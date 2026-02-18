@@ -1,0 +1,18 @@
+# Secrets
+.env
+
+# Docker
+.dockerignore
+
+# Python (for your future shadow evaluator scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# Logs and Transcripts
+# (Keep the folder, but ignore the actual data files if they are sensitive)
+transcripts/*.json
+transcripts/*.csv
+*.log
