@@ -1,15 +1,18 @@
 import chainlit as cl
 from openai import AsyncOpenAI
 import os
-from dotenv import load_dotenv
 
-load_dotenv() # Loads your sk-... key from .env
-client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]  # raises KeyError if missing (good)
+client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+
+PROMPT_PATH = os.getenv("SYSTEM_PROMPT_PATH", "/prompts/ai_base_control.txt")
 
 @cl.on_chat_start
 async def start():
+    if not os.path.exists(PROMPT_PATH):
+        raise FileNotFoundError(f"Prompt file not found: {PROMPT_PATH}. Is ./prompts mounted to /prompts?")
     # Load your prompt from your shared folder!
-    with open("../prompts/ai_base_control.txt", "r") as f:
+    with open(PROMPT_PATH, "r", encoding="utf-8") as f:
         system_prompt = f.read()
     
     cl.user_session.set("message_history", [{"role": "system", "content": system_prompt}])

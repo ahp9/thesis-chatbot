@@ -1,0 +1,29 @@
+services:
+  chainlit:
+    build:
+      context: ./app_chainlit
+      target: dev
+    container_name: chainlit
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    volumes:
+      - ./app_chainlit:/app
+      - ./prompts:/prompts
+    working_dir: /app
+    restart: unless-stopped
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:v0.3.35
+    container_name: open-webui
+    ports:
+      - "3000:8080"
+    env_file:
+      - ./.env
+    volumes:
+      - open-webui:/app/backend/data
+    restart: unless-stopped
+
+volumes:
+  open-webui:
