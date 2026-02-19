@@ -11,6 +11,7 @@ services:
     volumes:
       - ./app_chainlit:/app
       - ./prompts:/prompts
+      - ./transcripts:/app/transcripts
     working_dir: /app
     restart: unless-stopped
 
