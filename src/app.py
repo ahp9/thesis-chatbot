@@ -1,14 +1,9 @@
 import chainlit as cl
 from openai import AsyncOpenAI
 import os
-from chainlit.input_widget import Select
 
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"] 
 client = AsyncOpenAI(api_key=OPENAI_API_KEY)
-
-# PROMPT_PATH = os.getenv("SYSTEM_PROMPT_PATH", "/prompts/ai_base_control.txt")
-# TRANSCRIPT_DIR = Path(os.getenv("TRANSCRIPT_DIR", "./transcripts"))
-# TRANSCRIPT_DIR.mkdir(parents=True, exist_ok=True)
 
 @cl.on_chat_start
 async def start():
@@ -20,11 +15,6 @@ async def start():
     cl.user_session.set("phase", "forethought")
     cl.user_session.set("message_history", [])
 
-    
-@cl.on_settings_update
-async def update_settings(settings):
-    new_tutor = settings["tutor_type"]
-    cl.user_session.set("tutor_type", new_tutor)
     
 @cl.set_chat_profiles
 async def chat_profile():
@@ -45,12 +35,14 @@ async def chat_profile():
 
 @cl.on_message
 async def main(message: cl.Message):
+    # Fetch the message history and phase from the session and AI type
     history = cl.user_session.get("message_history")
     phase = cl.user_session.get("phase")
     tutor_type = cl.user_session.get("tutor_type")  
     
     history.append({"role": "user", "content": message.content})
 
+    # Create a system prompt based on the tutor type and phase
     if tutor_type == "SRL Tutor":
         system_prompt = f"You are a Self-Regulated Learning (SRL) tutor. Your role is to guide students through the phases of forethought, performance, and self-reflection. Currently, we are in the {phase} phase. Provide appropriate prompts and feedback based on the student's input and the current phase."
     elif tutor_type == "Basic Tutor":
@@ -68,11 +60,11 @@ async def main(message: cl.Message):
     
     ai_text = response.choices[0].message.content
 
-    # 6. Simple Phase Switch (Example: Move to performance after the first goal is set)
+    # Change to next phase
     if phase == "forethought":
         cl.user_session.set("phase", "performance")
 
-    # 7. Save and Send
+    # Save the AI response to history
     history.append({"role": "assistant", "content": ai_text})
     cl.user_session.set("history", history)
     
