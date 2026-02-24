@@ -1,0 +1,16 @@
+name: Security Audit
+on: [push]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for Secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Audit Dependencies
+        run: |
+          pip install safety
+          safety check -r requirements.txt
