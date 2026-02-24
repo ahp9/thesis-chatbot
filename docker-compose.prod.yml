@@ -1,7 +1,7 @@
 services:
   chainlit:
     build:
-      context: ./app_chainlit
+      context: ./src
       target: prod
     ports:
       - "8000:8000"
