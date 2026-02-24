@@ -13,4 +13,4 @@ jobs:
       - name: Audit Dependencies
         run: |
           pip install safety
-          safety check -r requirements.txt
+          safety scan -r requirements.txt
