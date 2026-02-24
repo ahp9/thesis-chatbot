@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import chainlit as cl
 from openai import AsyncOpenAI
 import os
@@ -9,13 +11,23 @@ client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 @cl.on_chat_start
 async def start():
-    chat_profile = cl.user_session.get("chat_profile")
     
-    # Store information
-    cl.user_session.set("tutor_type", chat_profile)
-    cl.user_session.set("phase", "forethought")
-    cl.user_session.set("message_history", [])
-    cl.user_session.set("session_id", cl.context.session.id)
+    res = await cl.AskUserMessage(content="Please enter the Tester ID or Name to begin:", timeout=60).send()
+    
+    
+    if res:
+        tester_id = res["output"]
+        cl.user_session.set("user_id", res["output"])
+    
+        chat_profile = cl.user_session.get("chat_profile")
+    
+        # Store information
+        cl.user_session.set("tutor_type", chat_profile)
+        cl.user_session.set("phase", "forethought")
+        cl.user_session.set("message_history", [])
+        cl.user_session.set("session_id", cl.context.session.id)
+        
+        await cl.Message(content=f"Welcome, **{tester_id}**. How can i help you?").send()
     
 
     
@@ -43,8 +55,9 @@ async def main(message: cl.Message):
     phase = cl.user_session.get("phase")
     tutor_type = cl.user_session.get("tutor_type") 
     session_id = cl.user_session.get("session_id") 
+    student_id = cl.user_session.get("user_id")
     
-    history.append({"role": "user", "content": message.content})
+    history.append({"role": "user", "content": message.content, "timestamp": datetime.now().isoformat()})
 
     # Create a system prompt based on the tutor type and phase
     if tutor_type == "SRL Tutor":
@@ -69,13 +82,13 @@ async def main(message: cl.Message):
         cl.user_session.set("phase", "performance")
 
     # Save the AI response to history
-    history.append({"role": "assistant", "content": ai_text})
-    cl.user_session.set("history", history)
+    history.append({"role": "assistant", "content": ai_text, "timestamp": datetime.now().isoformat()})
+    cl.user_session.set("message_history", history)
     
     if len(history) > 0:
         save_conversation(
             session_id=session_id,
-            user_id="student_01",
+            user_id=student_id,
             tutor_type=cl.user_session.get("tutor_type"),
             phase=cl.user_session.get("phase"),
             history=history
@@ -89,7 +102,7 @@ async def end():
     if history: # Only save if there was a conversation
         save_conversation(
             session_id=cl.user_session.get("session_id"),
-            user_id="student_01",
+            user_id=cl.user_session.get("user_id"),
             tutor_type=cl.user_session.get("tutor_type"),
             phase=cl.user_session.get("phase"),
             history=history

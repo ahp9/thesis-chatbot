@@ -4,13 +4,13 @@ from datetime import datetime
 
 LOG_FILE = "transcripts"
 
-def get_log_filename(session_id):
-    return os.path.join(LOG_FILE, f"session_{session_id}.jsonl")
+def get_log_filename(user_id, session_id):
+    return os.path.join(LOG_FILE, f"user_{user_id}_session_{session_id}.jsonl")
 
 def save_conversation(session_id, user_id, tutor_type, phase, history):
     
     os.makedirs(LOG_FILE, exist_ok=True)
-    filename = get_log_filename(session_id)
+    filename = get_log_filename(user_id, session_id)
     
     data = {
         "metadata": {
