@@ -1,0 +1,13 @@
+services:
+  chainlit:
+    build:
+      context: ./src
+      target: prod
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    volumes:
+      # In prod, you usually do NOT mount source code
+      - ./prompts:/prompts:ro
+    restart: unless-stopped

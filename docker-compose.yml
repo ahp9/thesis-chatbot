@@ -1,0 +1,16 @@
+services:
+  chainlit:
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    container_name: chainlit
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    volumes:
+      - ./src:/app
+      - ./prompts:/prompts
+      - ./transcripts:/app/transcripts
+    working_dir: /app
+    restart: unless-stopped
