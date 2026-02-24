@@ -8,7 +8,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Important for Gitleaks to scan history
+          fetch-depth: 0
 
       #  Prevent API Key leaks
       - name: Check for Secrets
@@ -17,7 +17,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Check for vulnerable Python packages
-      - name: Safety Check
+      - uses: actions/checkout@main
+      - name: Run Safety CLI to check for vulnerabilities
         uses: pyupio/safety-action@v1
         with:
-          api-key: "" 
+          api-key: ${{ secrets.SAFETY_API_KEY }}
