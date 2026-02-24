@@ -5,12 +5,19 @@ jobs:
   security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Important for Gitleaks to scan history
+
+      #  Prevent API Key leaks
       - name: Check for Secrets
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Audit Dependencies
-        run: |
-          pip install safety
-          safety scan -r requirements.txt
+
+      # Check for vulnerable Python packages
+      - name: Safety Check
+        uses: pyupio/safety-action@v1
+        with:
+          api-key: "" 
