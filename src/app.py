@@ -82,7 +82,7 @@ async def main(message: cl.Message):
         cl.user_session.set("phase", "performance")
 
     # Save the AI response to history
-    history.append({"role": "assistant", "content": ai_text, "timestamp": datetime.now().isoformat()})
+    history.append({"role": "assistant", "content": ai_text, "timestamp": datetime.now().isoformat(), "system_prompt": system_prompt})
     cl.user_session.set("message_history", history)
     
     if len(history) > 0:
