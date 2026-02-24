@@ -3,3 +3,4 @@ openai==1.40.0
 pip-chill==1.0.3
 python-dotenv==1.0.1
 pydantic<2.10
+httpx==0.27.2
