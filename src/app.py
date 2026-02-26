@@ -1,11 +1,19 @@
+import os
+import json
+import sqlite3
+import chainlit as cl
+from chainlit.data.sql_alchemy import SQLAlchemyDataLayer
+from chainlit.types import ThreadDict
 from datetime import datetime
 from typing import Optional
-
-import chainlit as cl
 from openai import AsyncOpenAI
-import os
 
 from utils.logger import save_conversation
+
+# --- FIX 1 & 2: DATABASE ADAPTERS ---
+# This ensures lists and dicts save correctly in SQLite without Pydantic errors
+sqlite3.register_adapter(list, lambda lst: json.dumps(lst))
+sqlite3.register_adapter(dict, lambda dct: json.dumps(dct))
 
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"] 
 client = AsyncOpenAI(api_key=OPENAI_API_KEY)
@@ -22,9 +30,12 @@ def auth_callback(username: str, password: str) -> Optional[cl.User]:
         return cl.User(identifier=username, name=username.split("@")[0])
     return None
 
+@cl.data_layer
+def get_data_layer():
+    return SQLAlchemyDataLayer(conninfo="sqlite+aiosqlite:///./chainlit.db")
+
 @cl.on_chat_start
 async def start():
-
     user = cl.user_session.get("user")
     student_id = user.identifier.split("@")[0]
     
@@ -34,7 +45,40 @@ async def start():
     cl.user_session.set("user_id", student_id)
     cl.user_session.set("tutor_type", chat_profile)
     cl.user_session.set("message_history", [])
-    cl.user_session.set("session_id", cl.context.session.id)
+    thread_id = cl.context.session.thread_id
+    cl.user_session.set("session_id", thread_id)
+    
+@cl.on_chat_resume
+async def on_chat_resume(thread : ThreadDict):
+    metadata = thread.get("metadata", {})
+    
+    if isinstance(metadata, str):
+        try:
+            metadata = json.loads(metadata)
+        except json.JSONDecodeError:
+            metadata = {}
+            
+    student_id = metadata.get("user_id", "Unknown")
+    tutor_type = metadata.get("tutor_type", "SRL Tutor")
+
+    cl.user_session.set("user_id", student_id)
+    cl.user_session.set("tutor_type", tutor_type)
+    cl.user_session.set("session_id", thread.get("id"))
+    
+    # This restores the message history from the database
+    steps = thread.get("steps", [])
+    
+    # Reconstruct the message history for your OpenAI call
+    history = []
+    for step in steps:
+        role = "assistant" if step.get("type") == "assistant_message" else "user"
+        content = step.get("output") or step.get("input") or ""
+        history.append({"role": role, "content": content})
+    
+    # Restore the session variables
+    cl.user_session.set("message_history", history)
+
+
     
 
     

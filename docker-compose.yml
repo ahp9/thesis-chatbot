@@ -12,5 +12,6 @@ services:
       - ./src:/app
       - ./prompts:/prompts
       - ./transcripts:/app/transcripts
+      - ./chainlit.db:/app/chainlit.db
     working_dir: /app
     restart: unless-stopped
