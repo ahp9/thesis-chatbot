@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 import chainlit as cl
 from openai import AsyncOpenAI
@@ -9,25 +10,31 @@ from utils.logger import save_conversation
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"] 
 client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
+MOCK_USERS = {
+    "student1@research.local": "password123",
+    "student2@research.local": "study2026",
+    "student3@research.local": "research_mode"
+}
+
+@cl.password_auth_callback
+def auth_callback(username: str, password: str) -> Optional[cl.User]:
+    if username in MOCK_USERS and MOCK_USERS[username] == password:
+        return cl.User(identifier=username, name=username.split("@")[0])
+    return None
+
 @cl.on_chat_start
 async def start():
+
+    user = cl.user_session.get("user")
+    student_id = user.identifier.split("@")[0]
     
-    res = await cl.AskUserMessage(content="Please enter the Tester ID or Name to begin:", timeout=60).send()
+    chat_profile = cl.user_session.get("chat_profile")
     
-    
-    if res:
-        tester_id = res["output"]
-        cl.user_session.set("user_id", res["output"])
-    
-        chat_profile = cl.user_session.get("chat_profile")
-    
-        # Store information
-        cl.user_session.set("tutor_type", chat_profile)
-        cl.user_session.set("phase", "forethought")
-        cl.user_session.set("message_history", [])
-        cl.user_session.set("session_id", cl.context.session.id)
-        
-        await cl.Message(content=f"Welcome, **{tester_id}**. How can i help you?").send()
+    # Store information
+    cl.user_session.set("user_id", student_id)
+    cl.user_session.set("tutor_type", chat_profile)
+    cl.user_session.set("message_history", [])
+    cl.user_session.set("session_id", cl.context.session.id)
     
 
     
@@ -52,7 +59,6 @@ async def chat_profile():
 async def main(message: cl.Message):
     # Fetch the message history and phase from the session and AI type
     history = cl.user_session.get("message_history")
-    phase = cl.user_session.get("phase")
     tutor_type = cl.user_session.get("tutor_type") 
     session_id = cl.user_session.get("session_id") 
     student_id = cl.user_session.get("user_id")
@@ -61,7 +67,7 @@ async def main(message: cl.Message):
 
     # Create a system prompt based on the tutor type and phase
     if tutor_type == "SRL Tutor":
-        system_prompt = f"You are a Self-Regulated Learning (SRL) tutor. Your role is to guide students through the phases of forethought, performance, and self-reflection. Currently, we are in the {phase} phase. Provide appropriate prompts and feedback based on the student's input and the current phase."
+        system_prompt = f"You are a Self-Regulated Learning (SRL) tutor. Your role is to guide students through the phases of forethought, performance, and self-reflection. Currently, Provide appropriate prompts and feedback based on the student's input and the current phase."
     elif tutor_type == "Basic Tutor":
         system_prompt = f"You are a helpful AI assistant. Give direct answers and code when asked."
     else:
@@ -77,10 +83,6 @@ async def main(message: cl.Message):
     
     ai_text = response.choices[0].message.content
 
-    # Change to next phase
-    if phase == "forethought":
-        cl.user_session.set("phase", "performance")
-
     # Save the AI response to history
     history.append({"role": "assistant", "content": ai_text, "timestamp": datetime.now().isoformat(), "system_prompt": system_prompt})
     cl.user_session.set("message_history", history)
@@ -90,7 +92,6 @@ async def main(message: cl.Message):
             session_id=session_id,
             user_id=student_id,
             tutor_type=cl.user_session.get("tutor_type"),
-            phase=cl.user_session.get("phase"),
             history=history
         )
     
@@ -104,7 +105,6 @@ async def end():
             session_id=cl.user_session.get("session_id"),
             user_id=cl.user_session.get("user_id"),
             tutor_type=cl.user_session.get("tutor_type"),
-            phase=cl.user_session.get("phase"),
             history=history
         )
 

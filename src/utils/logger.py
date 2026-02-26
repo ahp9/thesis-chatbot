@@ -7,7 +7,7 @@ LOG_FILE = "transcripts"
 def get_log_filename(user_id, session_id):
     return os.path.join(LOG_FILE, f"user_{user_id}_session_{session_id}.jsonl")
 
-def save_conversation(session_id, user_id, tutor_type, phase, history):
+def save_conversation(session_id, user_id, tutor_type, history):
     
     os.makedirs(LOG_FILE, exist_ok=True)
     filename = get_log_filename(user_id, session_id)
@@ -17,7 +17,6 @@ def save_conversation(session_id, user_id, tutor_type, phase, history):
             "session_id": session_id,
             "user_id": user_id,
             "tutor_type": tutor_type,
-            "phase": phase,
             "timestamp": datetime.now().isoformat()
         },
         "history": history
