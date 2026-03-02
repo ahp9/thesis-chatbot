@@ -89,8 +89,8 @@ async def run_suite(
     suite_file: str,
     rubric_file: str,
     tutor_type: str = "SRL Tutor",
-    max_cases: Optional[int] = None,   # ✅ lets you test quickly
-    verbose: bool = True,              # ✅ prints progress so it doesn't feel frozen
+    max_cases: Optional[int] = None,   
+    verbose: bool = True,              
 ):
     client = get_client()
 
