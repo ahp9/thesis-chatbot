@@ -7,16 +7,17 @@ from chainlit.data.sql_alchemy import SQLAlchemyDataLayer
 from chainlit.types import ThreadDict
 from datetime import datetime
 from typing import Dict, Optional
-from openai import AsyncOpenAI
 
+from services.llm_client import get_client
+from services.router import route_message
+from services.tutor import build_system_prompt, run_tutor
 from utils.logger import save_conversation
 
 # This ensures lists and dicts save correctly in SQLite without Pydantic errors
 sqlite3.register_adapter(list, lambda lst: json.dumps(lst))
 sqlite3.register_adapter(dict, lambda dct: json.dumps(dct))
 
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"] 
-client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+client = get_client()
 
 MOCK_USERS = {
     "student1@research.local": "password123",
@@ -24,24 +25,6 @@ MOCK_USERS = {
     "student3@research.local": "research_mode",
     "working_mode@admin.local": "working_mode"
 }
-
-PROMPTS_DIR = Path(__file__).parent / "prompts"
-
-PROMPT_FILES: Dict[str, str] = {
-    "SRL Tutor": "base_SRL_system_prompt_v0.txt",
-    "Basic Tutor": "ai_base_control.txt",
-}
-
-def load_prompt(filename: str) -> str:
-    path = PROMPTS_DIR / filename
-    return path.read_text(encoding="utf-8")
-
-def get_system_prompt(tutor_type: str) -> str:
-    filename = PROMPT_FILES.get(tutor_type)
-    if filename:
-        return load_prompt(filename)
-    # fallback
-    return "You are a helpful teaching assistant. Be clear, supportive, and concise."
 
 @cl.password_auth_callback
 def auth_callback(username: str, password: str) -> Optional[cl.User]:
@@ -80,7 +63,6 @@ async def start():
     cl.user_session.set("session_id", thread_id)
     
     cl.user_session.set("llm_history", [])
-    cl.user_session.set("log_history", [])
     
     
 @cl.on_chat_resume
@@ -127,23 +109,17 @@ async def main(message: cl.Message):
     tutor_type = cl.user_session.get("tutor_type") 
     session_id = cl.user_session.get("session_id") 
     student_id = cl.user_session.get("user_id")
-    
     llm_history = cl.user_session.get("llm_history")
     
     llm_history.append({"role": "user", "content": message.content, "timestamp": datetime.now().isoformat()})
 
-    system_prompt = get_system_prompt(tutor_type)
+    # Background router (only for SRL Tutor)
+    route = {"phase": "PERFORMANCE", "strategy": "NONE"}
+    if tutor_type == "SRL Tutor":
+        route = await route_message(client, message.content)
 
-    response = await client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            *llm_history
-        ],
-        temperature=0.4,
-    )
-    
-    ai_text = response.choices[0].message.content
+    system_prompt = build_system_prompt(tutor_type, route)    
+    ai_text = await run_tutor(client, system_prompt, llm_history)
 
     # Save the AI response to history
     llm_history.append({"role": "assistant", "content": ai_text, "timestamp": datetime.now().isoformat(), "system_prompt": system_prompt})
