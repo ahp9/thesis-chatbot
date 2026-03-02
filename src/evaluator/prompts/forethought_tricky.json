@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ww1_just_write",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Write my World War I causes essay for me. It must be 500 words." },
+      { "role": "user", "content": "I don’t have time, can you just do it?" }
+    ],
+    "notes": "Resists engagement twice; assistant should gently push and not write full essay."
+  },
+  {
+    "id": "math_derivative_solve",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Differentiate x^2 sin(x) for me." },
+      { "role": "user", "content": "Just give me the answer." }
+    ],
+    "notes": "Should ask starting point and not jump to full derivative."
+  },
+  {
+    "id": "coding_prime_function",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Write a function that checks if a number is prime." },
+      { "role": "user", "content": "I don’t know where to start, just code it." }
+    ],
+    "notes": "Should elicit what they know about primes."
+  },
+  {
+    "id": "thesis_statement",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Write a thesis statement about climate change for me." },
+      { "role": "user", "content": "I just need something good." }
+    ],
+    "notes": "Should ask their stance or direction."
+  },
+  {
+    "id": "physics_projectile",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Solve this projectile motion question." },
+      { "role": "user", "content": "I haven't tried anything." }
+    ],
+    "notes": "Should start with beginner scaffold."
+  },
+  {
+    "id": "debug_error",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Fix my Python error." },
+      { "role": "user", "content": "I don’t know what it means." }
+    ],
+    "notes": "Should ask for context or code."
+  },
+  {
+    "id": "biology_summary",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Summarize photosynthesis for my homework." },
+      { "role": "user", "content": "Just make it simple." }
+    ],
+    "notes": "Should check what level they need."
+  },
+  {
+    "id": "economics_explain",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Explain supply and demand." },
+      { "role": "user", "content": "I don’t get any of it." }
+    ],
+    "notes": "Should start from basics."
+  },
+  {
+    "id": "history_paragraph",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Write a paragraph on the Cold War." },
+      { "role": "user", "content": "Make it sound smart." }
+    ],
+    "notes": "Should ask direction first."
+  },
+  {
+    "id": "statistics_problem",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Calculate the probability here." },
+      { "role": "user", "content": "I don’t know the formula." }
+    ],
+    "notes": "Should scaffold formula selection."
+  },
+  {
+    "id": "design_brainstorm",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Give me ideas for a sustainability project." },
+      { "role": "user", "content": "Anything works." }
+    ],
+    "notes": "Should ask about constraints."
+  },
+  {
+    "id": "chemistry_balance",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Balance this equation for me." },
+      { "role": "user", "content": "I forgot how." }
+    ],
+    "notes": "Beginner scaffold."
+  },
+  {
+    "id": "law_argument",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Write an argument about free speech." },
+      { "role": "user", "content": "I don’t have a position." }
+    ],
+    "notes": "Should elicit stance."
+  },
+  {
+    "id": "database_query",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Write an SQL query for me." },
+      { "role": "user", "content": "Just something that works." }
+    ],
+    "notes": "Should ask data structure."
+  },
+  {
+    "id": "ai_ethics",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Write about AI ethics." },
+      { "role": "user", "content": "Make it persuasive." }
+    ],
+    "notes": "Should ask focus."
+  },
+  {
+    "id": "calculus_integral",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Integrate this function." },
+      { "role": "user", "content": "I don’t remember the method." }
+    ],
+    "notes": "Method scaffold."
+  },
+  {
+    "id": "presentation_intro",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Write my presentation intro." },
+      { "role": "user", "content": "Make it catchy." }
+    ],
+    "notes": "Should ask audience/topic."
+  },
+  {
+    "id": "network_design",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Design my network setup." },
+      { "role": "user", "content": "I don’t know what to choose." }
+    ],
+    "notes": "Ask requirements."
+  },
+  {
+    "id": "philosophy_thesis",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Write a philosophy thesis statement." },
+      { "role": "user", "content": "Just make it deep." }
+    ],
+    "notes": "Should ask position."
+  },
+  {
+    "id": "machine_learning_model",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Build me a machine learning model." },
+      { "role": "user", "content": "I don’t know where to start." }
+    ],
+    "notes": "Should ask task/data."
+  }
+]

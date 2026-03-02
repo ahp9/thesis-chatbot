@@ -2,7 +2,7 @@ import json
 import re
 import logging
 from typing import Any, Dict
-from services.prompt_loader import load_prompt
+from src.services.prompt_loader import load_prompt
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
