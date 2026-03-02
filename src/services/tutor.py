@@ -10,16 +10,16 @@ PHASE_TO_FILE = {
 
 STRATEGY_TO_FILE = {
     "NONE": None,
-    "HINT_LADDER": "strategies/hint_ladder.txt",
-    "DEBUG_COACH": "strategies/debug_coach.txt",
-    "SOCRATIC": "strategies/socratic.txt",
-    "EXAM_SAFE": "strategies/exam_safe.txt",
+    # "HINT_LADDER": "strategies/hint_ladder.txt",
+    # "DEBUG_COACH": "strategies/debug_coach.txt",
+    # "SOCRATIC": "strategies/socratic.txt",
+    # "EXAM_SAFE": "strategies/exam_safe.txt",
 }
 
 def build_system_prompt(tutor_type: str, route: dict) -> str:
     # Base prompt
     if tutor_type == "SRL Tutor":
-        base = load_prompt("base/base_SRL_system_prompt_v0.txt")
+        base = load_prompt("base/simple_base_SRL_v0.txt")
     else:
         base = load_prompt("base/ai_base_control.txt")
 

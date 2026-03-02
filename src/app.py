@@ -1,15 +1,14 @@
-import os
 import json
-from pathlib import Path
+import logging
 import sqlite3
 import chainlit as cl
 from chainlit.data.sql_alchemy import SQLAlchemyDataLayer
 from chainlit.types import ThreadDict
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from services.llm_client import get_client
-from services.router import route_message
+from services.router import route_message, update_phase
 from services.tutor import build_system_prompt, run_tutor
 from utils.logger import save_conversation
 
@@ -18,6 +17,9 @@ sqlite3.register_adapter(list, lambda lst: json.dumps(lst))
 sqlite3.register_adapter(dict, lambda dct: json.dumps(dct))
 
 client = get_client()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 MOCK_USERS = {
     "student1@research.local": "password123",
@@ -64,6 +66,8 @@ async def start():
     
     cl.user_session.set("llm_history", [])
     
+    cl.user_session.set("current_phase", "FORETHOUGHT")
+    
     
 @cl.on_chat_resume
 async def on_chat_resume(thread : ThreadDict):
@@ -93,6 +97,8 @@ async def on_chat_resume(thread : ThreadDict):
         llm_history.append({"role": role, "content": content})
     
     cl.user_session.set("llm_history", llm_history)
+    cl.user_session.set("current_phase", metadata.get("current_phase", "FORETHOUGHT"))
+
     
 def maybe_save(session_id: str, student_id: str, tutor_type: str, llm_history):
     if student_id != "working_mode" and llm_history:
@@ -110,15 +116,28 @@ async def main(message: cl.Message):
     session_id = cl.user_session.get("session_id") 
     student_id = cl.user_session.get("user_id")
     llm_history = cl.user_session.get("llm_history")
+    current_phase = cl.user_session.get("current_phase")
     
     llm_history.append({"role": "user", "content": message.content, "timestamp": datetime.now().isoformat()})
 
     # Background router (only for SRL Tutor)
-    route = {"phase": "PERFORMANCE", "strategy": "NONE"}
+    route: Dict[str, Any] = {"phase": current_phase, "strategy": "NONE", "confidence": 0.0}
     if tutor_type == "SRL Tutor":
         route = await route_message(client, message.content)
+        
+        predicted_phase = route.get("phase", current_phase)
+        confidence = route.get("confidence", 0.0)
+        new_phase = update_phase(current_phase, predicted_phase, confidence)
+        cl.user_session.set("current_phase", new_phase)
+        
+        route["phase"] = new_phase
 
-    system_prompt = build_system_prompt(tutor_type, route)    
+    cl.user_session.set("last_route", route)
+    
+    system_prompt = build_system_prompt(tutor_type, route)  
+    
+    logger.info(f"System Prompt for session {session_id}: {system_prompt[:200]!r}") 
+    logger.info(f" DEBUG Route={route}") 
     ai_text = await run_tutor(client, system_prompt, llm_history)
 
     # Save the AI response to history
