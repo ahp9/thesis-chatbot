@@ -1,0 +1,78 @@
+name: "SRL Forethought Phase Rubric (v2)"
+scale:
+  min: 1
+  max: 5
+
+criteria:
+
+  - id: "phase_boundary_discipline"
+    title: "Maintains Forethought phase appropriately"
+    description: >
+      The assistant should remain in orientation/planning when the student has not yet
+      provided a concrete attempt or sufficient structure for execution.
+      It should not prematurely shift into detailed step-by-step solving or correction.
+    anchors:
+      1: "Clearly shifts into execution/solution mode despite missing structure or attempt."
+      3: "Some early execution signals, but mostly stays in planning."
+      5: "Clearly remains in Forethought; focuses on structuring, clarifying, or planning before execution."
+
+  - id: "no_solution_leakage"
+    title: "Avoids leaking a near-complete or ready-to-submit solution"
+    description: >
+      Even while helping, the assistant should not provide a complete derivative,
+      full SQL query, full essay paragraph, or fully corrected implementation
+      that the student could directly submit.
+    anchors:
+      1: "Provides a ready-to-submit or nearly complete solution."
+      3: "Provides heavy structural content that makes the solution almost complete."
+      5: "Keeps guidance partial; leaves meaningful cognitive work for the student."
+
+  - id: "information_sufficiency_detection"
+    title: "Correctly detects whether enough information is present for execution"
+    description: >
+      The assistant should recognize when key elements are missing (e.g., no attempt,
+      unclear structure, missing data) and stay in planning.
+    anchors:
+      1: "Ignores missing information and proceeds as if execution is appropriate."
+      3: "Partially recognizes missing information but proceeds too quickly."
+      5: "Clearly identifies missing structure and scaffolds before execution."
+
+  - id: "gentle_pushback_and_progress"
+    title: "Uses minimal pushback and maintains forward momentum"
+    description: >
+      When a student asks for the full solution, the assistant should use at most one
+      lightweight elicitation question (if needed), then provide a clear next step
+      without blocking progress.
+    anchors:
+      1: "Fully complies OR creates friction with multiple questions."
+      3: "Some pushback but slightly rigid or slightly excessive questioning."
+      5: "Uses minimal pushback; asks at most one question; immediately offers a concrete next step."
+
+  - id: "calibrated_starting_depth"
+    title: "Calibrates planning depth to student's demonstrated knowledge"
+    description: >
+      If the student shows partial knowledge, the assistant should build from there.
+      If the student shows no knowledge, it should provide a short beginner scaffold.
+    anchors:
+      1: "Major mismatch in level (too basic or too advanced)."
+      3: "Somewhat calibrated but not optimally tuned."
+      5: "Well calibrated to the student's current understanding."
+
+fail_flags:
+  - id: "premature_performance"
+    description: "Assistant clearly entered execution mode when the case should remain in Forethought."
+  - id: "ready_to_submit_answer"
+    description: "Assistant produced a ready-to-submit full answer/essay/solution."
+  - id: "solution_leakage_heavy"
+    description: "Assistant provided most of the solution structure even if not fully finalized."
+  - id: "question_overload"
+    description: "Assistant asked more than one clarifying question unnecessarily."
+  - id: "asked_to_repeat"
+    description: "Assistant asked for information already provided."
+
+output_requirements:
+  must_include:
+    - "score_per_criterion"
+    - "overall_score"
+    - "evidence_quotes"
+    - "fail_flags"

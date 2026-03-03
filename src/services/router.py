@@ -49,7 +49,7 @@ def update_phase(current_phase: str, predicted_phase: str, confidence: float) ->
     return current_phase
 
 async def route_message(client, user_message: str) -> Dict[str, Any]:
-    router_system = load_prompt("base/router_system_prompt.txt")
+    router_system = load_prompt("base/router_system_prompt_v1.txt")
 
     resp = await client.chat.completions.create(
         model=ROUTER_MODEL,

@@ -1,0 +1,265 @@
+[
+  {
+    "id": "ww1_half_context_then_write",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I have to write a 500-word essay about the causes of World War I for my history class, and it's due later today. We’ve talked a lot about alliances, nationalism, and militarism in class, and I understand the basics, but I’m feeling overwhelmed and short on time. Could you just write the full essay for me?"
+      },
+      {
+        "role": "user",
+        "content": "Please don’t ask me follow-up questions — I really just need something I can submit."
+      }
+    ],
+    "notes": "Still orientation despite context → should stay in Forethought."
+  },
+
+  {
+    "id": "ww1_attempted_intro",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I’ve started my essay with this sentence: 'World War I was caused by several interlinked factors such as alliances and nationalism.' I feel like it’s kind of basic and maybe too vague. Do you think this is a strong enough introduction, and what would you change to make it more analytical?"
+      }
+    ],
+    "notes": "Student has begun writing → Performance."
+  },
+
+  {
+    "id": "derivative_fake_attempt",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I tried to differentiate x^2 sin(x) and I got 2x sin(x). My thinking was that I differentiate x^2 and then just multiply by sin(x). Is that correct? If not, what did I misunderstand?"
+      }
+    ],
+    "notes": "Student attempt → Performance."
+  },
+
+  {
+    "id": "derivative_request_only",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      {
+        "role": "user",
+        "content": "Can you differentiate x^2 sin(x)? We just started product rule and I’m still confused about when to use it."
+      },
+      {
+        "role": "user",
+        "content": "I don’t need the explanation right now — just give me the final answer."
+      }
+    ],
+    "notes": "No attempt → Forethought."
+  },
+
+  {
+    "id": "prime_function_started",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I wrote this to check if a number is prime, but it doesn’t always work:\nfor i in range(2, n):\n    if n % i == 0:\n        return False\nSometimes it behaves strangely. What’s wrong with this?"
+      }
+    ],
+    "notes": "Code attempt → Performance."
+  },
+
+  {
+    "id": "prime_function_request",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I need a Python function that checks if a number is prime, and it should be reasonably efficient."
+      },
+      {
+        "role": "user",
+        "content": "Can you just write a good version for me?"
+      }
+    ],
+    "notes": "Still planning → Forethought."
+  },
+
+  {
+    "id": "projectile_attempt",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I’m solving a projectile problem and I tried using v^2 = u^2 + 2as, but I’m stuck because I need the launch angle. Am I using the wrong equation?"
+      }
+    ],
+    "notes": "Student attempt → Performance."
+  },
+
+  {
+    "id": "projectile_no_attempt",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I have a projectile motion question involving launch speed and angle, but I don’t know where to start."
+      },
+      {
+        "role": "user",
+        "content": "Can you solve it for me?"
+      }
+    ],
+    "notes": "No attempt → Forethought."
+  },
+
+  {
+    "id": "debug_code_started",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "My Python program crashes with a TypeError saying I can’t add a string to an int. It seems to happen on this line: total += price. What could cause that?"
+      }
+    ],
+    "notes": "Student isolated issue → Performance."
+  },
+
+  {
+    "id": "debug_request_only",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      {
+        "role": "user",
+        "content": "My Python code gives me an error and I don’t understand what it means."
+      },
+      {
+        "role": "user",
+        "content": "Can you fix it?"
+      }
+    ],
+    "notes": "No detail → Forethought."
+  },
+
+  {
+    "id": "sql_with_attempt",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I tried writing this query: SELECT customer, SUM(amount) FROM sales but it doesn’t sort the results the way I want. I want the highest spending customers first. What am I missing?"
+      }
+    ],
+    "notes": "Query attempt → Performance."
+  },
+
+  {
+    "id": "sql_request_only",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I need an SQL query that finds the customers who spent the most money."
+      },
+      {
+        "role": "user",
+        "content": "Just give me the query."
+      }
+    ],
+    "notes": "Still planning → Forethought."
+  },
+
+  {
+    "id": "integral_attempt",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I’m trying to compute ∫x e^x dx and I started using integration by parts. I set u = x and dv = e^x dx, but now I’m confused about what to do next."
+      }
+    ],
+    "notes": "Execution started → Performance."
+  },
+
+  {
+    "id": "integral_request",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      {
+        "role": "user",
+        "content": "Can you integrate x e^x?"
+      },
+      {
+        "role": "user",
+        "content": "I just need the final answer."
+      }
+    ],
+    "notes": "Still planning → Forethought."
+  },
+
+  {
+    "id": "essay_outline_started",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I made a rough outline for my essay: introduction, alliances, militarism. It feels incomplete. Does this structure make sense and what would you improve?"
+      }
+    ],
+    "notes": "Execution phase → Performance."
+  },
+
+  {
+    "id": "essay_outline_request_only",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I need to write an essay about the causes of World War I but I haven’t planned it yet."
+      },
+      {
+        "role": "user",
+        "content": "Can you create an outline for me?"
+      }
+    ],
+    "notes": "Still planning → Forethought."
+  },
+
+  {
+    "id": "sql_forethought_forethought_then_attempt",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I need an SQL query to find the top customers by total spending, but I’m not sure how to structure it."
+      },
+      {
+        "role": "user",
+        "content": "Do I need GROUP BY for this, and how does ORDER BY work together with SUM?"
+      },
+      {
+        "role": "user",
+        "content": "I tried: SELECT customer, SUM(amount) FROM sales; but it doesn’t give me the highest spending customers first. What should the corrected query look like?"
+      }
+    ],
+    "notes": "2 Forethought turns → 1 Performance turn (phase transition case)."
+  },
+
+  {
+    "id": "essay_forethought_forethought_then_draft",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I need to write an essay about the causes of World War I, but I’m not sure how to structure my argument."
+      },
+      {
+        "role": "user",
+        "content": "Should I organize it by themes like alliances and nationalism, or by chronology?"
+      },
+      {
+        "role": "user",
+        "content": "Here’s my introduction draft: 'World War I was the result of rising nationalism, complex alliance systems, and militarism that created tensions across Europe.' Is this a strong start?"
+      }
+    ],
+    "notes": "2 Forethought turns → 1 Performance turn (phase transition case)."
+  }
+]

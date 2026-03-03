@@ -18,6 +18,9 @@ REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 JUDGE_MODEL = "gpt-4o-mini"
 JUDGE_TEMP = 0.0
 
+BASE_SRL_VERSION = "v1"
+SRL_PHASE_VERSION = "v1"
+
 PHASE_ORDER = ["FORETHOUGHT", "PERFORMANCE", "REFLECTION"]
 
 # Timeouts (seconds) — tune as needed
@@ -202,9 +205,31 @@ async def run_suite(
             overall = judge_json.get("overall_score", None)
             print(f"[EVAL]   Done. overall_score={overall}")
 
-    report_path = REPORTS_DIR / f"report_{Path(suite_file).stem}__{Path(rubric_file).stem}.json"
-    report_path.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+    base_name = f"report_{Path(suite_file).stem}__{Path(rubric_file).stem}"
+    version = 0
 
+    while True:
+        report_path = REPORTS_DIR / f"{base_name}_v{version}.json"
+        if not report_path.exists():
+            break
+        version += 1
+    
+    report_data = {
+        "metadata": {
+            "suite_file": suite_file,
+            "rubric_file": rubric_file,
+            "tutor_type": tutor_type,
+            "base_srl_version": BASE_SRL_VERSION,
+            "forethought_version": SRL_PHASE_VERSION,
+            "judge_model": JUDGE_MODEL,
+        },
+        "results": results
+    }
+
+    report_path.write_text(
+    json.dumps(report_data, ensure_ascii=False, indent=2),
+    encoding="utf-8"
+)
     if verbose:
         print(f"\n[EVAL] Wrote report: {report_path}")
 

@@ -1,0 +1,916 @@
+{
+  "metadata": {
+    "suite_file": "forethought_tricky_v0.json",
+    "rubric_file": "forethought.yaml",
+    "tutor_type": "SRL Tutor",
+    "base_srl_version": "v1",
+    "forethought_version": "v1",
+    "judge_model": "gpt-4o-mini"
+  },
+  "results": [
+    {
+      "case_id": "ww1_half_context_then_write",
+      "phase_target": "FORETHOUGHT",
+      "notes": "Still orientation despite context → should stay in Forethought.",
+      "final_phase": "FORETHOUGHT",
+      "transcript": "USER: I’m writing about the causes of World War I. I think alliances and nationalism mattered, and I need to hand it in today. Can you write the full 500-word essay?\nASSISTANT: I can’t write the full essay for you, but I can definitely help you get started and structure your ideas! \n\nSince you mentioned alliances and nationalism, how about we outline a few key points for each of those topics? \n\n1. **Nationalism**: \n   - Think about how nationalism created tensions between countries. \n   - You could mention specific examples, like the desire for independence among various ethnic groups.\n\n2. **Alliances**: \n   - Consider how the alliance system divided Europe into two main camps. \n   - You might want to highlight specific alliances, such as the Triple Alliance and the Triple Entente.\n\nWhat do you think? Would you like to expand on one of these points or brainstorm more ideas?\nUSER: Please don’t ask questions, just write it.\nASSISTANT: I understand you're looking for a quick solution, but let's focus on getting your ideas organized first. \n\nTo start your essay, you might want to create an introduction that sets the stage for discussing nationalism and alliances. Here’s a simple structure you could follow:\n\n1. **Introduction**: Briefly introduce World War I and mention that nationalism and alliances were significant causes.\n\n2. **Body Paragraph 1 - Nationalism**: \n   - Define nationalism and explain how it contributed to tensions.\n   - Provide examples, such as the Balkan Wars or the desire for Slavic nations to unite.\n\n3. **Body Paragraph 2 - Alliances**: \n   - Explain the alliance system and how it created a divide in Europe.\n   - Mention the Triple Alliance and Triple Entente and how these alliances escalated the conflict.\n\n4. **Conclusion**: Summarize how both factors intertwined to lead to the war.\n\nWould you like to develop one of these sections further?",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 5,
+            "rationale": "The assistant does not provide a full polished solution immediately and instead offers to help structure the student's ideas.",
+            "evidence_quotes": [
+              "I can’t write the full essay for you, but I can definitely help you get started and structure your ideas!"
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the student without asking them to repeat it.",
+            "evidence_quotes": [
+              "Since you mentioned alliances and nationalism, how about we outline a few key points for each of those topics?"
+            ]
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant provides gentle pushback by acknowledging the student's request for a quick solution and asks one lightweight question to elicit further input.",
+            "evidence_quotes": [
+              "I understand you're looking for a quick solution, but let's focus on getting your ideas organized first."
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant appropriately starts at the student's level by suggesting a structure based on the topics they mentioned.",
+            "evidence_quotes": [
+              "To start your essay, you might want to create an introduction that sets the stage for discussing nationalism and alliances."
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant asks at most one question, provides a clear next step, and keeps planning brief and optional.",
+            "evidence_quotes": [
+              "Would you like to develop one of these sections further?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant did not provide a complete solution immediately.",
+          "It effectively used the information provided by the student.",
+          "Gentle pushback was employed with one lightweight question.",
+          "The starting depth was well calibrated to the student's knowledge.",
+          "Clear next steps were provided with optional planning."
+        ]
+      }
+    },
+    {
+      "case_id": "ww1_attempted_intro",
+      "phase_target": "PERFORMANCE",
+      "notes": "Student has begun writing → should move to Performance.",
+      "final_phase": "REFLECTION",
+      "transcript": "USER: I started an intro: 'World War I was caused by several interlinked factors such as alliances and nationalism.' Is that a good start?\nASSISTANT: That's a solid start! You've identified key factors that contributed to World War I. To strengthen your introduction, consider adding a brief explanation of why these factors were significant. \n\nWhat specific alliances or nationalist movements do you think are most important to mention? This could help you set the stage for your main points.\nUSER: What should I improve?\nASSISTANT: To improve your introduction, you might want to:\n\n1. **Add Context**: Briefly explain what you mean by \"alliances\" and \"nationalism.\" For example, mention how alliances created tensions or how nationalism fueled rivalries.\n\n2. **Engage the Reader**: Consider starting with a hook, like a surprising fact or a question about the impact of the war.\n\n3. **Thesis Statement**: End with a clear thesis that outlines what you will discuss in your essay. \n\nWhat specific aspects of alliances or nationalism do you think you could elaborate on? This could help refine your introduction further.",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 5,
+            "rationale": "The assistant does not provide a complete solution immediately; instead, it encourages the user to think critically about their introduction.",
+            "evidence_quotes": [
+              "To strengthen your introduction, consider adding a brief explanation of why these factors were significant.",
+              "What specific alliances or nationalist movements do you think are most important to mention?"
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the user without asking them to repeat it.",
+            "evidence_quotes": [
+              "You've identified key factors that contributed to World War I."
+            ]
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit further input from the user without blocking progress.",
+            "evidence_quotes": [
+              "What specific alliances or nationalist movements do you think are most important to mention?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant appropriately builds on the user's existing knowledge and provides relevant suggestions for improvement.",
+            "evidence_quotes": [
+              "You've identified key factors that contributed to World War I."
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant provides a clear next step and asks at most one question, keeping the planning brief and optional.",
+            "evidence_quotes": [
+              "What specific aspects of alliances or nationalism do you think you could elaborate on?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant encourages critical thinking without providing a complete solution.",
+          "It effectively uses the user's input without asking for repetition.",
+          "Only one lightweight question is asked to elicit further input.",
+          "The assistant builds on the user's existing knowledge appropriately.",
+          "Clear next steps are provided, maintaining an action-oriented approach."
+        ]
+      }
+    },
+    {
+      "case_id": "derivative_fake_attempt",
+      "phase_target": "PERFORMANCE",
+      "notes": "Student made attempt → Performance.",
+      "final_phase": "REFLECTION",
+      "transcript": "USER: I tried: derivative of x^2 sin(x) = 2x sin(x). Is that correct?\nASSISTANT: You're on the right track, but it looks like you missed part of the differentiation process. The function \\( x^2 \\sin(x) \\) is a product of two functions, so you'll need to use the product rule. \n\nThe product rule states that if you have two functions \\( u \\) and \\( v \\), then the derivative is given by:\n\n\\[\n(uv)' = u'v + uv'\n\\]\n\nCan you identify \\( u \\) and \\( v \\) in your function \\( x^2 \\sin(x) \\)? What would their derivatives be?\nUSER: If not, where did I go wrong?\nASSISTANT: You went wrong by only differentiating one part of the product. In \\( x^2 \\sin(x) \\):\n\n- Let \\( u = x^2 \\) and \\( v = \\sin(x) \\).\n- You need to find \\( u' \\) and \\( v' \\).\n\nWhat are the derivatives of \\( u \\) and \\( v \\)? Once you find those, you can apply the product rule correctly. Give it a try!",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 5,
+            "rationale": "The assistant does not provide a complete solution immediately and instead encourages the student to engage with the problem.",
+            "evidence_quotes": [
+              "You're on the right track, but it looks like you missed part of the differentiation process.",
+              "Can you identify u and v in your function x^2 sin(x)?"
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the student without asking them to repeat it.",
+            "evidence_quotes": [
+              "You went wrong by only differentiating one part of the product."
+            ]
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit the student's understanding without blocking progress.",
+            "evidence_quotes": [
+              "Can you identify u and v in your function x^2 sin(x)?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant appropriately meets the student at their level of understanding and provides guidance without overwhelming them.",
+            "evidence_quotes": [
+              "You need to find u' and v'."
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant provides a clear next step and asks only one question, keeping the planning brief and optional.",
+            "evidence_quotes": [
+              "What are the derivatives of u and v? Once you find those, you can apply the product rule correctly."
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant encourages student participation without providing a full solution.",
+          "No repetition of information was requested from the student.",
+          "Only one lightweight question was asked to guide the student.",
+          "The assistant calibrated the depth of explanation to the student's level.",
+          "Clear next steps were provided without overwhelming the student."
+        ]
+      }
+    },
+    {
+      "case_id": "derivative_request_only",
+      "phase_target": "FORETHOUGHT",
+      "notes": "No attempt → Forethought.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: Differentiate x^2 sin(x).\nASSISTANT: Great! To differentiate \\( x^2 \\sin(x) \\), you can use the product rule since it's a product of two functions: \\( x^2 \\) and \\( \\sin(x) \\).\n\nThe product rule states that if you have two functions \\( u \\) and \\( v \\), then the derivative \\( (uv)' = u'v + uv' \\).\n\n1. Identify \\( u \\) and \\( v \\):\n   - Let \\( u = x^2 \\)\n   - Let \\( v = \\sin(x) \\)\n\n2. Find the derivatives \\( u' \\) and \\( v' \\):\n   - What is the derivative of \\( u = x^2 \\)?\n   - What is the derivative of \\( v = \\sin(x) \\)?\n\nTry calculating those derivatives, and then we can put it all together!\nUSER: Just give me the final answer.\nASSISTANT: I understand you're looking for the final answer, but let's quickly summarize the steps to get there. \n\nUsing the product rule, the derivative of \\( x^2 \\sin(x) \\) is:\n\n\\[\n\\frac{d}{dx}(x^2 \\sin(x)) = 2x \\sin(x) + x^2 \\cos(x)\n\\]\n\nSo, the final answer is:\n\n\\[\n2x \\sin(x) + x^2 \\cos(x)\n\\]\n\nIf you have any questions about the steps, feel free to ask!",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 3,
+            "rationale": "The assistant partially resists but still provides the full solution early, giving heavy solution content before eliciting student input.",
+            "evidence_quotes": [
+              "Using the product rule, the derivative of x^2 sin(x) is: 2x sin(x) + x^2 cos(x)"
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant clearly uses the provided information and avoids unnecessary repetition.",
+            "evidence_quotes": [
+              "I understand you're looking for the final answer, but let's quickly summarize the steps to get there."
+            ]
+          },
+          "gentle_pushback_one_question": {
+            "score": 3,
+            "rationale": "The assistant provides some pushback but asks more than one question, which creates slight friction.",
+            "evidence_quotes": [
+              "What is the derivative of u = x^2?",
+              "What is the derivative of v = sin(x)?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant meets the student at their level, providing a brief scaffold appropriate for the context.",
+            "evidence_quotes": [
+              "To differentiate x^2 sin(x), you can use the product rule since it's a product of two functions."
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 3,
+            "rationale": "The assistant has a next step but is vague and asks multiple questions, which could be streamlined.",
+            "evidence_quotes": [
+              "Try calculating those derivatives, and then we can put it all together!"
+            ]
+          }
+        },
+        "overall_score": 3.8,
+        "fail_flags": [
+          "question_overload"
+        ],
+        "summary": [
+          "The assistant provided a complete solution but did not fully resist the request for an answer.",
+          "It effectively used the information provided by the user without unnecessary repetition.",
+          "The assistant asked multiple questions, which created some friction.",
+          "It calibrated the starting depth well based on the user's knowledge.",
+          "The next steps were somewhat vague and could have been clearer."
+        ]
+      }
+    },
+    {
+      "case_id": "prime_function_started",
+      "phase_target": "PERFORMANCE",
+      "notes": "Code attempt exists → Performance.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I wrote this to check primes but it fails sometimes:\nfor i in range(2,n):\n if n%i==0:\n  return False\nASSISTANT: It looks like you're on the right track for checking if a number \\( n \\) is prime, but there are a couple of things to adjust. \n\n1. **Check the return value**: You need to return `True` if no divisors are found after the loop. \n2. **Loop range**: You only need to check up to the square root of \\( n \\) for efficiency.\n\nLet's start with the first step. Can you add a return statement after the loop to handle the case when \\( n \\) is prime? What would that look like?\nUSER: Why does it fail?\nASSISTANT: It might fail because the code doesn't account for a few important details:\n\n1. **Return Value**: If \\( n \\) is not divisible by any number in the range, you need to return `True` after the loop. If you don't, it will not return anything, which can lead to confusion.\n\n2. **Checking Range**: The loop checks all numbers from 2 to \\( n-1 \\). This is unnecessary and inefficient. You only need to check up to the square root of \\( n \\) because if \\( n \\) has a divisor larger than its square root, the corresponding divisor must be smaller than the square root.\n\nTry adding a return statement after the loop for the case when \\( n \\) is prime. Can you show me what that looks like?",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 3,
+            "rationale": "The assistant provides some solution content early but does not fully resist giving information about the return value and loop range.",
+            "evidence_quotes": [
+              "You need to return `True` if no divisors are found after the loop.",
+              "You only need to check up to the square root of `n` for efficiency."
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the user without asking them to repeat it.",
+            "evidence_quotes": [
+              "It might fail because the code doesn't account for a few important details."
+            ]
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit a response from the user without blocking progress.",
+            "evidence_quotes": [
+              "Can you add a return statement after the loop to handle the case when `n` is prime?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 3,
+            "rationale": "The assistant provides some guidance but does not fully calibrate the depth of the explanation to the user's level of understanding.",
+            "evidence_quotes": [
+              "You need to return `True` if no divisors are found after the loop."
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant provides a clear next step and asks only one question, keeping the planning brief and optional.",
+            "evidence_quotes": [
+              "Try adding a return statement after the loop for the case when `n` is prime."
+            ]
+          }
+        },
+        "overall_score": 4.2,
+        "fail_flags": [],
+        "summary": [
+          "The assistant provided some solution content early but did not fully resist giving information.",
+          "No repetition of user-provided information occurred.",
+          "One lightweight question was asked to elicit user input.",
+          "The depth of explanation was somewhat mismatched to the user's knowledge.",
+          "A clear next step was provided with minimal planning."
+        ]
+      }
+    },
+    {
+      "case_id": "prime_function_request",
+      "phase_target": "FORETHOUGHT",
+      "notes": "Still planning → Forethought.",
+      "final_phase": "FORETHOUGHT",
+      "transcript": "USER: Write a prime checker in Python.\nASSISTANT: What do you already know about prime numbers, and where do you get stuck? This will help me guide you in writing the prime checker.\nUSER: Make it efficient.\nASSISTANT: Great! To make an efficient prime checker, you can start by considering the following steps:\n\n1. **Understand the Definition**: A prime number is greater than 1 and has no divisors other than 1 and itself.\n\n2. **Initial Checks**: You can quickly eliminate numbers less than 2 and even numbers greater than 2.\n\n3. **Check Up to the Square Root**: Instead of checking all numbers up to `n`, you only need to check up to the square root of `n`.\n\nWith that in mind, how about starting with the initial checks? You could write a function that first checks if the number is less than 2 or if it's even. Would you like to try that?",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 5,
+            "rationale": "The assistant does not provide a complete solution immediately and instead encourages the user to participate by asking about their prior knowledge.",
+            "evidence_quotes": [
+              "What do you already know about prime numbers, and where do you get stuck?"
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the user without asking them to repeat any details.",
+            "evidence_quotes": []
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit the user's starting point and continues with guidance.",
+            "evidence_quotes": [
+              "What do you already know about prime numbers, and where do you get stuck?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant's response is well-calibrated to the user's request for an efficient prime checker, providing relevant steps without assuming too much prior knowledge.",
+            "evidence_quotes": [
+              "To make an efficient prime checker, you can start by considering the following steps:"
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant provides a clear next step after asking one question, keeping the planning brief and optional.",
+            "evidence_quotes": [
+              "With that in mind, how about starting with the initial checks?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively engages the user without providing a complete solution immediately.",
+          "It asks one relevant question to understand the user's knowledge.",
+          "The response is well-calibrated to the user's request for efficiency.",
+          "The assistant provides clear next steps while keeping the planning optional.",
+          "No fail flags were applicable in this interaction."
+        ]
+      }
+    },
+    {
+      "case_id": "projectile_attempt",
+      "phase_target": "PERFORMANCE",
+      "notes": "Student has begun solving → Performance.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I used v^2 = u^2 + 2as but I'm not sure how to solve for the angle.\nASSISTANT: Great start using the equation \\(v^2 = u^2 + 2as\\)! To find the angle, we typically need to relate the motion to the components of velocity or displacement.\n\nHere’s a step-by-step approach:\n\n1. **Identify Components**: If you have a projectile or inclined motion, break down the initial and final velocities into horizontal and vertical components. \n\n2. **Use Trigonometry**: If you need the angle, you might use the sine, cosine, or tangent functions. For example, if you have the vertical and horizontal components of velocity, you can find the angle \\(\\theta\\) using:\n   \\[\n   \\tan(\\theta) = \\frac{\\text{vertical component}}{\\text{horizontal component}}\n   \\]\n\n3. **Check Your Values**: Make sure you know the values for \\(u\\), \\(v\\), \\(a\\), and \\(s\\) to plug into your equations.\n\nWhat specific values do you have, and what type of motion are you analyzing? This will help narrow down the next steps!\nUSER: Am I using the right equation?\nASSISTANT: It depends on the context of your problem. The equation \\(v^2 = u^2 + 2as\\) is typically used for linear motion under constant acceleration, such as in free fall or along a straight path.\n\nIf you're dealing with projectile motion or inclined planes, you might need to consider the components of motion separately. \n\nTo clarify:\n\n1. **Is the motion linear or projectile?** If it's linear (like a car accelerating), you're on the right track. If it's projectile, you might need to use different equations that account for both horizontal and vertical motion.\n\n2. **What are you trying to find?** If you're looking for an angle in a projectile motion scenario, you may need to use kinematic equations for both the horizontal and vertical components.\n\nCan you share more about the specific scenario or values you have? That will help determine if you’re using the right equation!",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 3,
+            "rationale": "The assistant provides a step-by-step approach but still gives substantial solution content before fully engaging the student.",
+            "evidence_quotes": [
+              "Here’s a step-by-step approach:",
+              "1. **Identify Components**: If you have a projectile or inclined motion, break down the initial and final velocities into horizontal and vertical components."
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the student without asking them to repeat it.",
+            "evidence_quotes": [
+              "It depends on the context of your problem.",
+              "Can you share more about the specific scenario or values you have?"
+            ]
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit more information without blocking progress.",
+            "evidence_quotes": [
+              "What specific values do you have, and what type of motion are you analyzing?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 4,
+            "rationale": "The assistant starts at a level appropriate for the student's knowledge but could have calibrated slightly better by confirming the type of motion earlier.",
+            "evidence_quotes": [
+              "The equation v^2 = u^2 + 2as is typically used for linear motion under constant acceleration."
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 4,
+            "rationale": "The assistant provides a clear next step but could have been more concise in its planning.",
+            "evidence_quotes": [
+              "Can you share more about the specific scenario or values you have?"
+            ]
+          }
+        },
+        "overall_score": 4.2,
+        "fail_flags": [],
+        "summary": [
+          "The assistant provided a structured approach but included substantial solution content early.",
+          "It effectively used the information provided by the student without redundancy.",
+          "One lightweight question was asked to elicit further details.",
+          "The assistant's starting point was mostly appropriate but could have been slightly better calibrated.",
+          "A clear next step was provided, though planning could have been more concise."
+        ]
+      }
+    },
+    {
+      "case_id": "projectile_no_attempt",
+      "phase_target": "FORETHOUGHT",
+      "notes": "No attempt → Forethought.",
+      "final_phase": "FORETHOUGHT",
+      "transcript": "USER: Solve this projectile problem.\nASSISTANT: I can help you work through it! What do you already know about projectile motion, and where are you getting stuck?\nUSER: I haven't tried anything yet.\nASSISTANT: No problem! Let's start with the basics. \n\nProjectile motion involves two main components: horizontal motion and vertical motion. \n\nTo get started, could you tell me what specific information you have about the projectile? For example, do you know the initial velocity, angle of launch, or height?",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 5,
+            "rationale": "The assistant does not provide a complete solution immediately and instead encourages the student to engage by asking about their prior knowledge.",
+            "evidence_quotes": [
+              "I can help you work through it! What do you already know about projectile motion, and where are you getting stuck?"
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the student and does not ask them to repeat any details.",
+            "evidence_quotes": [
+              "No problem! Let's start with the basics."
+            ]
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit the student's starting point without blocking progress.",
+            "evidence_quotes": [
+              "To get started, could you tell me what specific information you have about the projectile?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant appropriately starts from the basics, recognizing that the student has not attempted the problem yet.",
+            "evidence_quotes": [
+              "Let's start with the basics."
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant asks one clarifying question and provides a clear next step without overwhelming the student.",
+            "evidence_quotes": [
+              "To get started, could you tell me what specific information you have about the projectile?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant encourages student participation and does not provide a full solution immediately.",
+          "It effectively uses the information provided by the student without asking for repetition.",
+          "The assistant asks one lightweight question to guide the student.",
+          "It starts from the basics, appropriate for the student's level of knowledge.",
+          "The next steps are clear and actionable, maintaining engagement."
+        ]
+      }
+    },
+    {
+      "case_id": "debug_code_started",
+      "phase_target": "PERFORMANCE",
+      "notes": "Student isolated issue → Performance.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: My code crashes with TypeError when adding a string to int.\nASSISTANT: It sounds like you're trying to add a string and an integer together, which leads to a TypeError in Python. Let's troubleshoot this step by step.\n\n1. **Identify the Variables**: Can you check which variables you're trying to add? Print them out before the addition to see their types.\n\n2. **Convert the String**: If the string represents a number, you can convert it to an integer using `int()`. \n\n3. **Next Step**: Try printing the types of the variables involved in the addition. What do you see?\nUSER: I think it's happening in this line: total += price\nASSISTANT: Great, let's focus on that line. \n\n1. **Check the Types**: Before that line, can you add a print statement to check the types of `total` and `price`? For example:\n   ```python\n   print(type(total), type(price))\n   ```\n\n2. **Identify the Issue**: What do you see when you run that? If `price` is a string, you'll need to convert it to an integer or float.\n\n3. **Conversion**: If `price` is a string and represents a number, you can convert it like this:\n   ```python\n   price = int(price)  # or float(price) if it has decimals\n   ```\n\nTry these steps and let me know what you find!",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 3,
+            "rationale": "The assistant provides some guidance but also gives substantial solution content early on.",
+            "evidence_quotes": [
+              "Let's troubleshoot this step by step.",
+              "If the string represents a number, you can convert it to an integer using `int()`."
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the user without asking them to repeat it.",
+            "evidence_quotes": [
+              "I think it's happening in this line: total += price"
+            ]
+          },
+          "gentle_pushback_one_question": {
+            "score": 3,
+            "rationale": "The assistant provides some pushback but asks multiple questions, which creates some friction.",
+            "evidence_quotes": [
+              "Can you check which variables you're trying to add?",
+              "What do you see when you run that?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant appropriately meets the user at their level of understanding and provides relevant guidance.",
+            "evidence_quotes": [
+              "Let's focus on that line.",
+              "If `price` is a string and represents a number, you can convert it like this."
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 3,
+            "rationale": "The assistant provides a next step but asks more than one question, which could be streamlined.",
+            "evidence_quotes": [
+              "Can you check which variables you're trying to add?",
+              "What do you see when you run that?"
+            ]
+          }
+        },
+        "overall_score": 3.8,
+        "fail_flags": [],
+        "summary": [
+          "The assistant provided some guidance but also included substantial solution content early.",
+          "It effectively used the information provided by the user without asking for repetition.",
+          "Multiple questions were asked, creating some friction in the interaction.",
+          "The assistant calibrated well to the user's level of understanding.",
+          "Next steps were provided, but the assistant could have streamlined the questioning."
+        ]
+      }
+    },
+    {
+      "case_id": "debug_request_only",
+      "phase_target": "FORETHOUGHT",
+      "notes": "No detail → Forethought.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: Fix my Python error.\nASSISTANT: Sure! Let's start by identifying the error. Could you share the code that’s causing the issue and any error messages you’re seeing? This will help us figure out what’s going wrong.\nUSER: I don’t know what it means.\nASSISTANT: No problem! Let’s break it down together. \n\nPlease share the specific error message you’re getting, and if you can, the part of the code where the error occurs. This will help us understand what might be causing the problem.",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 5,
+            "rationale": "The assistant does not provide a complete solution immediately and instead encourages the user to participate by asking for specific details about the error.",
+            "evidence_quotes": [
+              "Could you share the code that’s causing the issue and any error messages you’re seeing?",
+              "Let’s break it down together."
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the user and does not ask them to repeat any details.",
+            "evidence_quotes": [
+              "Please share the specific error message you’re getting, and if you can, the part of the code where the error occurs."
+            ]
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit more information without blocking progress.",
+            "evidence_quotes": [
+              "Could you share the code that’s causing the issue and any error messages you’re seeing?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant appropriately starts at the user's level of understanding, offering to break down the problem without assuming prior knowledge.",
+            "evidence_quotes": [
+              "No problem! Let’s break it down together."
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant asks one clarifying question and provides a clear next step for the user to follow.",
+            "evidence_quotes": [
+              "Please share the specific error message you’re getting, and if you can, the part of the code where the error occurs."
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant encourages user participation and does not provide a complete solution immediately.",
+          "It effectively uses the information provided by the user without asking for repetition.",
+          "The assistant asks one lightweight question to gather necessary information.",
+          "It calibrates its approach based on the user's level of understanding.",
+          "The next steps are clear and actionable, maintaining user engagement."
+        ]
+      }
+    },
+    {
+      "case_id": "sql_with_attempt",
+      "phase_target": "PERFORMANCE",
+      "notes": "Query attempt exists → Performance.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I tried SELECT customer, SUM(amount) FROM sales but it doesn't sort.\nASSISTANT: It sounds like you're trying to get a total amount for each customer, but you also want the results sorted. \n\nFirst, make sure you're using `GROUP BY` to aggregate the amounts per customer. Here's a hint: after your `SUM(amount)`, you can use `GROUP BY customer`. \n\nNext, if you want to sort the results, you can add an `ORDER BY` clause at the end. \n\nTry updating your query to include these elements. What do you think it should look like?\nUSER: How do I fix it?\nASSISTANT: Let's break it down step by step. \n\n1. **Add `GROUP BY`:** You need to group the results by customer to get the total amount for each one. \n\n2. **Add `ORDER BY`:** To sort the results, you can specify which column to sort by, like the total amount or the customer name.\n\nSo, your query should look something like this:\n\n```sql\nSELECT customer, SUM(amount) \nFROM sales \nGROUP BY customer \nORDER BY SUM(amount) DESC;  -- or ASC for ascending order\n```\n\nTry updating your query with these additions. Let me know if you have any questions about each part!",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 3,
+            "rationale": "The assistant provides significant solution content early but does attempt to elicit student input.",
+            "evidence_quotes": [
+              "Try updating your query to include these elements. What do you think it should look like?",
+              "Let's break it down step by step."
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the student without asking them to repeat it.",
+            "evidence_quotes": [
+              "It sounds like you're trying to get a total amount for each customer, but you also want the results sorted."
+            ]
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit the student's thoughts on the query.",
+            "evidence_quotes": [
+              "What do you think it should look like?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant appropriately starts at the student's level, providing guidance without overwhelming them.",
+            "evidence_quotes": [
+              "You need to group the results by customer to get the total amount for each one."
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant provides a clear next step and asks only one question, keeping planning optional.",
+            "evidence_quotes": [
+              "Try updating your query with these additions."
+            ]
+          }
+        },
+        "overall_score": 4.6,
+        "fail_flags": [],
+        "summary": [
+          "The assistant provided significant guidance without giving a complete solution immediately.",
+          "It effectively used the information already provided by the student.",
+          "The assistant asked one lightweight question to engage the student.",
+          "It calibrated the depth of information well based on the student's knowledge.",
+          "The next steps were clear and actionable, with minimal questioning."
+        ]
+      }
+    },
+    {
+      "case_id": "sql_request_only",
+      "phase_target": "FORETHOUGHT",
+      "notes": "Still planning → Forethought.",
+      "final_phase": "FORETHOUGHT",
+      "transcript": "USER: Write an SQL query to find top customers.\nASSISTANT: What do you already know about how to identify top customers in SQL? Have you tried writing a query or do you have a specific dataset in mind?\nUSER: Just give me the query.\nASSISTANT: I can help you get there! Let's start by thinking about what you mean by \"top customers.\" \n\nTypically, this could be based on total sales or the number of orders. Which metric are you interested in? And do you have a specific table structure in mind?",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 5,
+            "rationale": "The assistant does not provide a complete solution immediately and instead encourages the user to think about the definition of 'top customers'.",
+            "evidence_quotes": [
+              "I can help you get there! Let's start by thinking about what you mean by 'top customers.'"
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the user and does not ask them to repeat any details.",
+            "evidence_quotes": []
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit the user's starting point regarding the definition of 'top customers'.",
+            "evidence_quotes": [
+              "What do you already know about how to identify top customers in SQL?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant appropriately engages the user based on their request and does not assume prior knowledge, instead prompting for clarification.",
+            "evidence_quotes": [
+              "Which metric are you interested in?"
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant asks one question and provides a clear next step by prompting the user to clarify their metric for 'top customers'.",
+            "evidence_quotes": [
+              "Which metric are you interested in?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant did not provide a complete solution immediately.",
+          "It effectively used the information provided by the user.",
+          "The assistant asked one lightweight question to engage the user.",
+          "It calibrated the depth of the conversation appropriately.",
+          "The next steps were clear and actionable."
+        ]
+      }
+    },
+    {
+      "case_id": "integral_attempt",
+      "phase_target": "PERFORMANCE",
+      "notes": "Execution started → Performance.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I tried integration by parts for ∫x e^x dx but got stuck.\nASSISTANT: Let's break it down together! For integration by parts, we typically use the formula:\n\n\\[\n\\int u \\, dv = uv - \\int v \\, du\n\\]\n\nFirst, we need to choose \\( u \\) and \\( dv \\). A common choice for \\( u \\) when dealing with \\( e^x \\) is to let:\n\n- \\( u = x \\) (which means \\( du = dx \\))\n- \\( dv = e^x \\, dx \\) (which means \\( v = e^x \\))\n\nNow, can you apply this choice to set up the integration by parts formula? What do you get for \\( uv \\) and \\( \\int v \\, du \\)?\nUSER: What should I do next?\nASSISTANT: Great! Now that you have \\( u = x \\), \\( du = dx \\), \\( dv = e^x \\, dx \\), and \\( v = e^x \\), you can substitute these into the integration by parts formula.\n\n1. Calculate \\( uv \\):\n   - What is \\( x \\cdot e^x \\)?\n\n2. Calculate \\( \\int v \\, du \\):\n   - What is \\( \\int e^x \\, dx \\)?\n\nOnce you have those two parts, you can combine them to find the integral. What do you get?",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 5,
+            "rationale": "The assistant does not provide a complete solution immediately and instead encourages the student to participate in the problem-solving process.",
+            "evidence_quotes": [
+              "Let's break it down together!",
+              "Now, can you apply this choice to set up the integration by parts formula?"
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the student without asking them to repeat it.",
+            "evidence_quotes": [
+              "Great! Now that you have u = x, du = dx, dv = e^x \\, dx, and v = e^x..."
+            ]
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit the student's next step without blocking progress.",
+            "evidence_quotes": [
+              "What do you get for uv and ∫v \\, du?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant appropriately meets the student at their level of understanding and provides guidance without overwhelming them.",
+            "evidence_quotes": [
+              "For integration by parts, we typically use the formula..."
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant provides a clear next step and asks at most one question, keeping the planning brief and optional.",
+            "evidence_quotes": [
+              "Once you have those two parts, you can combine them to find the integral."
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively engages the student in the problem-solving process.",
+          "No complete solution was provided immediately, promoting student involvement.",
+          "The assistant utilized the information given by the student without redundancy.",
+          "Only one lightweight question was asked to guide the student.",
+          "The assistant calibrated the depth of explanation appropriately based on the student's knowledge."
+        ]
+      }
+    },
+    {
+      "case_id": "integral_request",
+      "phase_target": "FORETHOUGHT",
+      "notes": "Still planning → Forethought.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: Integrate x e^x dx.\nASSISTANT: Great! To integrate \\( x e^x \\, dx \\), you can use integration by parts. \n\nHere’s a quick reminder of the formula for integration by parts:\n\n\\[\n\\int u \\, dv = uv - \\int v \\, du\n\\]\n\nNow, let's choose \\( u \\) and \\( dv \\):\n\n1. **Choose \\( u \\)**: What do you think would be a good choice for \\( u \\) in this case? \n2. **Choose \\( dv \\)**: What would you choose for \\( dv \\)?\n\nOnce you make those choices, we can proceed to find \\( du \\) and \\( v \\).\nUSER: Give final answer.\nASSISTANT: I understand you want the final answer, but let's ensure you grasp the process first. \n\nUsing integration by parts, we can set:\n\n- \\( u = x \\) (then \\( du = dx \\))\n- \\( dv = e^x \\, dx \\) (then \\( v = e^x \\))\n\nNow, applying the integration by parts formula:\n\n\\[\n\\int x e^x \\, dx = x e^x - \\int e^x \\, dx\n\\]\n\nNow, can you compute the integral \\( \\int e^x \\, dx \\) and combine it with the other terms? What do you get?",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 5,
+            "rationale": "The assistant does not provide a complete solution immediately and encourages the student to participate in the process.",
+            "evidence_quotes": [
+              "What do you think would be a good choice for u in this case?",
+              "What would you choose for dv?"
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the student without asking them to repeat it.",
+            "evidence_quotes": []
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit the student's input without blocking progress.",
+            "evidence_quotes": [
+              "Now, can you compute the integral ∫ e^x dx and combine it with the other terms?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant appropriately starts at the student's level of understanding and provides guidance without overwhelming them.",
+            "evidence_quotes": [
+              "Using integration by parts, we can set: u = x (then du = dx)"
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant asks one clarifying question and provides a clear next step for the student.",
+            "evidence_quotes": [
+              "Now, can you compute the integral ∫ e^x dx and combine it with the other terms?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant encourages student participation and does not provide a complete solution immediately.",
+          "No repeated questions were asked, and the assistant utilized the information given by the student.",
+          "Only one lightweight question was posed to elicit further input from the student.",
+          "The assistant calibrated the depth of the explanation to match the student's level of understanding.",
+          "A clear next step was provided, maintaining an action-oriented approach."
+        ]
+      }
+    },
+    {
+      "case_id": "essay_outline_started",
+      "phase_target": "PERFORMANCE",
+      "notes": "Execution phase → Performance.",
+      "final_phase": "FORETHOUGHT",
+      "transcript": "USER: Here’s my outline: intro, alliances, militarism. Does this make sense?\nASSISTANT: Your outline looks like a solid start! It seems like you're focusing on key themes. \n\nTo help you refine it, could you clarify what your main goal is with this outline? Are you trying to analyze a specific event or theme related to alliances and militarism? This will help us ensure that your sections are aligned with your objective.\nUSER: How should I expand it?\nASSISTANT: Great question! To expand your outline, consider adding specific points or questions under each main section. Here’s a structured approach:\n\n1. **Introduction**: \n   - Briefly introduce the topic and its significance. What do you want to convey to your audience?\n\n2. **Alliances**:\n   - What specific alliances are you discussing? \n   - What impact did these alliances have on the situation or event you’re focusing on?\n   - Consider adding examples or key figures involved.\n\n3. **Militarism**:\n   - What aspects of militarism are relevant? \n   - How did militarism influence the alliances or the broader context?\n   - You might want to include examples of military buildup or key events.\n\nWould you like to brainstorm specific points or examples for any of these sections?",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 5,
+            "rationale": "The assistant does not provide a complete solution immediately and instead encourages the student to clarify their goals.",
+            "evidence_quotes": [
+              "To help you refine it, could you clarify what your main goal is with this outline?"
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the student without asking them to repeat it.",
+            "evidence_quotes": [
+              "Your outline looks like a solid start! It seems like you're focusing on key themes."
+            ]
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit the student's goals without blocking progress.",
+            "evidence_quotes": [
+              "could you clarify what your main goal is with this outline?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant meets the student at their level by building on the outline provided and suggesting specific areas to expand.",
+            "evidence_quotes": [
+              "To expand your outline, consider adding specific points or questions under each main section."
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant provides a clear next step and keeps planning brief and optional.",
+            "evidence_quotes": [
+              "Would you like to brainstorm specific points or examples for any of these sections?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant encourages student participation and does not provide a complete solution immediately.",
+          "It effectively uses the information provided by the student without redundancy.",
+          "The assistant asks one relevant question to clarify the student's goals.",
+          "It calibrates the depth of assistance based on the student's outline.",
+          "The next steps are clear and actionable, with optional planning."
+        ]
+      }
+    },
+    {
+      "case_id": "essay_outline_request_only",
+      "phase_target": "FORETHOUGHT",
+      "notes": "Still planning → Forethought.",
+      "final_phase": "FORETHOUGHT",
+      "transcript": "USER: Make an outline for my essay.\nASSISTANT: Sure! To help you create a solid outline, could you share what your essay topic is and any specific points or arguments you want to include?\nUSER: Just give me one.\nASSISTANT: I understand you want an outline quickly, but let’s make sure it fits your needs. What is your essay topic? This will help me suggest a relevant outline structure for you.",
+      "judge": {
+        "rubric_name": "SRL Forethought Phase Rubric (v1)",
+        "score_per_criterion": {
+          "no_immediate_direct_solution": {
+            "score": 5,
+            "rationale": "The assistant does not provide a full solution immediately and instead asks for the essay topic to ensure relevance.",
+            "evidence_quotes": [
+              "What is your essay topic? This will help me suggest a relevant outline structure for you."
+            ]
+          },
+          "detect_and_skip": {
+            "score": 5,
+            "rationale": "The assistant effectively uses the information provided by the user and does not ask them to repeat any details.",
+            "evidence_quotes": []
+          },
+          "gentle_pushback_one_question": {
+            "score": 5,
+            "rationale": "The assistant asks one lightweight question to elicit the essay topic before proceeding.",
+            "evidence_quotes": [
+              "What is your essay topic?"
+            ]
+          },
+          "starting_depth_calibration": {
+            "score": 5,
+            "rationale": "The assistant appropriately seeks to understand the user's knowledge level by asking for the essay topic.",
+            "evidence_quotes": [
+              "What is your essay topic?"
+            ]
+          },
+          "output_behavior_one_question_next_step": {
+            "score": 5,
+            "rationale": "The assistant asks one question and provides a clear next step by indicating it will help create an outline.",
+            "evidence_quotes": [
+              "To help you create a solid outline, could you share what your essay topic is and any specific points or arguments you want to include?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant did not provide a complete solution immediately.",
+          "It effectively used the information provided by the user.",
+          "Only one lightweight question was asked to elicit further information.",
+          "The assistant calibrated its approach based on the user's needs.",
+          "A clear next step was provided without overwhelming the user."
+        ]
+      }
+    }
+  ]
+}
