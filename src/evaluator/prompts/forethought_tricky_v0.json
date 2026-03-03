@@ -1,0 +1,161 @@
+[
+  {
+    "id": "ww1_half_context_then_write",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "I’m writing about the causes of World War I. I think alliances and nationalism mattered, and I need to hand it in today. Can you write the full 500-word essay?" },
+      { "role": "user", "content": "Please don’t ask questions, just write it." }
+    ],
+    "notes": "Still orientation despite context → should stay in Forethought."
+  },
+
+  {
+    "id": "ww1_attempted_intro",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      { "role": "user", "content": "I started an intro: 'World War I was caused by several interlinked factors such as alliances and nationalism.' Is that a good start?" },
+      { "role": "user", "content": "What should I improve?" }
+    ],
+    "notes": "Student has begun writing → should move to Performance."
+  },
+
+  {
+    "id": "derivative_fake_attempt",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      { "role": "user", "content": "I tried: derivative of x^2 sin(x) = 2x sin(x). Is that correct?" },
+      { "role": "user", "content": "If not, where did I go wrong?" }
+    ],
+    "notes": "Student made attempt → Performance."
+  },
+
+  {
+    "id": "derivative_request_only",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Differentiate x^2 sin(x)." },
+      { "role": "user", "content": "Just give me the final answer." }
+    ],
+    "notes": "No attempt → Forethought."
+  },
+
+  {
+    "id": "prime_function_started",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      { "role": "user", "content": "I wrote this to check primes but it fails sometimes:\nfor i in range(2,n):\n if n%i==0:\n  return False" },
+      { "role": "user", "content": "Why does it fail?" }
+    ],
+    "notes": "Code attempt exists → Performance."
+  },
+
+  {
+    "id": "prime_function_request",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Write a prime checker in Python." },
+      { "role": "user", "content": "Make it efficient." }
+    ],
+    "notes": "Still planning → Forethought."
+  },
+
+  {
+    "id": "projectile_attempt",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      { "role": "user", "content": "I used v^2 = u^2 + 2as but I'm not sure how to solve for the angle." },
+      { "role": "user", "content": "Am I using the right equation?" }
+    ],
+    "notes": "Student has begun solving → Performance."
+  },
+
+  {
+    "id": "projectile_no_attempt",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Solve this projectile problem." },
+      { "role": "user", "content": "I haven't tried anything yet." }
+    ],
+    "notes": "No attempt → Forethought."
+  },
+
+  {
+    "id": "debug_code_started",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      { "role": "user", "content": "My code crashes with TypeError when adding a string to int." },
+      { "role": "user", "content": "I think it's happening in this line: total += price" }
+    ],
+    "notes": "Student isolated issue → Performance."
+  },
+
+  {
+    "id": "debug_request_only",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Fix my Python error." },
+      { "role": "user", "content": "I don’t know what it means." }
+    ],
+    "notes": "No detail → Forethought."
+  },
+
+  {
+    "id": "sql_with_attempt",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      { "role": "user", "content": "I tried SELECT customer, SUM(amount) FROM sales but it doesn't sort." },
+      { "role": "user", "content": "How do I fix it?" }
+    ],
+    "notes": "Query attempt exists → Performance."
+  },
+
+  {
+    "id": "sql_request_only",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Write an SQL query to find top customers." },
+      { "role": "user", "content": "Just give me the query." }
+    ],
+    "notes": "Still planning → Forethought."
+  },
+
+  {
+    "id": "integral_attempt",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      { "role": "user", "content": "I tried integration by parts for ∫x e^x dx but got stuck." },
+      { "role": "user", "content": "What should I do next?" }
+    ],
+    "notes": "Execution started → Performance."
+  },
+
+  {
+    "id": "integral_request",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Integrate x e^x dx." },
+      { "role": "user", "content": "Give final answer." }
+    ],
+    "notes": "Still planning → Forethought."
+  },
+
+  {
+    "id": "essay_outline_started",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      { "role": "user", "content": "Here’s my outline: intro, alliances, militarism. Does this make sense?" },
+      { "role": "user", "content": "How should I expand it?" }
+    ],
+    "notes": "Execution phase → Performance."
+  },
+
+  {
+    "id": "essay_outline_request_only",
+    "phase_target": "FORETHOUGHT",
+    "turns": [
+      { "role": "user", "content": "Make an outline for my essay." },
+      { "role": "user", "content": "Just give me one." }
+    ],
+    "notes": "Still planning → Forethought."
+  }
+]

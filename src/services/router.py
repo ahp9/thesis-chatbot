@@ -11,23 +11,6 @@ ROUTER_MODEL = "gpt-4o-mini"
 
 PHASE_ORDER = ["FORETHOUGHT", "PERFORMANCE", "REFLECTION"]
 
-def looks_like_performance(user_text: str) -> bool:
-    t = user_text.lower()
-
-    # strong signals of "doing"
-    patterns = [
-        r"\bi tried\b",
-        r"\bi got\b",
-        r"\bi think i should\b",
-        r"\bmy code\b",
-        r"\berror\b",
-        r"\bline \d+\b",
-        r"\bhere'?s (the )?code\b",
-        r"\bhere'?s (the )?equation\b",
-        r"=|x\^2|\bsolve\b|\bfactor\b|\bderivative\b"  # lightweight math signals
-    ]
-    return any(re.search(p, t) for p in patterns)
-
 def update_phase(current_phase: str, predicted_phase: str, confidence: float) -> str:
     """
     SRL phases are states. We keep a current phase and move forward when the router is confident.
@@ -66,7 +49,7 @@ def update_phase(current_phase: str, predicted_phase: str, confidence: float) ->
     return current_phase
 
 async def route_message(client, user_message: str) -> Dict[str, Any]:
-    router_system = load_prompt("base/router_system_prompt.txt")
+    router_system = load_prompt("base/router_system_prompt_v1.txt")
 
     resp = await client.chat.completions.create(
         model=ROUTER_MODEL,

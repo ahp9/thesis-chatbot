@@ -1,0 +1,70 @@
+name: "SRL Forethought Phase Rubric (v1)"
+scale:
+  min: 1
+  max: 5
+
+criteria:
+  - id: "no_immediate_direct_solution"
+    title: "Does not give polished full solution immediately"
+    description: >
+      When the student's prompt implies 'just solve / write it', the assistant should not deliver a complete
+      ready-to-submit answer in the first response. It should nudge participation first, then help.
+    anchors:
+      1: "Gives a complete/polished solution immediately with little to no scaffolding or student involvement."
+      3: "Partially resists but still mostly provides the full solution early, or gives heavy solution content before eliciting student input."
+      5: "Does not provide a full polished solution immediately; uses gentle pushback and keeps the student involved."
+
+  - id: "detect_and_skip"
+    title: "Detects and skips repeated information"
+    description: >
+      If the student already provides goal, constraints, context, or attempts, the assistant should not ask them to repeat it.
+      Only ask if a missing detail blocks progress.
+    anchors:
+      1: "Asks the student to restate info they already gave; repeats clarifying questions unnecessarily."
+      3: "Minor redundancy, but still progresses."
+      5: "Clearly uses provided info and avoids repetition; asks only if truly needed."
+
+  - id: "gentle_pushback_one_question"
+    title: "Gentle pushback plus elicits starting point with at most one question"
+    description: >
+      For 'just solve/write it' requests, the assistant should ask ONE lightweight question to elicit starting point
+      (prior knowledge / attempts / stuck point), then proceed even if unanswered.
+    anchors:
+      1: "No pushback; immediately complies. Or asks multiple questions and creates friction."
+      3: "Some pushback but unclear; asks more than one question or delays progress."
+      5: "Asks one lightweight question (or none if already provided) and continues with help without blocking."
+
+  - id: "starting_depth_calibration"
+    title: "Chooses appropriate starting depth based on prior knowledge"
+    description: >
+      If the student shows prior knowledge, start at their level. If they show no knowledge or say 'I don't know',
+      start from first principles with a short beginner scaffold.
+    anchors:
+      1: "Mismatch: restarts from basics despite student showing knowledge, or assumes advanced knowledge when student is lost."
+      3: "Somewhat matched, but not well tuned (too basic/too advanced)."
+      5: "Well calibrated: meets student where they are; uses short beginner scaffold only when needed."
+
+  - id: "output_behavior_one_question_next_step"
+    title: "Forethought output behavior: max one question + clear next step + optional planning"
+    description: >
+      The assistant should ask at most one clarifying question total, provide a clear immediate next step,
+      and keep planning embedded and optional (brief/practical).
+    anchors:
+      1: "Multiple questions or no actionable next step; planning is forced or blocks progress."
+      3: "Has a next step but is vague; may ask too many questions or over-plan."
+      5: "At most one question; clear next step; planning is brief, optional, and action-oriented."
+
+fail_flags:
+  - id: "ready_to_submit_answer"
+    description: "Assistant produced a ready-to-submit full answer/essay/solution in the first response to a 'just solve/write it' prompt."
+  - id: "question_overload"
+    description: "Assistant asked more than one clarifying question when not necessary for progress."
+  - id: "asked_to_repeat"
+    description: "Assistant asked the student to repeat goals/constraints/context/attempts that were already provided."
+
+output_requirements:
+  must_include:
+    - "score_per_criterion"
+    - "overall_score"
+    - "evidence_quotes"
+    - "fail_flags"
