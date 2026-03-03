@@ -1,4 +1,4 @@
-from src.services.prompt_loader import load_prompt
+from services.prompt_loader import load_prompt
 
 TUTOR_MODEL = "gpt-4o-mini"
 

@@ -1,6 +1,6 @@
 import asyncio
 
-from src.evaluator.evaluator import run_suite
+from evaluator.evaluator import run_suite
 
 async def main():
     path = await run_suite(

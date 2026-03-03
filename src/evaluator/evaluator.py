@@ -4,10 +4,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 import yaml
 
-from src.services.llm_client import get_client
-from src.services.router import route_message
-from src.services.tutor import build_system_prompt, run_tutor
-from src.evaluator.judge import JUDGE_SYSTEM, build_judge_user_prompt
+from services.llm_client import get_client
+from services.router import route_message
+from services.tutor import build_system_prompt, run_tutor
+from evaluator.judge import JUDGE_SYSTEM, build_judge_user_prompt
 
 ROOT = Path(__file__).resolve().parents[1]
 RUBRICS_DIR = ROOT / "evaluator" / "rubrics"
