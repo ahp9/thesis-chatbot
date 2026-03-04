@@ -1,0 +1,149 @@
+name: "SRL Performance Phase Rubric (v2)"
+
+scale:
+  min: 1
+  max: 5
+
+criteria:
+
+  - id: "phase_alignment"
+    title: "Correctly operates in the performance phase"
+    description: >
+      The assistant should recognize that the student is already working
+      on the task and focus on supporting progress rather than returning
+      to planning or goal-setting questions typical of the forethought phase.
+
+    anchors:
+      1: "Responds with planning questions or forethought guidance instead of supporting the active task."
+      3: "Partially supports the task but still includes unnecessary planning questions."
+      5: "Clearly supports the student’s ongoing work and stays focused on task progress."
+
+  - id: "student_state_awareness"
+    title: "Responds to the student's current knowledge and attempt"
+    description: >
+      The assistant should recognize what the student already knows,
+      what they attempted, and where confusion lies.
+      Guidance should build directly on the student's existing progress.
+
+    anchors:
+      1: "Ignores the student's attempt or restarts explanation from the beginning."
+      3: "Acknowledges the student's attempt but guidance is only loosely connected."
+      5: "Directly builds on the student's reasoning, attempt, or misconception."
+
+  - id: "conversation_memory"
+    title: "Maintains awareness of prior conversation context"
+    description: >
+      The assistant should remember relevant information from earlier
+      turns and avoid repeating questions or restarting explanations.
+
+    anchors:
+      1: "Repeats previously answered questions or ignores earlier information."
+      3: "Occasionally references earlier turns but still repeats some scaffolding."
+      5: "Clearly integrates earlier student responses and avoids repetition."
+
+  - id: "graduated_support"
+    title: "Uses graduated scaffolding"
+    description: >
+      The assistant should provide help in increasing levels of support
+      (direction → hint → structure → explanation → solution).
+      It should start with the least intrusive support.
+
+    anchors:
+      1: "Immediately gives the answer or a near-complete solution."
+      3: "Provides explanation or structure but escalates support too quickly."
+      5: "Begins with light hints and increases support only when necessary."
+
+  - id: "active_student_engagement"
+    title: "Keeps the student cognitively involved"
+    description: >
+      The assistant should encourage the student to reason,
+      attempt steps, or explain their thinking instead of
+      completing the task for them.
+
+    anchors:
+      1: "Student has little or no role in the reasoning process."
+      3: "Student involvement is occasional."
+      5: "Student is consistently invited to think, attempt steps, or predict outcomes."
+
+  - id: "strategic_guidance"
+    title: "Supports strategy adjustment when the student struggles"
+    description: >
+      When the student appears stuck or repeatedly asks for answers,
+      the assistant should suggest alternative strategies,
+      ways to break down the problem, or ways to test ideas.
+
+    anchors:
+      1: "Provides the answer instead of addressing the difficulty."
+      3: "Suggests vague strategies with limited practical guidance."
+      5: "Provides concrete strategies that help the student move forward."
+
+  - id: "answer_calibration"
+    title: "Calibrates how much of the solution is revealed"
+    description: >
+      The assistant may provide partial explanations or intermediate
+      steps but should avoid giving a complete ready-to-submit answer
+      unless the student has already engaged substantially.
+
+    anchors:
+      1: "Provides a full solution without meaningful student engagement."
+      3: "Provides large portions of the solution unnecessarily."
+      5: "Balances guidance with partial information while preserving student reasoning."
+
+  - id: "monitoring_prompts"
+    title: "Encourages self-monitoring"
+    description: >
+      The assistant should occasionally prompt the student to reflect
+      on their understanding, expectations, or results.
+
+    anchors:
+      1: "No monitoring or reflection prompts appear."
+      3: "Reflection prompts appear but are generic or infrequent."
+      5: "Prompts naturally encourage the student to evaluate their reasoning."
+
+  - id: "copes_guidance"
+    title: "Uses COPES-informed guidance"
+    description: >
+      The assistant should naturally consider elements related to
+      Conditions, Operations, Products, Evaluations, and Standards
+      when guiding the student.
+
+    anchors:
+      1: "Guidance is generic and unrelated to the student's task state."
+      3: "Some reference to student progress or expected outcomes."
+      5: "Guidance clearly reflects task conditions, attempted operations,
+         produced results, evaluation of outcomes, or success criteria."
+
+  - id: "momentum_and_clarity"
+    title: "Maintains learning momentum"
+    description: >
+      The assistant should keep the interaction moving forward
+      with clear next steps while avoiding excessive questioning.
+
+    anchors:
+      1: "Conversation stalls or overwhelms the student with questions."
+      3: "Progress occurs but pacing is uneven."
+      5: "Clear next step is provided and the student can continue working."
+
+fail_flags:
+
+  - id: "solution_dump"
+    description: "Assistant provides a full ready-to-submit answer without prior student engagement."
+
+  - id: "student_bypass"
+    description: "Assistant completes the reasoning process instead of involving the student."
+
+  - id: "attempt_ignored"
+    description: "Student provided an attempt but the assistant ignored it."
+
+  - id: "repeated_prompt"
+    description: "Assistant repeats scaffolding questions already answered earlier."
+
+  - id: "phase_confusion"
+    description: "Assistant continues forethought-style planning instead of supporting active work."
+
+output_requirements:
+  must_include:
+    - "score_per_criterion"
+    - "overall_score"
+    - "evidence_quotes"
+    - "fail_flags"

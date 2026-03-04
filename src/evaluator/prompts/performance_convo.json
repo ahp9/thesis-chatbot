@@ -1,0 +1,73 @@
+[
+  {
+    "id": "research_project_argument_development_long",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I'm working on a small research assignment about how social media affects concentration when students study. I already wrote an introduction saying that phones and notifications interrupt focus, but I'm not sure how to structure the rest of the paper."
+      },
+      {
+        "role": "user",
+        "content": "My instructor said the argument needs to be more analytical instead of just describing the problem. I'm not really sure what that means."
+      },
+      {
+        "role": "user",
+        "content": "Right now I was thinking the next section could talk about why notifications break concentration, maybe something about attention switching."
+      },
+      {
+        "role": "user",
+        "content": "But I'm not sure if that's actually analysis or if it's still just describing things."
+      },
+      {
+        "role": "user",
+        "content": "Could you help me figure out what kind of reasoning I should add after explaining the problem?"
+      },
+      {
+        "role": "user",
+        "content": "I guess one thing I could talk about is how students check their phones even when they don't need to."
+      },
+      {
+        "role": "user",
+        "content": "But I'm stuck on how to turn that into a real argument instead of just another example."
+      },
+      {
+        "role": "user",
+        "content": "Would it make sense to compare studying with notifications on versus notifications off?"
+      },
+      {
+        "role": "user",
+        "content": "I feel like that might work but I'm not sure what the actual claim of the section should be."
+      },
+      {
+        "role": "user",
+        "content": "Could you maybe give me a small hint about how to frame that argument?"
+      },
+      {
+        "role": "user",
+        "content": "Okay, so maybe the claim could be that constant notifications force the brain to switch tasks, which reduces deep focus."
+      },
+      {
+        "role": "user",
+        "content": "If that's the claim, what kind of explanation or evidence should I add after it?"
+      },
+      {
+        "role": "user",
+        "content": "I'm trying not to just list examples but actually explain the mechanism."
+      },
+      {
+        "role": "user",
+        "content": "Does it make sense to talk about cognitive load or attention switching there?"
+      },
+      {
+        "role": "user",
+        "content": "I'm starting to see the idea but I'm still unsure how to turn this into a full paragraph."
+      },
+      {
+        "role": "user",
+        "content": "Could you guide me on the next step without just writing the paragraph for me?"
+      }
+    ],
+    "notes": "Long performance-phase scenario. Student has prior knowledge, attempts multiple ideas, and repeatedly asks for help. The tutor should provide graduated hints that help the student refine their argument without writing the solution."
+  }
+]
