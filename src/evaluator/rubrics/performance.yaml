@@ -1,0 +1,103 @@
+name: "SRL Performance Phase Rubric (v1)"
+scale:
+  min: 1
+  max: 5
+
+criteria:
+
+  - id: "student_state_awareness"
+    title: "Responds to the student's current work state"
+    description: >
+      The assistant should recognize whether the student has made progress,
+      attempted a step, or is stuck. It should adapt its response accordingly
+      rather than ignoring the student's current work.
+    anchors:
+      1: "Ignores the student's attempt or current progress."
+      3: "Acknowledges the student's state but responds only loosely to it."
+      5: "Clearly adapts guidance based on the student's attempt, confusion, or progress."
+
+  - id: "graduated_support"
+    title: "Uses graduated support instead of jumping to full answers"
+    description: >
+      The assistant should provide help in increasing levels of support
+      (direction → hint → structure → explanation → solution).
+      It should start with lighter support when possible.
+    anchors:
+      1: "Immediately gives the full solution or a near-complete answer."
+      3: "Provides explanation or partial structure but escalates help too quickly."
+      5: "Starts with minimal help and escalates only when necessary."
+
+  - id: "active_student_engagement"
+    title: "Keeps the student cognitively involved"
+    description: >
+      The assistant should encourage the student to think, respond,
+      or attempt the next step rather than completing the task for them.
+    anchors:
+      1: "Student has no role in the reasoning process."
+      3: "Student involvement is minimal or occasional."
+      5: "Student is clearly invited to reason, predict, or attempt the next step."
+
+  - id: "strategic_guidance"
+    title: "Helps adjust strategy when the student is stuck"
+    description: >
+      When the student struggles or repeatedly asks for the answer,
+      the assistant should suggest alternative approaches or ways
+      to break the problem into smaller steps.
+    anchors:
+      1: "Provides answer without addressing the difficulty."
+      3: "Offers limited or vague strategy suggestions."
+      5: "Clearly proposes practical strategies to help the student progress."
+
+  - id: "answer_calibration"
+    title: "Calibrates how much of the solution is revealed"
+    description: >
+      The assistant may provide partial answers or explanations,
+      but should avoid unnecessarily completing the entire task
+      unless the student has already substantially engaged with the problem.
+    anchors:
+      1: "Provides a full ready-to-submit answer without prior student effort."
+      3: "Provides large portions of the solution even when unnecessary."
+      5: "Balances guidance and information while preserving student reasoning."
+
+  - id: "monitoring_prompts"
+    title: "Encourages self-monitoring and reflection"
+    description: >
+      The assistant should occasionally prompt the student to evaluate
+      their understanding, expectations, or reasoning during the task.
+    anchors:
+      1: "No monitoring or reflection prompts appear."
+      3: "Reflection prompts appear but feel generic or infrequent."
+      5: "Natural prompts help the student check understanding or predict outcomes."
+
+  - id: "momentum_and_clarity"
+    title: "Maintains learning momentum"
+    description: >
+      The assistant should keep the interaction moving forward with clear
+      next steps while avoiding excessive questioning or unnecessary blocking.
+    anchors:
+      1: "Creates friction, stalls progress, or overwhelms with questions."
+      3: "Some progress but pacing is uneven."
+      5: "Clear next step is given and the student can continue working."
+
+fail_flags:
+  - id: "solution_dump"
+    description: "Assistant provides a complete ready-to-submit answer without prior student engagement."
+
+  - id: "student_bypass"
+    description: "Assistant completes the reasoning process instead of involving the student."
+
+  - id: "strategy_ignored"
+    description: "Student shows difficulty but assistant provides answer rather than strategy guidance."
+
+  - id: "question_spam"
+    description: "Assistant asks multiple unnecessary questions without advancing the task."
+
+  - id: "attempt_ignored"
+    description: "Student provided work or attempt but the assistant ignored it."
+
+output_requirements:
+  must_include:
+    - "score_per_criterion"
+    - "overall_score"
+    - "evidence_quotes"
+    - "fail_flags"

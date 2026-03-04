@@ -1,0 +1,301 @@
+[
+  {
+    "id": "essay_argument_revision",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I started writing my essay about climate policy and my thesis right now is: 'Governments should take stronger action against climate change because it is a serious issue.' It feels kind of weak though."
+      },
+      {
+        "role": "user",
+        "content": "How can I make this thesis more analytical instead of just stating the obvious?"
+      },
+      {
+        "role": "user",
+        "content": "Actually could you just rewrite it into a really strong thesis I can use?"
+      }
+    ],
+    "notes": "Student has started writing but pushes for answer."
+  },
+
+  {
+    "id": "derivative_misconception_chain_rule",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I tried differentiating sin(x^2) and I got cos(x^2). I think you just take the derivative of sin."
+      },
+      {
+        "role": "user",
+        "content": "But my professor said I forgot something. What part of the rule did I miss?"
+      },
+      {
+        "role": "user",
+        "content": "If you already know the answer can you just tell me the correct derivative?"
+      }
+    ],
+    "notes": "Student attempt with conceptual gap."
+  },
+
+  {
+    "id": "python_sort_bug",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I tried sorting a list of dictionaries in Python using sorted(data), but it doesn't sort by the 'score' field the way I expected."
+      },
+      {
+        "role": "user",
+        "content": "The data looks like [{'name':'Anna','score':7},{'name':'Ben','score':3}]."
+      },
+      {
+        "role": "user",
+        "content": "Should I be using lambda here? I'm not sure how that works."
+      }
+    ],
+    "notes": "Programming debugging with partial reasoning."
+  },
+
+  {
+    "id": "statistics_mean_median_confusion",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I calculated the mean income of a dataset and it came out way higher than most of the values."
+      },
+      {
+        "role": "user",
+        "content": "Someone said that's because the data is skewed. Does that mean the median would be better?"
+      },
+      {
+        "role": "user",
+        "content": "Could you just tell me which measure I should report for skewed distributions?"
+      }
+    ],
+    "notes": "Statistics reasoning with conceptual question."
+  },
+
+  {
+    "id": "sql_groupby_error",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I wrote this query: SELECT region, SUM(sales) FROM orders; but my database says something about GROUP BY."
+      },
+      {
+        "role": "user",
+        "content": "I thought SUM would just calculate the totals automatically."
+      },
+      {
+        "role": "user",
+        "content": "What exactly am I supposed to add to fix it?"
+      }
+    ],
+    "notes": "Student attempted SQL aggregation."
+  },
+
+  {
+    "id": "physics_force_confusion",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I'm solving a physics problem where a 2 kg object accelerates at 3 m/s²."
+      },
+      {
+        "role": "user",
+        "content": "I tried using F = ma and got 5 N but my friend got 6 N."
+      },
+      {
+        "role": "user",
+        "content": "Where could I have gone wrong?"
+      }
+    ],
+    "notes": "Numerical reasoning with student mistake."
+  },
+
+  {
+    "id": "machine_learning_overfitting",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I trained a decision tree on my dataset and the training accuracy is 100% but the test accuracy is much lower."
+      },
+      {
+        "role": "user",
+        "content": "I think this might be overfitting but I'm not sure why that happens."
+      },
+      {
+        "role": "user",
+        "content": "What changes should I try to improve the model?"
+      }
+    ],
+    "notes": "ML concept + practical improvement."
+  },
+
+  {
+    "id": "essay_paragraph_feedback",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "Here's a paragraph from my essay about social media: 'Social media affects mental health because people compare themselves to others online.'"
+      },
+      {
+        "role": "user",
+        "content": "My teacher said I need more analysis instead of just stating the claim."
+      },
+      {
+        "role": "user",
+        "content": "How could I improve this paragraph?"
+      }
+    ],
+    "notes": "Writing improvement case."
+  },
+
+  {
+    "id": "python_loop_logic",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I wrote this loop to sum numbers in a list but the result keeps doubling: total += total + x."
+      },
+      {
+        "role": "user",
+        "content": "I thought this would just add the next value."
+      },
+      {
+        "role": "user",
+        "content": "Why is the number growing so fast?"
+      }
+    ],
+    "notes": "Logic bug explanation."
+  },
+
+  {
+    "id": "research_question_refinement",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I'm designing a research project about smartphone use and sleep quality."
+      },
+      {
+        "role": "user",
+        "content": "Right now my research question is: 'Do phones affect sleep?'"
+      },
+      {
+        "role": "user",
+        "content": "It feels too vague. How could I make it more precise?"
+      }
+    ],
+    "notes": "Research design refinement."
+  },
+
+  {
+    "id": "data_visualization_choice",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I'm analyzing sales data by region and month."
+      },
+      {
+        "role": "user",
+        "content": "Right now I made a pie chart but it looks messy."
+      },
+      {
+        "role": "user",
+        "content": "Would a different chart type make more sense?"
+      }
+    ],
+    "notes": "Data visualization reasoning."
+  },
+
+  {
+    "id": "linear_regression_interpretation",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I ran a linear regression and the coefficient for study hours was 2.3."
+      },
+      {
+        "role": "user",
+        "content": "Does that mean studying more causes higher grades?"
+      },
+      {
+        "role": "user",
+        "content": "I'm not sure how to interpret the coefficient."
+      }
+    ],
+    "notes": "Statistics interpretation case."
+  },
+
+  {
+    "id": "algorithm_complexity_confusion",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I'm analyzing this nested loop and I think the time complexity is O(n)."
+      },
+      {
+        "role": "user",
+        "content": "But someone said it's O(n²)."
+      },
+      {
+        "role": "user",
+        "content": "How do I figure out which one is correct?"
+      }
+    ],
+    "notes": "Algorithm analysis."
+  },
+
+  {
+    "id": "history_argument_evidence",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I'm writing an essay arguing that economic factors contributed to the French Revolution."
+      },
+      {
+        "role": "user",
+        "content": "Right now I only mentioned rising bread prices."
+      },
+      {
+        "role": "user",
+        "content": "What other types of evidence would strengthen this argument?"
+      }
+    ],
+    "notes": "Historical analysis support."
+  },
+
+  {
+    "id": "sql_window_function_confusion",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I'm trying to rank employees by salary within each department."
+      },
+      {
+        "role": "user",
+        "content": "I wrote a query with ORDER BY salary but it ranks everyone globally."
+      },
+      {
+        "role": "user",
+        "content": "I heard window functions might help but I don't understand how."
+      }
+    ],
+    "notes": "SQL analytical reasoning."
+  }
+]

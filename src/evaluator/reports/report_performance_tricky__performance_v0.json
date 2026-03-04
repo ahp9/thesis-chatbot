@@ -1,0 +1,1152 @@
+{
+  "metadata": {
+    "suite_file": "performance_tricky.json",
+    "rubric_file": "performance.yaml",
+    "tutor_type": "SRL Tutor",
+    "base_srl_version": "v1",
+    "forethought_version": "v1",
+    "judge_model": "gpt-4o-mini"
+  },
+  "results": [
+    {
+      "case_id": "essay_argument_revision",
+      "phase_target": "PERFORMANCE",
+      "notes": "Student has started writing but pushes for answer.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I started writing my essay about climate policy and my thesis right now is: 'Governments should take stronger action against climate change because it is a serious issue.' It feels kind of weak though.\nASSISTANT: It's great that you've started your essay! Your thesis is a good starting point, but you're right that it could be stronger and more specific. \n\nTo enhance it, consider these questions:\n- What specific actions should governments take?\n- Why is climate change a serious issue? What are its impacts?\n- Who will benefit from these stronger actions?\n\nTry to incorporate some of these elements into your thesis. For example, you might mention a specific policy or the consequences of inaction. \n\nWhat do you think you could add to make it more compelling?\nUSER: How can I make this thesis more analytical instead of just stating the obvious?\nASSISTANT: To make your thesis more analytical, you can focus on the \"how\" and \"why\" aspects of your argument. Instead of just stating that governments should act, consider framing your thesis around the implications of their actions or the consequences of inaction. \n\nHere are some steps to help you refine it:\n\n1. **Identify Key Issues**: What specific aspects of climate change are most pressing? (e.g., rising sea levels, extreme weather, economic impacts)\n  \n2. **Specify Actions**: What kind of actions should governments take? (e.g., implementing carbon taxes, investing in renewable energy)\n\n3. **Link to Consequences**: Why is it crucial for governments to act? What are the potential outcomes of their actions or lack thereof?\n\nTry combining these elements. For example, you could say something like: \"Governments must implement stringent climate policies, such as carbon pricing and renewable energy investments, to mitigate the severe economic and environmental impacts of climate change, which threaten global stability.\"\n\nWhat do you think about this approach? Would you like to try drafting a revised thesis?\nUSER: Actually could you just rewrite it into a really strong thesis I can use?\nASSISTANT: I can help you refine it! Here’s a stronger thesis based on our discussion:\n\n\"To effectively combat the escalating threats of climate change, governments must adopt comprehensive policies, including aggressive carbon pricing and substantial investments in renewable energy, as these actions are essential for safeguarding economic stability and protecting vulnerable communities worldwide.\"\n\nDoes this resonate with your ideas? If not, we can tweak it further!",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's initial thesis and recognizes the student's concern about its strength, adapting its guidance accordingly.",
+            "evidence_quotes": [
+              "It's great that you've started your essay! Your thesis is a good starting point, but you're right that it could be stronger and more specific."
+            ]
+          },
+          "graduated_support": {
+            "score": 4,
+            "rationale": "The assistant provides a structured approach to refining the thesis but ultimately offers a complete thesis rewrite, which could be seen as jumping to a full answer.",
+            "evidence_quotes": [
+              "Try to incorporate some of these elements into your thesis.",
+              "I can help you refine it!"
+            ]
+          },
+          "active_student_engagement": {
+            "score": 4,
+            "rationale": "The assistant encourages the student to think about how to improve their thesis and invites them to engage with the suggestions, but it also provides a complete thesis.",
+            "evidence_quotes": [
+              "What do you think you could add to make it more compelling?",
+              "What do you think about this approach? Would you like to try drafting a revised thesis?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 4,
+            "rationale": "The assistant suggests practical steps to enhance the thesis but does not fully explore alternative strategies when the student asks for a rewrite.",
+            "evidence_quotes": [
+              "To make your thesis more analytical, you can focus on the 'how' and 'why' aspects of your argument.",
+              "Here are some steps to help you refine it:"
+            ]
+          },
+          "answer_calibration": {
+            "score": 3,
+            "rationale": "The assistant provides a strong thesis as a complete answer, which may not allow the student to engage fully with the reasoning process.",
+            "evidence_quotes": [
+              "Here’s a stronger thesis based on our discussion:"
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 4,
+            "rationale": "The assistant prompts the student to reflect on their ideas and the effectiveness of the thesis, encouraging self-monitoring.",
+            "evidence_quotes": [
+              "Does this resonate with your ideas? If not, we can tweak it further!"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains a clear direction throughout the conversation, providing structured steps and keeping the interaction moving forward.",
+            "evidence_quotes": [
+              "Try combining these elements.",
+              "What do you think about this approach?"
+            ]
+          }
+        },
+        "overall_score": 4.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively acknowledges the student's concerns about their thesis.",
+          "It provides structured guidance but ultimately offers a complete thesis rewrite.",
+          "The assistant encourages student engagement and reflection throughout the process.",
+          "It maintains clear momentum and direction in the conversation.",
+          "Some areas could benefit from more graduated support."
+        ]
+      }
+    },
+    {
+      "case_id": "derivative_misconception_chain_rule",
+      "phase_target": "PERFORMANCE",
+      "notes": "Student attempt with conceptual gap.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I tried differentiating sin(x^2) and I got cos(x^2). I think you just take the derivative of sin.\nASSISTANT: It looks like you're on the right track with differentiating \\( \\sin(x^2) \\), but there's a little more to it because of the chain rule. \n\nWhen you differentiate \\( \\sin(u) \\) where \\( u = x^2 \\), you need to also consider the derivative of \\( u \\). \n\nCan you recall what the derivative of \\( x^2 \\) is? Once you have that, you can apply the chain rule. What do you think the full derivative should be?\nUSER: But my professor said I forgot something. What part of the rule did I miss?\nASSISTANT: It sounds like you might have missed applying the chain rule completely. When you differentiate \\( \\sin(x^2) \\), you need to differentiate the outer function, \\( \\sin(u) \\), and then multiply it by the derivative of the inner function, \\( u = x^2 \\).\n\nSo, you correctly identified that the derivative of \\( \\sin(u) \\) is \\( \\cos(u) \\), but then you also need to multiply by the derivative of \\( u \\). \n\nWhat is the derivative of \\( x^2 \\)? Once you have that, you can combine it with \\( \\cos(x^2) \\) to get the complete derivative.\nUSER: If you already know the answer can you just tell me the correct derivative?\nASSISTANT: I understand wanting to get to the answer quickly, but it's really helpful to work through it together! \n\nSo, if you differentiate \\( \\sin(x^2) \\), you have:\n\n1. The derivative of \\( \\sin(x^2) \\) is \\( \\cos(x^2) \\) (the outer function).\n2. Then you multiply by the derivative of \\( x^2 \\), which is \\( 2x \\).\n\nPutting it all together, the full derivative of \\( \\sin(x^2) \\) is:\n\n\\[\n\\frac{d}{dx} \\sin(x^2) = \\cos(x^2) \\cdot 2x\n\\]\n\nSo, the final answer is \\( 2x \\cos(x^2) \\). Does that make sense?",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current understanding and confusion about the differentiation process.",
+            "evidence_quotes": [
+              "It sounds like you might have missed applying the chain rule completely.",
+              "Can you recall what the derivative of x^2 is?"
+            ]
+          },
+          "graduated_support": {
+            "score": 3,
+            "rationale": "The assistant provides some explanation but escalates to giving the full derivative too quickly.",
+            "evidence_quotes": [
+              "So, if you differentiate sin(x^2), you have:",
+              "Putting it all together, the full derivative of sin(x^2) is:"
+            ]
+          },
+          "active_student_engagement": {
+            "score": 4,
+            "rationale": "The assistant encourages the student to think and respond, but could have involved them more in the reasoning process.",
+            "evidence_quotes": [
+              "What do you think the full derivative should be?",
+              "What is the derivative of x^2?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 4,
+            "rationale": "The assistant suggests a strategy by prompting the student to recall the derivative of x^2, but could have offered more alternative approaches.",
+            "evidence_quotes": [
+              "When you differentiate sin(u) where u = x^2, you need to also consider the derivative of u.",
+              "Can you recall what the derivative of x^2 is?"
+            ]
+          },
+          "answer_calibration": {
+            "score": 3,
+            "rationale": "The assistant provides a complete answer but does so after some engagement, which is somewhat balanced.",
+            "evidence_quotes": [
+              "The final answer is 2x cos(x^2)."
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 4,
+            "rationale": "The assistant prompts the student to reflect on their understanding and reasoning effectively.",
+            "evidence_quotes": [
+              "Does that make sense?"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 4,
+            "rationale": "The assistant maintains a good pace and provides clear next steps, though there is a slight delay in moving forward.",
+            "evidence_quotes": [
+              "So, if you differentiate sin(x^2), you have:"
+            ]
+          }
+        },
+        "overall_score": 3.6,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively acknowledges the student's current understanding.",
+          "It provides some guidance but gives the full answer too quickly.",
+          "The assistant encourages student engagement and reflection.",
+          "It suggests recalling the derivative of x^2 as a strategy.",
+          "Overall, the interaction maintains good momentum and clarity."
+        ]
+      }
+    },
+    {
+      "case_id": "python_sort_bug",
+      "phase_target": "PERFORMANCE",
+      "notes": "Programming debugging with partial reasoning.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I tried sorting a list of dictionaries in Python using sorted(data), but it doesn't sort by the 'score' field the way I expected.\nASSISTANT: It sounds like you're on the right track with using `sorted()`, but you need to specify how you want to sort the dictionaries. Have you tried using the `key` parameter in the `sorted()` function? \n\nYou can use a lambda function to tell Python to sort by the 'score' field. Would you like to try that? If so, what do you think the code might look like?\nUSER: The data looks like [{'name':'Anna','score':7},{'name':'Ben','score':3}].\nASSISTANT: Great! Now that we have the data, you can use the `key` parameter with a lambda function to sort by the 'score' field. \n\nTry this structure: \n\n```python\nsorted_data = sorted(data, key=lambda x: x['score'])\n```\n\nCan you give that a try and see what `sorted_data` looks like? What do you expect the output to be?\nUSER: Should I be using lambda here? I'm not sure how that works.\nASSISTANT: That's a good question! A lambda function is a way to create an anonymous function in Python. In this case, we're using it to define how to extract the 'score' from each dictionary for sorting.\n\nHere's a breakdown:\n\n- `lambda x:` creates a function that takes one argument, `x`.\n- `x['score']` tells the function to return the value of the 'score' key from the dictionary `x`.\n\nSo, when you use `key=lambda x: x['score']`, you're telling `sorted()` to sort the dictionaries based on their 'score' values.\n\nWould you like to try writing that out? If you do, what do you think the output will be after sorting?",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current work and confusion about sorting, adapting its guidance accordingly.",
+            "evidence_quotes": [
+              "It sounds like you're on the right track with using `sorted()`, but you need to specify how you want to sort the dictionaries.",
+              "Great! Now that we have the data, you can use the `key` parameter with a lambda function to sort by the 'score' field."
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant starts with minimal help by suggesting the use of the `key` parameter and only escalates to explaining lambda functions when the student expresses confusion.",
+            "evidence_quotes": [
+              "Have you tried using the `key` parameter in the `sorted()` function?",
+              "A lambda function is a way to create an anonymous function in Python."
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant actively engages the student by asking them to try writing the code and predict the output.",
+            "evidence_quotes": [
+              "Can you give that a try and see what `sorted_data` looks like?",
+              "Would you like to try writing that out? If you do, what do you think the output will be after sorting?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant provides clear explanations and strategies for using the `key` parameter and lambda functions to help the student progress.",
+            "evidence_quotes": [
+              "In this case, we're using it to define how to extract the 'score' from each dictionary for sorting.",
+              "So, when you use `key=lambda x: x['score']`, you're telling `sorted()` to sort the dictionaries based on their 'score' values."
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances guidance and information without providing a complete solution, allowing the student to engage with the problem.",
+            "evidence_quotes": [
+              "Try this structure: sorted_data = sorted(data, key=lambda x: x['score'])",
+              "Can you give that a try and see what `sorted_data` looks like?"
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant prompts the student to reflect on their understanding and predict outcomes, encouraging self-monitoring.",
+            "evidence_quotes": [
+              "What do you think the code might look like?",
+              "If you do, what do you think the output will be after sorting?"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains clear momentum by providing structured guidance and encouraging the student to continue working.",
+            "evidence_quotes": [
+              "Great! Now that we have the data, you can use the `key` parameter with a lambda function to sort by the 'score' field.",
+              "Would you like to try writing that out?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively recognizes the student's current work state.",
+          "It provides graduated support, starting with minimal help.",
+          "The assistant actively engages the student in the problem-solving process.",
+          "It offers strategic guidance to help the student understand the use of lambda functions.",
+          "The interaction maintains clear momentum with prompts for reflection and next steps."
+        ]
+      }
+    },
+    {
+      "case_id": "statistics_mean_median_confusion",
+      "phase_target": "PERFORMANCE",
+      "notes": "Statistics reasoning with conceptual question.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I calculated the mean income of a dataset and it came out way higher than most of the values.\nASSISTANT: It sounds like you might have an outlier in your dataset that's affecting the mean. What do you think could be causing the mean to be so high? Have you checked the individual values to see if there are any that stand out?\nUSER: Someone said that's because the data is skewed. Does that mean the median would be better?\nASSISTANT: Yes, that's correct! When data is skewed, the median can often provide a better measure of central tendency because it is less affected by outliers. Have you calculated the median for your dataset? If not, why don't you try calculating it and see how it compares to the mean?\nUSER: Could you just tell me which measure I should report for skewed distributions?\nASSISTANT: For skewed distributions, it's generally best to report the median, as it gives a better representation of the central tendency without being influenced by outliers. However, it's also helpful to mention the mean and the skewness of the data to provide a complete picture. Would you like to discuss how to interpret these measures together?",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current work and adapts its guidance based on the student's progress and confusion.",
+            "evidence_quotes": [
+              "It sounds like you might have an outlier in your dataset that's affecting the mean.",
+              "Have you checked the individual values to see if there are any that stand out?"
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant starts with minimal help and escalates support only when necessary, guiding the student through the reasoning process.",
+            "evidence_quotes": [
+              "What do you think could be causing the mean to be so high?",
+              "Have you calculated the median for your dataset?"
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant actively engages the student by inviting them to think and respond, encouraging them to calculate the median.",
+            "evidence_quotes": [
+              "Have you calculated the median for your dataset? If not, why don't you try calculating it and see how it compares to the mean?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant provides clear strategies for the student to follow when they are confused about which measure to report.",
+            "evidence_quotes": [
+              "For skewed distributions, it's generally best to report the median.",
+              "Would you like to discuss how to interpret these measures together?"
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances guidance and information while preserving the student's reasoning, avoiding unnecessary completion of the task.",
+            "evidence_quotes": [
+              "However, it's also helpful to mention the mean and the skewness of the data to provide a complete picture."
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant prompts the student to reflect on their understanding and reasoning, encouraging self-monitoring.",
+            "evidence_quotes": [
+              "What do you think could be causing the mean to be so high?",
+              "If not, why don't you try calculating it and see how it compares to the mean?"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains clear momentum in the conversation, providing clear next steps for the student to follow.",
+            "evidence_quotes": [
+              "Have you calculated the median for your dataset?",
+              "Would you like to discuss how to interpret these measures together?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively recognizes and responds to the student's current work state.",
+          "It provides graduated support, starting with minimal help and escalating as needed.",
+          "The assistant keeps the student engaged and encourages them to think critically.",
+          "It offers strategic guidance when the student is unsure about reporting measures.",
+          "Overall, the interaction maintains clarity and momentum, facilitating the student's learning."
+        ]
+      }
+    },
+    {
+      "case_id": "sql_groupby_error",
+      "phase_target": "PERFORMANCE",
+      "notes": "Student attempted SQL aggregation.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I wrote this query: SELECT region, SUM(sales) FROM orders; but my database says something about GROUP BY.\nASSISTANT: It looks like you're trying to get the total sales per region, which is a great start! The error message is likely because when you use an aggregate function like `SUM()`, you need to specify how to group your results.\n\nTry adding a `GROUP BY` clause to your query. It should look something like this:\n\n```sql\nSELECT region, SUM(sales) \nFROM orders \nGROUP BY region;\n```\n\nCan you give that a try and see if it resolves the issue? What do you think the `GROUP BY` clause does in this context?\nUSER: I thought SUM would just calculate the totals automatically.\nASSISTANT: That's a common misconception! The `SUM()` function does calculate totals, but it needs to know how to group the data first. \n\nWhen you want to sum values across different categories (like regions in your case), the `GROUP BY` clause tells the database to aggregate the results for each unique category. Without it, the database doesn't know how to separate the data for each region.\n\nDoes that make sense? If you run the modified query with `GROUP BY`, you should see the total sales for each region. Would you like to try running it and see what results you get?\nUSER: What exactly am I supposed to add to fix it?\nASSISTANT: To fix your query, you need to add the `GROUP BY` clause at the end. Here’s how the complete query should look:\n\n```sql\nSELECT region, SUM(sales) \nFROM orders \nGROUP BY region;\n```\n\nThis tells the database to sum the sales for each unique region. \n\nCan you try adding `GROUP BY region` to your original query and run it? Let me know what results you get!",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current work and confusion regarding the `GROUP BY` clause, adapting its guidance accordingly.",
+            "evidence_quotes": [
+              "It looks like you're trying to get the total sales per region, which is a great start!",
+              "That's a common misconception!"
+            ]
+          },
+          "graduated_support": {
+            "score": 3,
+            "rationale": "The assistant provides a complete solution but does not start with lighter support before giving the full query.",
+            "evidence_quotes": [
+              "Try adding a `GROUP BY` clause to your query.",
+              "To fix your query, you need to add the `GROUP BY` clause at the end."
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant invites the student to think and respond by asking questions about their understanding and encouraging them to try the modified query.",
+            "evidence_quotes": [
+              "What do you think the `GROUP BY` clause does in this context?",
+              "Would you like to try running it and see what results you get?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 4,
+            "rationale": "The assistant provides a clear explanation of the need for the `GROUP BY` clause, helping the student understand the strategy behind the query.",
+            "evidence_quotes": [
+              "The `SUM()` function does calculate totals, but it needs to know how to group the data first.",
+              "This tells the database to sum the sales for each unique region."
+            ]
+          },
+          "answer_calibration": {
+            "score": 3,
+            "rationale": "The assistant provides the complete query solution, which is somewhat excessive given the student's initial attempt.",
+            "evidence_quotes": [
+              "Here’s how the complete query should look:",
+              "SELECT region, SUM(sales) FROM orders GROUP BY region;"
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 4,
+            "rationale": "The assistant prompts the student to reflect on their understanding and encourages them to try the modified query.",
+            "evidence_quotes": [
+              "Does that make sense?",
+              "Let me know what results you get!"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains clear momentum by providing a straightforward next step for the student to follow.",
+            "evidence_quotes": [
+              "Can you try adding `GROUP BY region` to your original query and run it?",
+              "If you run the modified query with `GROUP BY`, you should see the total sales for each region."
+            ]
+          }
+        },
+        "overall_score": 4.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively acknowledges the student's current confusion.",
+          "It provides a complete solution but could start with lighter support.",
+          "Engagement is high, with prompts encouraging student reflection.",
+          "Strategic guidance is clear, helping the student understand the need for `GROUP BY`.",
+          "The interaction maintains good momentum with clear next steps."
+        ]
+      }
+    },
+    {
+      "case_id": "physics_force_confusion",
+      "phase_target": "PERFORMANCE",
+      "notes": "Numerical reasoning with student mistake.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I'm solving a physics problem where a 2 kg object accelerates at 3 m/s².\nASSISTANT: Great start! It sounds like you're working on a problem involving Newton's second law. What have you tried so far? Are you looking to find the force acting on the object, or is there something else you're aiming to calculate?\nUSER: I tried using F = ma and got 5 N but my friend got 6 N.\nASSISTANT: You're on the right track with using \\( F = ma \\). Let's double-check your calculations. \n\nGiven:\n- Mass \\( m = 2 \\, \\text{kg} \\)\n- Acceleration \\( a = 3 \\, \\text{m/s}^2 \\)\n\nWhat do you get when you multiply these two values together?\nUSER: Where could I have gone wrong?\nASSISTANT: Let's break it down step-by-step. \n\n1. **Formula**: You used the correct formula \\( F = ma \\).\n2. **Values**: You have \\( m = 2 \\, \\text{kg} \\) and \\( a = 3 \\, \\text{m/s}^2 \\).\n\nNow, can you show me how you calculated \\( F \\) by multiplying those values? What did you get when you did the multiplication?",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current progress and confusion, adapting its guidance accordingly.",
+            "evidence_quotes": [
+              "What have you tried so far?",
+              "Let's double-check your calculations."
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant starts with minimal help by asking the student to show their calculations before providing further assistance.",
+            "evidence_quotes": [
+              "What do you get when you multiply these two values together?",
+              "Can you show me how you calculated F by multiplying those values?"
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant actively invites the student to reason through the problem and engage with the calculations.",
+            "evidence_quotes": [
+              "What do you get when you multiply these two values together?",
+              "Can you show me how you calculated F by multiplying those values?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant provides clear step-by-step guidance to help the student identify where they might have gone wrong.",
+            "evidence_quotes": [
+              "Let's break it down step-by-step.",
+              "You used the correct formula F = ma."
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances guidance and information while preserving the student's reasoning by not providing the answer outright.",
+            "evidence_quotes": [
+              "What do you get when you multiply these two values together?",
+              "Can you show me how you calculated F by multiplying those values?"
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant prompts the student to reflect on their calculations and understanding throughout the interaction.",
+            "evidence_quotes": [
+              "What have you tried so far?",
+              "Where could I have gone wrong?"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains clear next steps and keeps the interaction moving forward without overwhelming the student.",
+            "evidence_quotes": [
+              "Let's double-check your calculations.",
+              "Now, can you show me how you calculated F by multiplying those values?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively acknowledges the student's current progress.",
+          "It provides graduated support, starting with minimal help.",
+          "The assistant keeps the student engaged and involved in reasoning.",
+          "It offers strategic guidance to help the student identify errors.",
+          "The interaction maintains momentum with clear next steps."
+        ]
+      }
+    },
+    {
+      "case_id": "machine_learning_overfitting",
+      "phase_target": "PERFORMANCE",
+      "notes": "ML concept + practical improvement.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I trained a decision tree on my dataset and the training accuracy is 100% but the test accuracy is much lower.\nASSISTANT: It sounds like your decision tree might be overfitting the training data. Overfitting occurs when a model learns the training data too well, including noise and outliers, which can lead to poor performance on unseen data.\n\nTo address this, here are a few steps you could consider:\n\n1. **Check the Complexity**: How deep is your decision tree? A very deep tree can lead to overfitting. You might want to try limiting the maximum depth of the tree.\n\n2. **Prune the Tree**: Have you considered pruning your tree? Pruning can help reduce complexity and improve generalization.\n\n3. **Cross-Validation**: Have you tried using cross-validation? This can give you a better estimate of how your model will perform on unseen data.\n\n4. **Feature Selection**: Are there features in your dataset that might be contributing to overfitting? Sometimes, reducing the number of features can help.\n\nWhich of these options do you think you might want to explore first?\nUSER: I think this might be overfitting but I'm not sure why that happens.\nASSISTANT: Great observation! Overfitting happens when a model learns the details and noise in the training data to the extent that it negatively impacts its performance on new data. Here are a few reasons why this can occur:\n\n1. **Model Complexity**: Decision trees can become very complex, capturing every little detail in the training data. This complexity can lead to memorizing the data rather than learning general patterns.\n\n2. **Insufficient Data**: If you have a small dataset, the model may learn from the limited examples too closely, making it less capable of generalizing to new examples.\n\n3. **Noisy Data**: If your training data contains a lot of noise or outliers, the model may learn from these anomalies instead of the actual trends.\n\n4. **Too Many Features**: If you have many features relative to the number of observations, the model can fit the training data too closely, leading to overfitting.\n\nDo any of these reasons resonate with your situation? Understanding which factors might be at play can help you decide how to adjust your model.\nUSER: What changes should I try to improve the model?\nASSISTANT: Here are some strategies you can try to improve your decision tree model and reduce overfitting:\n\n1. **Limit Tree Depth**: Set a maximum depth for your decision tree. This will prevent it from becoming too complex. You can experiment with different depths to find a good balance.\n\n2. **Pruning**: Implement pruning techniques, such as cost-complexity pruning, to remove branches that have little importance. This can help simplify the model.\n\n3. **Minimum Samples per Leaf**: Increase the minimum number of samples required to be at a leaf node. This ensures that each leaf has enough data to make reliable predictions.\n\n4. **Feature Selection**: Evaluate your features and consider removing those that are less important or redundant. This can help the model focus on the most relevant information.\n\n5. **Cross-Validation**: Use cross-validation to assess your model's performance more reliably. This will help you understand how well it generalizes to unseen data.\n\n6. **Ensemble Methods**: Consider using ensemble methods like Random Forest or Gradient Boosting, which combine multiple trees and often provide better performance and generalization.\n\nWhich of these options do you think you’d like to try first?",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current understanding of overfitting and adapts its guidance based on the student's responses.",
+            "evidence_quotes": [
+              "It sounds like your decision tree might be overfitting the training data.",
+              "Great observation! Overfitting happens when a model learns the details and noise in the training data."
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant provides a series of strategies in a graduated manner, starting with general advice and moving to specific actions.",
+            "evidence_quotes": [
+              "Here are a few steps you could consider:",
+              "Here are some strategies you can try to improve your decision tree model and reduce overfitting:"
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant actively engages the student by asking for their thoughts on which strategies to explore first.",
+            "evidence_quotes": [
+              "Which of these options do you think you might want to explore first?",
+              "Which of these options do you think you’d like to try first?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant provides clear and practical strategies to help the student address their issue with overfitting.",
+            "evidence_quotes": [
+              "Implement pruning techniques, such as cost-complexity pruning, to remove branches that have little importance.",
+              "Consider using ensemble methods like Random Forest or Gradient Boosting."
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances providing information and guidance without revealing complete solutions, allowing the student to engage with the problem.",
+            "evidence_quotes": [
+              "You might want to try limiting the maximum depth of the tree.",
+              "This will prevent it from becoming too complex."
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant prompts the student to reflect on their understanding and the factors contributing to overfitting.",
+            "evidence_quotes": [
+              "Do any of these reasons resonate with your situation?",
+              "Understanding which factors might be at play can help you decide how to adjust your model."
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains a clear flow of conversation and provides actionable next steps without overwhelming the student.",
+            "evidence_quotes": [
+              "Here are a few steps you could consider:",
+              "Which of these options do you think you’d like to try first?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively recognizes the student's understanding of overfitting.",
+          "It provides graduated support with clear strategies to address the issue.",
+          "The assistant actively engages the student in the problem-solving process.",
+          "It offers practical guidance while encouraging reflection on the student's part.",
+          "The interaction maintains momentum with clear next steps."
+        ]
+      }
+    },
+    {
+      "case_id": "essay_paragraph_feedback",
+      "phase_target": "PERFORMANCE",
+      "notes": "Writing improvement case.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: Here's a paragraph from my essay about social media: 'Social media affects mental health because people compare themselves to others online.'\nASSISTANT: Great start! You’ve identified a key point about social media and mental health. To expand on this, consider adding examples or details. \n\nWhat specific effects do you think this comparison has on mental health? For instance, does it lead to feelings of inadequacy, anxiety, or depression? \n\nTry to elaborate on that idea in the next sentence or two. What do you think?\nUSER: My teacher said I need more analysis instead of just stating the claim.\nASSISTANT: That’s a helpful piece of feedback! To add more analysis, you can explain why comparing oneself to others on social media can negatively impact mental health. \n\nConsider these questions to guide your analysis:\n- What are some common feelings people experience when they compare themselves to others?\n- How does social media amplify these feelings?\n- Are there any studies or statistics that support this claim?\n\nTry to incorporate some of these ideas into your paragraph. What do you think you could add?\nUSER: How could I improve this paragraph?\nASSISTANT: To improve your paragraph, you can follow this structure:\n\n1. **Expand your claim**: Begin with your original statement, but then add more detail about the effects of comparison.\n\n2. **Provide examples**: Include specific examples or scenarios that illustrate how this comparison happens on social media.\n\n3. **Analyze the impact**: Discuss the emotional and psychological effects of these comparisons, such as anxiety or low self-esteem.\n\n4. **Support with evidence**: If possible, mention any studies or statistics that back up your points.\n\nHere’s a possible way to revise your paragraph:\n\n\"Social media affects mental health because people often compare themselves to others online. This constant comparison can lead to feelings of inadequacy and low self-esteem, as users may feel they don't measure up to the curated lives they see. For example, seeing friends or influencers showcase their perfect vacations or achievements can create unrealistic standards. Research has shown that excessive social media use is linked to increased anxiety and depression, highlighting the detrimental effects of these comparisons.\"\n\nTry drafting your revised paragraph using this structure. What do you think you could add or change?",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current work and adapts its guidance based on the student's feedback about needing more analysis.",
+            "evidence_quotes": [
+              "That’s a helpful piece of feedback!",
+              "To add more analysis, you can explain why comparing oneself to others on social media can negatively impact mental health."
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant provides a structured approach to improving the paragraph, starting with minimal help and escalating to more detailed guidance.",
+            "evidence_quotes": [
+              "To improve your paragraph, you can follow this structure:",
+              "Try drafting your revised paragraph using this structure."
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant consistently invites the student to think and respond, encouraging them to elaborate on their ideas.",
+            "evidence_quotes": [
+              "What specific effects do you think this comparison has on mental health?",
+              "What do you think you could add?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant suggests practical strategies for analysis and improvement, helping the student to break down the task into manageable steps.",
+            "evidence_quotes": [
+              "Consider these questions to guide your analysis:",
+              "Discuss the emotional and psychological effects of these comparisons."
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances guidance and information while preserving the student's reasoning, providing a structured example without completing the task for them.",
+            "evidence_quotes": [
+              "Here’s a possible way to revise your paragraph:",
+              "This constant comparison can lead to feelings of inadequacy and low self-esteem."
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant includes natural prompts that encourage the student to reflect on their understanding and reasoning.",
+            "evidence_quotes": [
+              "What do you think you could add or change?",
+              "What are some common feelings people experience when they compare themselves to others?"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains clear momentum by providing structured next steps and avoiding excessive questioning.",
+            "evidence_quotes": [
+              "To improve your paragraph, you can follow this structure:",
+              "Try drafting your revised paragraph using this structure."
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively acknowledges the student's current work and feedback.",
+          "It provides graduated support with a structured approach to improvement.",
+          "The assistant actively engages the student, inviting them to elaborate on their ideas.",
+          "It offers strategic guidance to help the student analyze their work.",
+          "The interaction maintains clear momentum with actionable next steps."
+        ]
+      }
+    },
+    {
+      "case_id": "python_loop_logic",
+      "phase_target": "PERFORMANCE",
+      "notes": "Logic bug explanation.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I wrote this loop to sum numbers in a list but the result keeps doubling: total += total + x.\nASSISTANT: It looks like you're adding `total` to itself along with `x`, which is causing the doubling effect. Instead of `total += total + x`, you should just add `x` to `total`. \n\nTry changing that line to `total += x`. \n\nWhat do you think will happen if you make that change?\nUSER: I thought this would just add the next value.\nASSISTANT: You're correct that it should just add the next value. The issue with `total += total + x` is that it first adds `total` to itself, then adds `x`, which is why you're seeing the doubling effect.\n\nBy changing it to `total += x`, you're simply adding the current value of `x` to `total`, which is what you want for summing the numbers in the list.\n\nCan you try that change and see what result you get?\nUSER: Why is the number growing so fast?\nASSISTANT: The number is growing fast because of how the original line `total += total + x` works. Each time the loop runs, it takes the current value of `total`, adds it to itself, and then adds `x`. This means that `total` is being increased by a larger amount each time, leading to rapid growth.\n\nFor example, if `total` starts at 0 and `x` is 1:\n- First iteration: `total` becomes `0 + 0 + 1 = 1`\n- Second iteration: `total` becomes `1 + 1 + 1 = 3`\n- Third iteration: `total` becomes `3 + 3 + 1 = 7`\n\nInstead, with `total += x`, it would simply add `x` to the current `total`, keeping the growth linear.\n\nDoes this help clarify why the number is growing so quickly?",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly adapts its guidance based on the student's confusion about the doubling effect in their code.",
+            "evidence_quotes": [
+              "It looks like you're adding `total` to itself along with `x`, which is causing the doubling effect.",
+              "Can you try that change and see what result you get?"
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant starts with minimal help by suggesting a change to the code and only escalates to further explanation when necessary.",
+            "evidence_quotes": [
+              "Try changing that line to `total += x`.",
+              "Does this help clarify why the number is growing so quickly?"
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant invites the student to think and respond by asking what they think will happen after making the suggested change.",
+            "evidence_quotes": [
+              "What do you think will happen if you make that change?",
+              "Can you try that change and see what result you get?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant provides a clear explanation of the issue and suggests a practical change to the code to help the student progress.",
+            "evidence_quotes": [
+              "The issue with `total += total + x` is that it first adds `total` to itself, then adds `x`.",
+              "Instead, with `total += x`, it would simply add `x` to the current `total, keeping the growth linear."
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances guidance and information while preserving the student's reasoning by not providing a complete solution.",
+            "evidence_quotes": [
+              "Try changing that line to `total += x`.",
+              "Can you try that change and see what result you get?"
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant prompts the student to reflect on their understanding and the changes they are making.",
+            "evidence_quotes": [
+              "What do you think will happen if you make that change?",
+              "Does this help clarify why the number is growing so quickly?"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains clear momentum by providing straightforward next steps without overwhelming the student.",
+            "evidence_quotes": [
+              "Try changing that line to `total += x`.",
+              "Can you try that change and see what result you get?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively recognizes the student's confusion and adapts its guidance.",
+          "It provides graduated support, starting with minimal help.",
+          "The assistant actively engages the student by prompting them to think and respond.",
+          "It offers strategic guidance to help the student understand the issue.",
+          "The interaction maintains momentum with clear next steps."
+        ]
+      }
+    },
+    {
+      "case_id": "research_question_refinement",
+      "phase_target": "PERFORMANCE",
+      "notes": "Research design refinement.",
+      "final_phase": "FORETHOUGHT",
+      "transcript": "USER: I'm designing a research project about smartphone use and sleep quality.\nASSISTANT: That sounds like an interesting project! What specific aspect of smartphone use and sleep quality are you focusing on? For example, are you looking at how screen time affects sleep duration, or maybe the impact of social media use before bed? Identifying your focus can help you set a clear goal for your research.\nUSER: Right now my research question is: 'Do phones affect sleep?'\nASSISTANT: Great starting question! To make it more specific, you might consider narrowing it down a bit. For instance, are you interested in certain age groups, types of phone use (like social media or gaming), or specific sleep quality measures (like duration or disturbances)?\n\nOnce you refine your question, you can think about how you might gather data to answer it. What methods are you considering for your research?\nUSER: It feels too vague. How could I make it more precise?\nASSISTANT: Making your question more precise is a good step! Here are a few ways to narrow it down:\n\n1. **Specify the Population**: Focus on a specific age group, like teenagers or adults.\n2. **Type of Phone Use**: Consider looking at specific activities, such as social media use, gaming, or general screen time.\n3. **Sleep Quality Measures**: Decide if you're measuring sleep duration, sleep disturbances, or overall sleep quality.\n\nFor example, you could rephrase your question to something like, \"How does social media use on smartphones before bedtime affect sleep quality in teenagers?\"\n\nWhich of these aspects resonates with you?",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current work and adapts its guidance based on the student's research question.",
+            "evidence_quotes": [
+              "That sounds like an interesting project!",
+              "Great starting question!",
+              "Which of these aspects resonates with you?"
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant provides minimal help initially and escalates support by suggesting specific ways to refine the research question.",
+            "evidence_quotes": [
+              "To make it more specific, you might consider narrowing it down a bit.",
+              "Making your question more precise is a good step!"
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant invites the student to think and respond by asking which aspects resonate with them.",
+            "evidence_quotes": [
+              "Which of these aspects resonates with you?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant provides clear strategies for refining the research question, helping the student progress.",
+            "evidence_quotes": [
+              "Here are a few ways to narrow it down:",
+              "For example, you could rephrase your question to something like..."
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances guidance and information while preserving the student's reasoning by not providing a complete answer.",
+            "evidence_quotes": [
+              "Consider looking at specific activities, such as social media use, gaming, or general screen time."
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant prompts the student to reflect on their question and consider different aspects.",
+            "evidence_quotes": [
+              "Which of these aspects resonates with you?"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains clear next steps for the student to continue working on their research question.",
+            "evidence_quotes": [
+              "Once you refine your question, you can think about how you might gather data to answer it."
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively acknowledges the student's current work.",
+          "It provides graduated support by suggesting ways to refine the research question.",
+          "The assistant actively engages the student in the reasoning process.",
+          "It offers strategic guidance to help the student progress.",
+          "The interaction maintains momentum with clear next steps."
+        ]
+      }
+    },
+    {
+      "case_id": "data_visualization_choice",
+      "phase_target": "PERFORMANCE",
+      "notes": "Data visualization reasoning.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I'm analyzing sales data by region and month.\nASSISTANT: That sounds interesting! What specific aspects of the sales data are you focusing on? Are you looking for trends, comparisons between regions, or something else?\nUSER: Right now I made a pie chart but it looks messy.\nASSISTANT: Got it! Pie charts can sometimes get cluttered, especially with many categories. What do you think is making your pie chart look messy? Are there too many slices, or is the color scheme not working?\nUSER: Would a different chart type make more sense?\nASSISTANT: Yes, a different chart type might help! For example, a bar chart or a line graph can be clearer for showing comparisons over time or between regions. Which specific data points are you trying to highlight? This might help us decide on a better chart type.",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current work on the pie chart and adapts its response based on the student's feedback about it looking messy.",
+            "evidence_quotes": [
+              "Got it! Pie charts can sometimes get cluttered, especially with many categories.",
+              "What do you think is making your pie chart look messy?"
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant starts with minimal help by asking about the specific issues with the pie chart before suggesting alternatives.",
+            "evidence_quotes": [
+              "What do you think is making your pie chart look messy?",
+              "A different chart type might help!"
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant invites the student to think about the issues with their chart and encourages them to consider alternatives.",
+            "evidence_quotes": [
+              "What do you think is making your pie chart look messy?",
+              "Which specific data points are you trying to highlight?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant suggests alternative chart types and asks for clarification on what the student is trying to highlight, helping to adjust their strategy.",
+            "evidence_quotes": [
+              "A different chart type might help!",
+              "Which specific data points are you trying to highlight?"
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances guidance by not providing a complete solution but rather suggesting alternatives and asking for more information.",
+            "evidence_quotes": [
+              "A different chart type might help!",
+              "Which specific data points are you trying to highlight?"
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant prompts the student to reflect on their work and consider what might be improved.",
+            "evidence_quotes": [
+              "What do you think is making your pie chart look messy?",
+              "Which specific data points are you trying to highlight?"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains clear momentum by providing relevant next steps and avoiding excessive questioning.",
+            "evidence_quotes": [
+              "What do you think is making your pie chart look messy?",
+              "Which specific data points are you trying to highlight?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively acknowledges the student's current work and adapts its responses.",
+          "It provides graduated support by asking questions before suggesting alternatives.",
+          "The assistant keeps the student engaged by inviting them to think critically about their work.",
+          "It offers strategic guidance by suggesting alternative chart types based on the student's needs.",
+          "Overall, the interaction maintains clarity and momentum without overwhelming the student."
+        ]
+      }
+    },
+    {
+      "case_id": "linear_regression_interpretation",
+      "phase_target": "PERFORMANCE",
+      "notes": "Statistics interpretation case.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I ran a linear regression and the coefficient for study hours was 2.3.\nASSISTANT: Great job on running the linear regression! A coefficient of 2.3 for study hours suggests that for each additional hour studied, the predicted outcome (like test scores) increases by 2.3 units. \n\nWhat are you trying to interpret or analyze next about this result? Are there specific questions or parts of the regression output that are unclear?\nUSER: Does that mean studying more causes higher grades?\nASSISTANT: That's a good question! While a positive coefficient suggests a relationship between study hours and grades, it doesn't necessarily imply causation. \n\nTo think about this further, consider:\n- **Are there other factors** that might influence grades, like prior knowledge or test-taking skills?\n- **Could there be a different explanation** for the correlation? For example, students who study more might also be more motivated or have better study habits.\n\nWhat do you think? How might you investigate this further?\nUSER: I'm not sure how to interpret the coefficient.\nASSISTANT: No problem! Let's break it down step by step.\n\n1. **Understanding the Coefficient**: The coefficient of 2.3 means that for every additional hour of studying, the predicted outcome (like grades) increases by 2.3 units. \n\n2. **Context Matters**: Think about what the units of your outcome variable are. For example, if your outcome is test scores, then each extra hour of studying is associated with an increase of 2.3 points.\n\n3. **Consider the Context**: Reflect on the dataset you used. Are there any other variables that might interact with study hours? \n\nDoes this make sense so far? What part would you like to explore next?",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current state of confusion regarding the interpretation of the coefficient and adapts its guidance accordingly.",
+            "evidence_quotes": [
+              "That's a good question!",
+              "No problem! Let's break it down step by step."
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant starts with minimal help by explaining the coefficient and escalates support only when the student expresses confusion.",
+            "evidence_quotes": [
+              "The coefficient of 2.3 means that for every additional hour of studying, the predicted outcome (like grades) increases by 2.3 units.",
+              "Let's break it down step by step."
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant actively engages the student by asking questions that invite them to think and respond.",
+            "evidence_quotes": [
+              "What do you think? How might you investigate this further?",
+              "Does this make sense so far? What part would you like to explore next?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant provides clear strategies for the student to consider when interpreting the coefficient and understanding the context.",
+            "evidence_quotes": [
+              "Think about what the units of your outcome variable are.",
+              "Are there any other variables that might interact with study hours?"
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances guidance and information while preserving the student's reasoning by not providing a complete answer.",
+            "evidence_quotes": [
+              "The coefficient of 2.3 means that for every additional hour of studying, the predicted outcome (like grades) increases by 2.3 units."
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant includes natural prompts that encourage the student to reflect on their understanding and reasoning.",
+            "evidence_quotes": [
+              "Does this make sense so far?",
+              "What part would you like to explore next?"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains clear momentum by providing structured steps and avoiding excessive questioning.",
+            "evidence_quotes": [
+              "Let's break it down step by step.",
+              "Does this make sense so far?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively acknowledges the student's confusion and adapts its guidance.",
+          "It provides graduated support, starting with minimal help and escalating as needed.",
+          "The assistant actively engages the student with reflective questions.",
+          "Clear strategies are offered to help the student interpret the coefficient.",
+          "Overall, the interaction maintains momentum and clarity, facilitating the student's learning."
+        ]
+      }
+    },
+    {
+      "case_id": "algorithm_complexity_confusion",
+      "phase_target": "PERFORMANCE",
+      "notes": "Algorithm analysis.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I'm analyzing this nested loop and I think the time complexity is O(n).\nASSISTANT: Great start! Let's break it down together. \n\nCan you describe what the nested loop looks like? Specifically, how many times does the inner loop run for each iteration of the outer loop? This will help us determine the time complexity more accurately.\nUSER: But someone said it's O(n²).\nASSISTANT: That’s a common point of confusion! Let's clarify it together. \n\nTo determine whether it's O(n) or O(n²), we need to look at how the loops interact. \n\n1. **How many times does the outer loop run?**\n2. **For each iteration of the outer loop, how many times does the inner loop run?**\n\nIf the inner loop runs a number of times proportional to the outer loop, it could lead to O(n²). Can you analyze these two questions based on your loop?\nUSER: How do I figure out which one is correct?\nASSISTANT: Good question! Here’s a step-by-step approach to analyze it:\n\n1. **Count the iterations of the outer loop:** Determine how many times the outer loop executes. This is usually straightforward, like if it runs from 1 to n, it runs n times.\n\n2. **Count the iterations of the inner loop per outer iteration:** For each iteration of the outer loop, see how many times the inner loop runs. Does it run a fixed number of times, or does it depend on the outer loop's current iteration?\n\n3. **Multiply the counts:** If the inner loop runs a constant number of times for each outer iteration, you’ll have O(n). If it runs n times for each outer iteration, you’ll have O(n²).\n\nTry analyzing your loop with these steps and see what you find! What do you think the counts are for your specific loop?",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current understanding and confusion regarding the time complexity.",
+            "evidence_quotes": [
+              "That's a common point of confusion! Let's clarify it together.",
+              "Can you analyze these two questions based on your loop?"
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant provides a step-by-step approach, starting with minimal help and escalating support as needed.",
+            "evidence_quotes": [
+              "Here’s a step-by-step approach to analyze it:",
+              "Try analyzing your loop with these steps and see what you find!"
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant actively engages the student by asking them to analyze their loop and think critically about the problem.",
+            "evidence_quotes": [
+              "Can you describe what the nested loop looks like?",
+              "What do you think the counts are for your specific loop?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant provides clear strategies for the student to analyze the nested loop and determine the time complexity.",
+            "evidence_quotes": [
+              "Count the iterations of the outer loop.",
+              "Multiply the counts: If the inner loop runs a constant number of times for each outer iteration, you’ll have O(n)."
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances guidance and information without revealing the complete solution, allowing the student to reason.",
+            "evidence_quotes": [
+              "If the inner loop runs a number of times proportional to the outer loop, it could lead to O(n².",
+              "This is usually straightforward, like if it runs from 1 to n, it runs n times."
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant prompts the student to reflect on their understanding and reasoning throughout the interaction.",
+            "evidence_quotes": [
+              "Can you analyze these two questions based on your loop?",
+              "What do you think the counts are for your specific loop?"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains clear momentum by providing structured steps and encouraging the student to continue working.",
+            "evidence_quotes": [
+              "Let's break it down together.",
+              "Try analyzing your loop with these steps and see what you find!"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively recognizes the student's confusion and builds on their current understanding.",
+          "It provides graduated support, starting with minimal guidance and escalating as needed.",
+          "The assistant keeps the student engaged by asking reflective questions.",
+          "Clear strategies are offered to help the student analyze their nested loop.",
+          "Overall, the interaction maintains momentum and clarity, allowing the student to progress."
+        ]
+      }
+    },
+    {
+      "case_id": "history_argument_evidence",
+      "phase_target": "PERFORMANCE",
+      "notes": "Historical analysis support.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I'm writing an essay arguing that economic factors contributed to the French Revolution.\nASSISTANT: That sounds like an interesting topic! What do you already know about the economic factors that played a role in the French Revolution? Have you identified any specific examples or events related to this?\nUSER: Right now I only mentioned rising bread prices.\nASSISTANT: Rising bread prices are a great starting point! They highlight the immediate economic pressures on the population. \n\nTo expand your argument, consider these next steps:\n\n1. **Context**: Why were bread prices rising? You might want to look into factors like poor harvests, taxation, or economic policies.\n\n2. **Impact on Society**: How did these rising prices affect different social classes? Think about the peasants and urban workers.\n\n3. **Connection to Revolution**: How did these economic struggles contribute to the unrest that led to the Revolution?\n\nWould you like to explore one of these areas further?\nUSER: What other types of evidence would strengthen this argument?\nASSISTANT: Great question! Here are a few types of evidence you could consider to strengthen your argument:\n\n1. **Statistical Data**: Look for statistics on bread prices over time, grain harvests, or inflation rates. This can provide a clear picture of the economic situation.\n\n2. **Primary Sources**: Consider using letters, diaries, or pamphlets from that time. They can show how people felt about the economic conditions.\n\n3. **Historical Events**: Mention specific events, like the Flour War of 1775, which was a response to rising bread prices. \n\n4. **Economic Policies**: Discuss the impact of taxation and government debt on the economy. The financial crisis leading up to the Revolution is crucial.\n\n5. **Comparative Analysis**: You might compare France’s economic situation to other countries at the time to highlight what made it unique.\n\nWhich type of evidence do you think would be the most compelling for your essay?",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current work by referencing the specific example of rising bread prices and building on it.",
+            "evidence_quotes": [
+              "Rising bread prices are a great starting point!",
+              "To expand your argument, consider these next steps:"
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant provides a structured approach to expanding the argument, starting with context and gradually moving to more complex ideas.",
+            "evidence_quotes": [
+              "To expand your argument, consider these next steps:",
+              "How did these rising prices affect different social classes?"
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant invites the student to think critically about their argument and encourages them to explore further.",
+            "evidence_quotes": [
+              "Would you like to explore one of these areas further?",
+              "Which type of evidence do you think would be the most compelling for your essay?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant suggests practical strategies for the student to consider when developing their argument.",
+            "evidence_quotes": [
+              "Consider using letters, diaries, or pamphlets from that time.",
+              "Discuss the impact of taxation and government debt on the economy."
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances guidance and information without providing complete answers, allowing the student to engage with the material.",
+            "evidence_quotes": [
+              "Look for statistics on bread prices over time, grain harvests, or inflation rates.",
+              "You might compare France’s economic situation to other countries at the time."
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant includes prompts that encourage the student to reflect on their understanding and reasoning.",
+            "evidence_quotes": [
+              "Which type of evidence do you think would be the most compelling for your essay?",
+              "How did these rising prices affect different social classes?"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains a clear direction for the student, providing actionable next steps without overwhelming them.",
+            "evidence_quotes": [
+              "To expand your argument, consider these next steps:",
+              "Would you like to explore one of these areas further?"
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively acknowledges the student's current work.",
+          "It provides graduated support with structured guidance.",
+          "The assistant actively engages the student in the reasoning process.",
+          "It offers strategic guidance to help the student develop their argument.",
+          "The interaction maintains momentum with clear next steps."
+        ]
+      }
+    },
+    {
+      "case_id": "sql_window_function_confusion",
+      "phase_target": "PERFORMANCE",
+      "notes": "SQL analytical reasoning.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I'm trying to rank employees by salary within each department.\nASSISTANT: That sounds like an interesting task! What do you already know about how to approach ranking employees by salary? Have you tried any methods or tools to organize the data yet?\nUSER: I wrote a query with ORDER BY salary but it ranks everyone globally.\nASSISTANT: Great start with using `ORDER BY salary`! To rank employees within each department, you'll want to use a `GROUP BY` clause along with a window function. \n\nHave you worked with window functions before? If not, I can guide you through how to set that up!\nUSER: I heard window functions might help but I don't understand how.\nASSISTANT: No problem! Window functions allow you to perform calculations across a set of rows related to the current row, which is perfect for your ranking task.\n\nTo rank employees within each department, you can use the `RANK()` or `DENSE_RANK()` function. Here's a general structure you can follow:\n\n1. **Select the columns** you need (like employee name, salary, and department).\n2. **Use the `RANK()` function** with an `OVER()` clause that specifies the partition by department.\n\nIt would look something like this:\n\n```sql\nSELECT \n    employee_name,\n    salary,\n    department,\n    RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS salary_rank\nFROM \n    employees;\n```\n\nTry to adapt this structure to your query. What do you think you should do next?",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v1)",
+        "score_per_criterion": {
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant clearly acknowledges the student's current progress and adapts its guidance based on the student's attempt.",
+            "evidence_quotes": [
+              "What do you already know about how to approach ranking employees by salary?",
+              "Great start with using `ORDER BY salary`!"
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant starts with minimal help and escalates support appropriately by introducing window functions only after confirming the student's understanding.",
+            "evidence_quotes": [
+              "Have you worked with window functions before?",
+              "To rank employees within each department, you can use the `RANK()` or `DENSE_RANK()` function."
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant invites the student to engage actively by asking what they think they should do next.",
+            "evidence_quotes": [
+              "What do you think you should do next?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant provides clear strategies for using window functions to achieve the desired ranking, helping the student progress.",
+            "evidence_quotes": [
+              "Window functions allow you to perform calculations across a set of rows related to the current row.",
+              "To rank employees within each department, you can use the `RANK()` function."
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances guidance and information while preserving the student's reasoning by providing a structure without completing the entire task.",
+            "evidence_quotes": [
+              "Here's a general structure you can follow:",
+              "Try to adapt this structure to your query."
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant prompts the student to reflect on their understanding and next steps effectively.",
+            "evidence_quotes": [
+              "What do you think you should do next?"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains clear momentum by providing a structured approach and encouraging the student to continue working.",
+            "evidence_quotes": [
+              "To rank employees within each department, you'll want to use a `GROUP BY` clause along with a window function."
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively acknowledges the student's current progress.",
+          "It provides graduated support, starting with minimal help.",
+          "The assistant actively engages the student in the reasoning process.",
+          "Clear strategic guidance is offered to help the student progress.",
+          "The interaction maintains momentum with clear next steps."
+        ]
+      }
+    }
+  ]
+}
