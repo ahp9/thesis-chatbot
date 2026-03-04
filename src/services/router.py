@@ -48,14 +48,39 @@ def update_phase(current_phase: str, predicted_phase: str, confidence: float) ->
 
     return current_phase
 
-async def route_message(client, user_message: str) -> Dict[str, Any]:
-    router_system = load_prompt("base/router_system_prompt_v1.txt")
+async def route_message(client, user_message: str, llm_history: list, current_phase: str) -> Dict[str, Any]:
+    router_system = load_prompt("base/router/router_system_prompt_v2.txt")
+
+    # Take last N messages as "immediate context"
+    N = 6
+    recent = llm_history[-N:] if llm_history else []
+
+    # Build a clean context transcript (avoid dumping huge text)
+    context_lines = []
+    for m in recent:
+        role = m.get("role", "").upper()
+        content = (m.get("content") or "").strip()
+        if not content:
+            continue
+        # keep it compact
+        context_lines.append(f"{role}: {content}")
+
+    context_text = "\n".join(context_lines) if context_lines else "(no prior context)"
+
+    router_input = f"""RECENT_CONTEXT (most recent messages):
+{context_text}
+
+CURRENT_PHASE_STATE: {current_phase}
+
+CURRENT_USER_MESSAGE:
+{user_message}
+"""
 
     resp = await client.chat.completions.create(
         model=ROUTER_MODEL,
         messages=[
             {"role": "system", "content": router_system},
-            {"role": "user", "content": user_message},
+            {"role": "user", "content": router_input},
         ],
         temperature=0,
     )
@@ -64,7 +89,6 @@ async def route_message(client, user_message: str) -> Dict[str, Any]:
     try:
         data = json.loads(content)
     except json.JSONDecodeError:
-        # Fallback if model returns non-JSON
         data = {
             "phase": "PERFORMANCE",
             "strategy": "NONE",
@@ -73,7 +97,6 @@ async def route_message(client, user_message: str) -> Dict[str, Any]:
             "one_optional_question": ""
         }
 
-    # Normalize
     data["phase"] = (data.get("phase") or "PERFORMANCE").upper()
     data["strategy"] = (data.get("strategy") or "NONE").upper()
     return data

@@ -123,7 +123,7 @@ async def main(message: cl.Message):
     # Background router (only for SRL Tutor)
     route: Dict[str, Any] = {"phase": current_phase, "strategy": "NONE", "confidence": 0.0}
     if tutor_type == "SRL Tutor":
-        route = await route_message(client, message.content)
+        route = await route_message(client, message.content, llm_history, current_phase)
         
         predicted_phase = route.get("phase", current_phase)
         confidence = route.get("confidence", 0.0)
