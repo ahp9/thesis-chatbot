@@ -4,7 +4,7 @@ TUTOR_MODEL = "gpt-4o-mini"
 
 PHASE_TO_FILE = {
     "FORETHOUGHT": "phases/forethought_v1.txt",
-    "PERFORMANCE": "phases/performance_v1.txt",
+    "PERFORMANCE": "phases/performance_v2.txt",
     "REFLECTION": "phases/reflection.txt",
 }
 
@@ -19,7 +19,7 @@ STRATEGY_TO_FILE = {
 def build_system_prompt(tutor_type: str, route: dict) -> str:
     # Base prompt
     if tutor_type == "SRL Tutor":
-        base = load_prompt("base/simple_base_SRL_v2.txt")
+        base = load_prompt("base/simple_base_SRL_v3.txt")
     else:
         base = load_prompt("base/ai_base_control.txt")
 
