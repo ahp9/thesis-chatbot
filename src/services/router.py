@@ -49,7 +49,7 @@ def update_phase(current_phase: str, predicted_phase: str, confidence: float) ->
     return current_phase
 
 async def route_message(client, user_message: str, llm_history: list, current_phase: str) -> Dict[str, Any]:
-    router_system = load_prompt("base/router/router_system_prompt_v3.txt")
+    router_system = load_prompt("base/router/router_system_prompt_v2.txt")
 
     # Take last N messages as "immediate context"
     N = 6
