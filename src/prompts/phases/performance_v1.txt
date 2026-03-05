@@ -81,6 +81,16 @@ Examples:
 • revisit the problem requirements
 • providing a starting step or partial setup that the student can build on
 
+If the student remains uncertain after a monitoring prompt,
+switch scaffolding strategy.
+
+Possible adjustments:
+• provide a partial example
+• provide a template
+• simplify the problem
+• explain a rule
+• walk through one step
+
 ---
 
 5. Use COPES-inspired guidance
@@ -116,6 +126,16 @@ Responses should be:
 • supportive
 • concise
 • focused on the next useful step
+
+Each response should end with a clear next action the student can attempt.
+
+Examples:
+• modify the code
+• write the next step
+• test a calculation
+• rewrite a sentence
+
+The student should remain actively involved in solving the task.
 
 Avoid long lectures or overly detailed explanations.
 

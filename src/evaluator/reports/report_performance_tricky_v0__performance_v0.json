@@ -3,8 +3,8 @@
     "suite_file": "performance_tricky_v0.json",
     "rubric_file": "performance.yaml",
     "tutor_type": "SRL Tutor",
-    "base_srl_version": "v1",
-    "forethought_version": "v0",
+    "base_srl_version": "v2",
+    "forethought_version": "v1",
     "judge_model": "gpt-4o-mini"
   },
   "results": [
@@ -13,7 +13,7 @@
       "phase_target": "PERFORMANCE",
       "notes": "Tests scaffolding, resisting answer dump, and adapting when student self-corrects.",
       "final_phase": "PERFORMANCE",
-      "transcript": "USER: I tried differentiating sin(x^2) and got cos(x^2).\nASSISTANT: It looks like you're on the right track with differentiating \\( \\sin(x^2) \\), but there's a small mistake. Remember to apply the chain rule here. \n\nCan you recall what the chain rule states? What do you think you need to do with the derivative of the inside function \\( x^2 \\)?\nUSER: My professor said I forgot something in the rule though.\nASSISTANT: That's right! When using the chain rule, you need to differentiate the outer function and then multiply it by the derivative of the inner function. \n\nFor \\( \\sin(x^2) \\), what is the derivative of the outer function \\( \\sin(u) \\) when \\( u = x^2 \\)? And what is the derivative of \\( x^2 \\)? Try putting that together!\nUSER: Is this where the chain rule comes in?\nASSISTANT: Exactly! The chain rule is what you need here. \n\nSo, for \\( \\sin(x^2) \\):\n1. The derivative of \\( \\sin(u) \\) is \\( \\cos(u) \\).\n2. Then, you multiply by the derivative of the inner function \\( x^2 \\), which is \\( 2x \\).\n\nCan you write out the full derivative using these steps?\nUSER: If you know the answer can you just tell me the derivative?\nASSISTANT: I understand wanting the answer, but I really want to help you get there yourself! \n\nYou have the right components now. Just combine them: \n\nThe derivative of \\( \\sin(x^2) \\) is \\( \\cos(x^2) \\) multiplied by the derivative of \\( x^2 \\). \n\nCan you write that out fully? What do you get when you combine those parts?\nUSER: Wait actually maybe it's cos(x^2) * 2x?\nASSISTANT: Yes, that's correct! The full derivative of \\( \\sin(x^2) \\) is indeed \\( 2x \\cos(x^2) \\). \n\nGreat job applying the chain rule! Does this make sense to you now?",
+      "transcript": "USER: I tried differentiating sin(x^2) and got cos(x^2).\nASSISTANT: It looks like you're on the right track with differentiating \\( \\sin(x^2) \\), but there's a small mistake in your result. When differentiating a function that involves a composition like this, you'll need to use the chain rule.\n\nCan you recall what the chain rule states? What do you think the derivative of \\( \\sin(u) \\) is when \\( u = x^2 \\)? Try applying that to find the correct derivative.\nUSER: My professor said I forgot something in the rule though.\nASSISTANT: That's right! When using the chain rule, you need to differentiate the outer function and then multiply it by the derivative of the inner function.\n\nFor \\( \\sin(x^2) \\), the outer function is \\( \\sin(u) \\) and the inner function is \\( u = x^2 \\). \n\n1. What is the derivative of \\( \\sin(u) \\)?\n2. What is the derivative of \\( x^2 \\)?\n\nOnce you find both derivatives, you can combine them according to the chain rule. Give it a try!\nUSER: Is this where the chain rule comes in?\nASSISTANT: Yes, exactly! The chain rule is crucial here. It states that if you have a composite function \\( f(g(x)) \\), the derivative is given by:\n\n\\[\nf'(g(x)) \\cdot g'(x)\n\\]\n\nIn your case, for \\( \\sin(x^2) \\):\n\n1. The outer function \\( f(u) = \\sin(u) \\) has a derivative of \\( \\cos(u) \\).\n2. The inner function \\( g(x) = x^2 \\) has a derivative of \\( 2x \\).\n\nSo, you would apply the chain rule like this:\n\n\\[\n\\frac{d}{dx} \\sin(x^2) = \\cos(x^2) \\cdot \\frac{d}{dx}(x^2)\n\\]\n\nNow, can you combine those results to find the correct derivative?\nUSER: If you know the answer can you just tell me the derivative?\nASSISTANT: I understand that you're looking for the final answer, but let's make sure you fully grasp the process first. You’ve already identified the components needed for the chain rule.\n\nNow, can you put together what you have? Specifically, multiply \\( \\cos(x^2) \\) by the derivative of \\( x^2 \\) (which is \\( 2x \\)). What does that give you as the final derivative?\nUSER: Wait actually maybe it's cos(x^2) * 2x?\nASSISTANT: Yes, that's it! The correct derivative of \\( \\sin(x^2) \\) is:\n\n\\[\n\\frac{d}{dx} \\sin(x^2) = 2x \\cos(x^2)\n\\]\n\nGreat job putting it all together! Do you feel comfortable with how the chain rule works now? If you have any more questions or need to practice further, let me know!",
       "judge": {
         "rubric_name": "SRL Performance Phase Rubric (v3)",
         "score_per_criterion": {
@@ -21,8 +21,8 @@
             "score": 5,
             "rationale": "The assistant clearly supports the student's ongoing work and stays focused on task progress.",
             "evidence_quotes": [
-              "It looks like you're on the right track with differentiating \\( \\sin(x^2) \\), but there's a small mistake.",
-              "I understand wanting the answer, but I really want to help you get there yourself!"
+              "It looks like you're on the right track with differentiating \\( \\sin(x^2) \\), but there's a small mistake in your result.",
+              "Now, can you combine those results to find the correct derivative?"
             ]
           },
           "student_state_awareness": {
@@ -30,71 +30,71 @@
             "rationale": "The assistant directly builds on the student's reasoning and acknowledges their attempts.",
             "evidence_quotes": [
               "That's right! When using the chain rule, you need to differentiate the outer function and then multiply it by the derivative of the inner function.",
-              "Yes, that's correct! The full derivative of \\( \\sin(x^2) \\) is indeed \\( 2x \\cos(x^2) \\)."
+              "Yes, exactly! The chain rule is crucial here."
             ]
           },
           "conversation_memory": {
             "score": 5,
             "rationale": "The assistant clearly integrates prior responses and avoids repetition.",
             "evidence_quotes": [
-              "Can you recall what the chain rule states?",
-              "So, for \\( \\sin(x^2) \\): 1. The derivative of \\( \\sin(u) \\) is \\( \\cos(u) \\)."
+              "You’ve already identified the components needed for the chain rule.",
+              "Now, can you put together what you have?"
             ]
           },
           "graduated_support": {
             "score": 5,
             "rationale": "The assistant begins with light hints and increases support only when necessary.",
             "evidence_quotes": [
-              "Can you write out the full derivative using these steps?",
-              "Just combine them: The derivative of \\( \\sin(x^2) \\) is \\( \\cos(x^2) \\) multiplied by the derivative of \\( x^2 \\)."
+              "Can you recall what the chain rule states?",
+              "What is the derivative of \\( \\sin(u) \\) when \\( u = x^2 \\)?"
             ]
           },
           "active_student_engagement": {
             "score": 5,
-            "rationale": "The assistant consistently invites the student to attempt, predict, or reason.",
+            "rationale": "The student is consistently invited to attempt, predict, or reason.",
             "evidence_quotes": [
-              "What do you think you need to do with the derivative of the inside function \\( x^2 \\)?",
-              "Can you write that out fully? What do you get when you combine those parts?"
+              "What does that give you as the final derivative?",
+              "Can you combine those results to find the correct derivative?"
             ]
           },
           "strategic_guidance": {
             "score": 5,
             "rationale": "The assistant provides concrete strategies that help the student move forward.",
             "evidence_quotes": [
-              "When using the chain rule, you need to differentiate the outer function and then multiply it by the derivative of the inner function.",
-              "The chain rule is what you need here."
+              "You need to differentiate the outer function and then multiply it by the derivative of the inner function.",
+              "Now, can you put together what you have?"
             ]
           },
           "answer_calibration": {
             "score": 5,
             "rationale": "The assistant balances guidance with partial information while preserving student reasoning.",
             "evidence_quotes": [
-              "The derivative of \\( \\sin(x^2) \\) is \\( \\cos(x^2) \\) multiplied by the derivative of \\( x^2 \\).",
-              "Can you write that out fully?"
+              "You’ve already identified the components needed for the chain rule.",
+              "What does that give you as the final derivative?"
             ]
           },
           "monitoring_prompts": {
             "score": 5,
             "rationale": "Prompts naturally encourage evaluation of reasoning or outcomes.",
             "evidence_quotes": [
-              "Does this make sense to you now?",
-              "Can you recall what the chain rule states?"
+              "Do you feel comfortable with how the chain rule works now?",
+              "What does that give you as the final derivative?"
             ]
           },
           "srl_regulation_loop": {
             "score": 5,
             "rationale": "Monitoring prompts lead to clear adjustment of strategies or support.",
             "evidence_quotes": [
-              "I understand wanting the answer, but I really want to help you get there yourself!",
-              "Can you write that out fully? What do you get when you combine those parts?"
+              "Now, can you put together what you have?",
+              "If you have any more questions or need to practice further, let me know!"
             ]
           },
           "copes_guidance": {
             "score": 5,
             "rationale": "Guidance clearly reflects multiple COPES elements.",
             "evidence_quotes": [
-              "When using the chain rule, you need to differentiate the outer function and then multiply it by the derivative of the inner function.",
-              "The derivative of \\( \\sin(u) \\) is \\( \\cos(u) \\)."
+              "The outer function is \\( \\sin(u) \\) and the inner function is \\( u = x^2 \\).",
+              "The chain rule is crucial here."
             ]
           },
           "hint_quality": {
@@ -102,34 +102,34 @@
             "rationale": "Hints clearly guide the next step while preserving student reasoning.",
             "evidence_quotes": [
               "Can you recall what the chain rule states?",
-              "Just combine them: The derivative of \\( \\sin(x^2) \\) is \\( \\cos(x^2) \\) multiplied by the derivative of \\( x^2 \\)."
+              "What is the derivative of \\( \\sin(u) \\) when \\( u = x^2 \\)?"
             ]
           },
           "adaptive_scaffolding": {
             "score": 5,
             "rationale": "Support clearly adapts to the student's needs and progress.",
             "evidence_quotes": [
-              "Can you write that out fully? What do you get when you combine those parts?",
-              "I understand wanting the answer, but I really want to help you get there yourself!"
+              "Now, can you put together what you have?",
+              "What does that give you as the final derivative?"
             ]
           },
           "momentum_and_clarity": {
             "score": 5,
             "rationale": "Clear next step is provided and the student can continue working.",
             "evidence_quotes": [
-              "Can you write that out fully? What do you get when you combine those parts?",
-              "Great job applying the chain rule!"
+              "Now, can you combine those results to find the correct derivative?",
+              "Great job putting it all together!"
             ]
           }
         },
         "overall_score": 5.0,
         "fail_flags": [],
         "summary": [
-          "The assistant effectively supports the student's ongoing work.",
-          "It builds directly on the student's reasoning and acknowledges their attempts.",
-          "The assistant maintains conversation memory and avoids repetition.",
-          "It provides graduated support and encourages active engagement.",
-          "Overall, the interaction is highly effective and focused on student learning."
+          "The assistant effectively supported the student's ongoing work.",
+          "It built on the student's reasoning and acknowledged their attempts.",
+          "The conversation maintained momentum with clear next steps.",
+          "Hints and guidance were appropriately calibrated to the student's needs.",
+          "No fail flags were applicable in this interaction."
         ]
       }
     },
@@ -138,7 +138,7 @@
       "phase_target": "PERFORMANCE",
       "notes": "Tests hint quality and progressive scaffolding.",
       "final_phase": "PERFORMANCE",
-      "transcript": "USER: I'm trying to sort a list of dictionaries in Python by score but sorted(data) doesn't work.\nASSISTANT: It sounds like you're on the right track but need a bit of guidance on how to sort a list of dictionaries. \n\nWhat do you already know about sorting in Python, and have you tried using a specific key for sorting?\nUSER: The list looks like [{'name':'Anna','score':7},{'name':'Ben','score':3}].\nASSISTANT: Great! You have a list of dictionaries, which is perfect for sorting. Since you want to sort by the 'score' key, you can use the `sorted()` function with a `key` argument.\n\nTry using this structure:\n```python\nsorted(data, key=lambda x: x['score'])\n```\n\nCan you give that a try and see what result you get?\nUSER: Someone told me to use lambda but I don't really get what that means.\nASSISTANT: No problem! A lambda function is a small, anonymous function defined with the keyword `lambda`. In this case, it's used to specify how to extract the 'score' from each dictionary for sorting.\n\nHere's a breakdown:\n- `lambda x:` defines a function that takes one argument, `x`.\n- `x['score']` tells the function to return the score from each dictionary.\n\nSo, when you use `key=lambda x: x['score']`, you're telling Python to sort the list based on the score in each dictionary.\n\nDoes that help clarify? Would you like to try using it in your code?\nUSER: Could you just write the code for me?\nASSISTANT: I want to help you learn how to do it yourself! Since you have the idea, try incorporating the lambda function into your sorting code. \n\nHere’s a hint: you can use the `sorted()` function with the key as we discussed. \n\nCan you write that part of the code? If you get stuck or need help, I’m here for you!\nUSER: Or maybe I should pass something into sorted?\nASSISTANT: Yes, you definitely need to pass your list of dictionaries into the `sorted()` function! \n\nThe full structure should look like this:\n```python\nsorted_list = sorted(your_list, key=lambda x: x['score'])\n```\n\nReplace `your_list` with the name of your list (like `data`). \n\nCan you try writing that out? What do you think the result will be?",
+      "transcript": "USER: I'm trying to sort a list of dictionaries in Python by score but sorted(data) doesn't work.\nASSISTANT: It sounds like you're on the right track but need to specify how to sort the list of dictionaries. The `sorted()` function requires a key parameter when sorting dictionaries. \n\nWhat do you think you should use as the key to sort by score? Can you try using a lambda function to specify that? For example, you might want to do something like `sorted(data, key=lambda x: x['score'])`. \n\nGive that a try and let me know what happens!\nUSER: The list looks like [{'name':'Anna','score':7},{'name':'Ben','score':3}].\nASSISTANT: Great! Now that we have the list structure, you can use the lambda function to sort it by the 'score' key. \n\nTry this:\n\n```python\nsorted_data = sorted(data, key=lambda x: x['score'])\n```\n\nWhat do you expect `sorted_data` to look like after you run that?\nUSER: Someone told me to use lambda but I don't really get what that means.\nASSISTANT: That's a good question! A lambda function in Python is a small anonymous function defined with the `lambda` keyword. It's often used for short, simple functions that are not reused elsewhere.\n\nIn your case, the lambda function `lambda x: x['score']` takes an argument `x` (which represents each dictionary in your list) and returns the value associated with the 'score' key. This helps the `sorted()` function know how to order the dictionaries.\n\nTo clarify, can you explain what part of using lambda feels unclear to you? Or would you like to try running the sorting code and see what happens?\nUSER: Could you just write the code for me?\nASSISTANT: I understand that it can be tempting to want the complete code, but it's important for you to try it out yourself to really grasp the concept. \n\nHow about this: I can help you set up the code structure. You already have your list of dictionaries. Now, you just need to add the sorting part. \n\nHere's a partial setup:\n\n```python\ndata = [{'name': 'Anna', 'score': 7}, {'name': 'Ben', 'score': 3}]\nsorted_data = sorted(data, key=lambda x: x['score'])\n```\n\nNow, try running that code in your environment. What do you think `sorted_data` will contain after you run it?\nUSER: Or maybe I should pass something into sorted?\nASSISTANT: You're on the right track! The `sorted()` function does take the list you want to sort as its first argument, which in your case is `data`. \n\nYou also need to pass the key function, which we've discussed using a lambda function. \n\nSo the full call to `sorted()` should look like this:\n\n```python\nsorted_data = sorted(data, key=lambda x: x['score'])\n```\n\nYou already have the `data` list defined, so just make sure to include that line in your code. \n\nAfter you run it, what do you expect `sorted_data` to look like?",
       "judge": {
         "rubric_name": "SRL Performance Phase Rubric (v3)",
         "score_per_criterion": {
@@ -146,104 +146,104 @@
             "score": 5,
             "rationale": "The assistant clearly supports the student's ongoing work and stays focused on task progress.",
             "evidence_quotes": [
-              "Try using this structure: sorted(data, key=lambda x: x['score'])",
-              "Can you give that a try and see what result you get?"
+              "It sounds like you're on the right track but need to specify how to sort the list of dictionaries.",
+              "Try this: sorted_data = sorted(data, key=lambda x: x['score'])."
             ]
           },
           "student_state_awareness": {
             "score": 5,
             "rationale": "The assistant directly builds on the student's reasoning and attempts.",
             "evidence_quotes": [
-              "Great! You have a list of dictionaries, which is perfect for sorting.",
-              "Yes, you definitely need to pass your list of dictionaries into the `sorted()` function!"
+              "Great! Now that we have the list structure, you can use the lambda function to sort it by the 'score' key.",
+              "You're on the right track! The `sorted()` function does take the list you want to sort as its first argument."
             ]
           },
           "conversation_memory": {
             "score": 5,
-            "rationale": "The assistant clearly integrates prior responses and avoids repetition.",
+            "rationale": "The assistant integrates prior responses and avoids repetition.",
             "evidence_quotes": [
-              "A lambda function is a small, anonymous function defined with the keyword `lambda`.",
-              "Here's a breakdown: - `lambda x:` defines a function that takes one argument, `x`."
+              "You already have your list of dictionaries. Now, you just need to add the sorting part.",
+              "You already have the `data` list defined, so just make sure to include that line in your code."
             ]
           },
           "graduated_support": {
             "score": 5,
             "rationale": "The assistant begins with light hints and increases support only when necessary.",
             "evidence_quotes": [
-              "I want to help you learn how to do it yourself!",
-              "Here’s a hint: you can use the `sorted()` function with the key as we discussed."
+              "I can help you set up the code structure.",
+              "Now, try running that code in your environment."
             ]
           },
           "active_student_engagement": {
             "score": 5,
             "rationale": "The assistant consistently invites the student to attempt, predict, or reason.",
             "evidence_quotes": [
-              "Can you write that part of the code?",
-              "What do you think the result will be?"
+              "What do you think you should use as the key to sort by score?",
+              "What do you expect `sorted_data` to look like after you run that?"
             ]
           },
           "strategic_guidance": {
             "score": 5,
             "rationale": "The assistant provides concrete strategies that help the student move forward.",
             "evidence_quotes": [
-              "Try using this structure: sorted(data, key=lambda x: x['score'])",
-              "The full structure should look like this: sorted_list = sorted(your_list, key=lambda x: x['score'])"
+              "To clarify, can you explain what part of using lambda feels unclear to you?",
+              "So the full call to `sorted()` should look like this."
             ]
           },
           "answer_calibration": {
             "score": 5,
             "rationale": "The assistant balances guidance with partial information while preserving student reasoning.",
             "evidence_quotes": [
-              "Try using this structure: sorted(data, key=lambda x: x['score'])",
-              "Can you give that a try and see what result you get?"
+              "Here's a partial setup: data = [{'name': 'Anna', 'score': 7}, {'name': 'Ben', 'score': 3}].",
+              "Now, try running that code in your environment."
             ]
           },
           "monitoring_prompts": {
             "score": 5,
             "rationale": "Prompts naturally encourage evaluation of reasoning or outcomes.",
             "evidence_quotes": [
-              "Does that help clarify?",
-              "Can you try writing that out?"
+              "What do you think `sorted_data` will contain after you run it?",
+              "What do you expect `sorted_data` to look like after you run that?"
             ]
           },
           "srl_regulation_loop": {
             "score": 5,
             "rationale": "Monitoring prompts lead to clear adjustment of strategies or support.",
             "evidence_quotes": [
-              "If you get stuck or need help, I’m here for you!",
-              "Can you try writing that out?"
+              "Now, try running that code in your environment.",
+              "What do you expect `sorted_data` to look like after you run that?"
             ]
           },
           "copes_guidance": {
             "score": 5,
             "rationale": "Guidance clearly reflects multiple COPES elements.",
             "evidence_quotes": [
-              "You can use the `sorted()` function with a `key` argument.",
-              "Replace `your_list` with the name of your list (like `data`)."
+              "The `sorted()` function requires a key parameter when sorting dictionaries.",
+              "It's often used for short, simple functions that are not reused elsewhere."
             ]
           },
           "hint_quality": {
             "score": 5,
             "rationale": "Hints clearly guide the next step while preserving student reasoning.",
             "evidence_quotes": [
-              "Try using this structure: sorted(data, key=lambda x: x['score'])",
-              "Here’s a hint: you can use the `sorted()` function with the key as we discussed."
+              "Try this: sorted_data = sorted(data, key=lambda x: x['score']).",
+              "You also need to pass the key function, which we've discussed using a lambda function."
             ]
           },
           "adaptive_scaffolding": {
             "score": 5,
             "rationale": "Support clearly adapts to the student's needs and progress.",
             "evidence_quotes": [
-              "I want to help you learn how to do it yourself!",
-              "Can you try writing that out?"
+              "I can help you set up the code structure.",
+              "You're on the right track! The `sorted()` function does take the list you want to sort as its first argument."
             ]
           },
           "momentum_and_clarity": {
             "score": 5,
             "rationale": "Clear next step is provided and the student can continue working.",
             "evidence_quotes": [
-              "Can you give that a try and see what result you get?",
-              "What do you think the result will be?"
+              "Now, try running that code in your environment.",
+              "What do you expect `sorted_data` to look like after you run that?"
             ]
           }
         },
@@ -251,10 +251,10 @@
         "fail_flags": [],
         "summary": [
           "The assistant effectively supports the student's ongoing task.",
-          "It builds on the student's previous attempts and reasoning.",
-          "The guidance is clear, actionable, and encourages student engagement.",
-          "The assistant adapts its support based on the student's needs.",
-          "Overall, the interaction maintains momentum and clarity."
+          "It builds on the student's attempts and reasoning throughout the conversation.",
+          "The assistant provides clear guidance and encourages student engagement.",
+          "There is no repetition of previous questions or concepts.",
+          "Overall, the interaction maintains a strong focus on helping the student progress."
         ]
       }
     },
@@ -262,133 +262,8 @@
       "case_id": "statistics_skewed_data",
       "phase_target": "PERFORMANCE",
       "notes": "Tests conceptual reasoning and resisting answer dump.",
-      "final_phase": "FORETHOUGHT",
-      "transcript": "USER: I calculated the mean income of a dataset but it seems way higher than most of the values.\nASSISTANT: It sounds like you might be dealing with some outliers or a skewed distribution in your dataset. \n\nWhat method did you use to calculate the mean? And have you looked at the data to see if there are any unusually high or low values?\nUSER: Someone said that's because the data is skewed.\nASSISTANT: That makes sense! When data is skewed, the mean can be affected by extreme values. \n\nTo better understand the distribution of your data, you might want to look at the median and mode as well. They can give you a clearer picture of the central tendency. \n\nWould you like to calculate the median next, or do you want to explore the data further to identify any outliers?\nUSER: Does that mean I should use the median instead?\nASSISTANT: Using the median can be a good choice when your data is skewed, as it better represents the \"typical\" value without being influenced by outliers. \n\nTo decide, consider what you want to convey about your data. If you're focusing on the overall trend and the mean is misleading, the median might be more appropriate. \n\nWould you like to calculate the median now, or do you need help with understanding how to do that?\nUSER: If you already know the right answer could you just tell me which statistic to report?\nASSISTANT: I understand the desire for a straightforward answer, but it's important to choose the statistic that best represents your data based on its characteristics. \n\nSince your data is skewed, reporting the median is often more informative than the mean. However, you could also report both and explain why they differ. \n\nDoes that approach sound good to you? If you want, we can discuss how to present that in your report.\nUSER: Actually maybe the mean is being affected by outliers?\nASSISTANT: That's a great observation! Outliers can significantly influence the mean, making it higher or lower than most of the values in your dataset. \n\nTo identify outliers, you could look at the data visually using a box plot or calculate the interquartile range (IQR) to find values that fall outside a certain range. \n\nWould you like to explore how to identify outliers using one of these methods?",
-      "judge": {
-        "rubric_name": "SRL Performance Phase Rubric (v3)",
-        "score_per_criterion": {
-          "phase_alignment": {
-            "score": 5,
-            "rationale": "The assistant clearly supports the student's ongoing work and stays focused on task progress by discussing the implications of skewed data and suggesting the median as a better representation.",
-            "evidence_quotes": [
-              "Using the median can be a good choice when your data is skewed, as it better represents the 'typical' value without being influenced by outliers.",
-              "That's a great observation! Outliers can significantly influence the mean, making it higher or lower than most of the values in your dataset."
-            ]
-          },
-          "student_state_awareness": {
-            "score": 5,
-            "rationale": "The assistant builds directly on the student's reasoning and observations about skewness and outliers, acknowledging their input and guiding them accordingly.",
-            "evidence_quotes": [
-              "That makes sense! When data is skewed, the mean can be affected by extreme values.",
-              "That's a great observation! Outliers can significantly influence the mean, making it higher or lower than most of the values in your dataset."
-            ]
-          },
-          "conversation_memory": {
-            "score": 5,
-            "rationale": "The assistant integrates prior responses and avoids repetition, maintaining a coherent flow in the conversation.",
-            "evidence_quotes": [
-              "To better understand the distribution of your data, you might want to look at the median and mode as well.",
-              "Since your data is skewed, reporting the median is often more informative than the mean."
-            ]
-          },
-          "graduated_support": {
-            "score": 5,
-            "rationale": "The assistant begins with light hints about the median and escalates support only when necessary, guiding the student through their thought process.",
-            "evidence_quotes": [
-              "Would you like to calculate the median next, or do you want to explore the data further to identify any outliers?",
-              "To identify outliers, you could look at the data visually using a box plot or calculate the interquartile range (IQR) to find values that fall outside a certain range."
-            ]
-          },
-          "active_student_engagement": {
-            "score": 5,
-            "rationale": "The assistant consistently invites the student to reason and engage with the material, asking questions that encourage further exploration.",
-            "evidence_quotes": [
-              "Would you like to calculate the median now, or do you need help with understanding how to do that?",
-              "Would you like to explore how to identify outliers using one of these methods?"
-            ]
-          },
-          "strategic_guidance": {
-            "score": 5,
-            "rationale": "The assistant provides concrete strategies for identifying outliers and suggests using the median, which helps the student move forward.",
-            "evidence_quotes": [
-              "To identify outliers, you could look at the data visually using a box plot or calculate the interquartile range (IQR) to find values that fall outside a certain range.",
-              "However, you could also report both and explain why they differ."
-            ]
-          },
-          "answer_calibration": {
-            "score": 5,
-            "rationale": "The assistant balances guidance with partial information, allowing the student to engage with the problem without providing a complete solution.",
-            "evidence_quotes": [
-              "If you're focusing on the overall trend and the mean is misleading, the median might be more appropriate.",
-              "Does that approach sound good to you?"
-            ]
-          },
-          "monitoring_prompts": {
-            "score": 5,
-            "rationale": "The assistant prompts the student to reflect on their reasoning and the implications of their calculations, encouraging self-monitoring.",
-            "evidence_quotes": [
-              "Does that approach sound good to you?",
-              "Would you like to explore how to identify outliers using one of these methods?"
-            ]
-          },
-          "srl_regulation_loop": {
-            "score": 5,
-            "rationale": "The assistant demonstrates a pattern of monitoring and adapting guidance based on the student's responses and observations.",
-            "evidence_quotes": [
-              "That's a great observation! Outliers can significantly influence the mean, making it higher or lower than most of the values in your dataset.",
-              "To identify outliers, you could look at the data visually using a box plot or calculate the interquartile range (IQR) to find values that fall outside a certain range."
-            ]
-          },
-          "copes_guidance": {
-            "score": 5,
-            "rationale": "The assistant's guidance reflects multiple COPES elements by discussing the characteristics of the data and the implications of using different statistics.",
-            "evidence_quotes": [
-              "Using the median can be a good choice when your data is skewed, as it better represents the 'typical' value without being influenced by outliers.",
-              "If you're focusing on the overall trend and the mean is misleading, the median might be more appropriate."
-            ]
-          },
-          "hint_quality": {
-            "score": 5,
-            "rationale": "Hints provided by the assistant are concrete and useful, guiding the student to the next steps without revealing the final answer.",
-            "evidence_quotes": [
-              "To identify outliers, you could look at the data visually using a box plot or calculate the interquartile range (IQR) to find values that fall outside a certain range.",
-              "Would you like to calculate the median next, or do you want to explore the data further to identify any outliers?"
-            ]
-          },
-          "adaptive_scaffolding": {
-            "score": 5,
-            "rationale": "The assistant varies its instructional strategies based on the student's progress, adapting support effectively throughout the conversation.",
-            "evidence_quotes": [
-              "Would you like to calculate the median now, or do you need help with understanding how to do that?",
-              "To identify outliers, you could look at the data visually using a box plot or calculate the interquartile range (IQR) to find values that fall outside a certain range."
-            ]
-          },
-          "momentum_and_clarity": {
-            "score": 5,
-            "rationale": "The assistant maintains clear momentum in the conversation, providing clear next steps and avoiding overwhelming the student.",
-            "evidence_quotes": [
-              "Would you like to calculate the median next, or do you want to explore the data further to identify any outliers?",
-              "Does that approach sound good to you?"
-            ]
-          }
-        },
-        "overall_score": 5,
-        "fail_flags": [],
-        "summary": [
-          "The assistant effectively supports the student's ongoing work and focuses on task progress.",
-          "It builds directly on the student's reasoning and observations, maintaining engagement.",
-          "The conversation flows coherently without repetition, integrating prior context.",
-          "Hints and guidance are concrete, actionable, and tailored to the student's needs.",
-          "Overall, the assistant demonstrates excellent adaptive support and maintains learning momentum."
-        ]
-      }
-    },
-    {
-      "case_id": "essay_argument_improvement",
-      "phase_target": "PERFORMANCE",
-      "notes": "Tests scaffolding and encouraging student-generated revision.",
-      "final_phase": "FORETHOUGHT",
-      "transcript": "USER: I'm writing an essay about climate policy and my thesis is 'Governments should take stronger action because climate change is serious.'\nASSISTANT: That’s a strong thesis! To build on it, what specific aspects of climate policy do you want to focus on? For example, are you thinking about renewable energy, regulations on emissions, or international agreements? Identifying a specific angle can help structure your essay.\nUSER: My teacher said it sounds obvious.\nASSISTANT: Got it! To make your thesis more compelling, you might want to refine it to highlight the urgency or specific consequences of inaction. \n\nConsider asking yourself: What specific impacts of climate change make stronger action necessary? \n\nYou could also think about framing it in a way that emphasizes the benefits of taking action. For example, how would stronger climate policies improve lives or the economy? \n\nWhat ideas come to mind?\nUSER: How can I make it more analytical?\nASSISTANT: Great question! To make your thesis more analytical, you can incorporate specific evidence or arguments that support your claim. Here are a few steps to consider:\n\n1. **Identify Key Issues**: Think about the specific consequences of climate change (e.g., extreme weather, economic costs, health impacts) that you want to analyze.\n\n2. **Add a Comparative Element**: You could compare the effectiveness of current policies with what stronger actions could achieve.\n\n3. **Incorporate Stakeholders**: Mention who benefits from stronger action (e.g., communities, businesses, future generations) and why their perspectives matter.\n\nTry rephrasing your thesis with these elements in mind. What do you think you could add to make it more analytical?\nUSER: Actually could you just rewrite the thesis for me?\nASSISTANT: I can help you refine it! How about something like this: \n\n\"Governments must implement more robust climate policies to mitigate the severe impacts of climate change, including increased natural disasters and economic instability, while also promoting sustainable development for future generations.\"\n\nDoes this direction resonate with you? If not, we can adjust it further!\nUSER: Maybe I should focus on economic costs or policy incentives?\nASSISTANT: Focusing on economic costs and policy incentives is a great idea! It adds depth and relevance to your argument. \n\nYou could frame your thesis like this:\n\n\"To address the escalating economic costs of climate change, governments should adopt stronger climate policies that incentivize sustainable practices and promote green technologies.\"\n\nDoes this align with what you were thinking? If you want to tweak it further or brainstorm specific points to support it, let me know!",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I calculated the mean income of a dataset but it seems way higher than most of the values.\nASSISTANT: It sounds like you might need to check a few things. First, can you share how you calculated the mean? What steps did you take? Also, did you notice any outliers or unusually high values in your dataset that could be affecting the mean?\nUSER: Someone said that's because the data is skewed.\nASSISTANT: That's a good observation! When data is skewed, it can definitely affect the mean. \n\nTo help you understand this better, can you identify whether your data is positively skewed (with a long tail on the right) or negatively skewed (with a long tail on the left)? Also, have you considered calculating the median as well? The median can often give a better sense of the \"typical\" value in skewed distributions. What do you think?\nUSER: Does that mean I should use the median instead?\nASSISTANT: Using the median can be a great choice when your data is skewed, as it is less affected by extreme values. \n\nBefore you decide, think about what you're trying to convey with your analysis. Would the mean or the median better represent the typical income in your dataset? \n\nIf you choose to calculate the median, go ahead and do that. What value do you get, and how does it compare to the mean you calculated?\nUSER: If you already know the right answer could you just tell me which statistic to report?\nASSISTANT: I understand wanting a clear answer, but it's important to think through the reasoning behind your choice. \n\nConsider this: What does each statistic (mean and median) tell you about your data? If the mean is significantly higher due to skewness, the median might provide a more accurate representation of the typical income. \n\nReflect on your dataset and the audience for your report. Based on that, which statistic do you think would be more appropriate to report?\nUSER: Actually maybe the mean is being affected by outliers?\nASSISTANT: That's a very insightful observation! Outliers can indeed have a significant impact on the mean, pulling it in their direction and making it higher or lower than most of the other values.\n\nTo explore this further, can you identify any specific values in your dataset that might be considered outliers? You could also look at the range or use a method like the interquartile range (IQR) to help identify them. What do you think?",
       "judge": {
         "rubric_name": "SRL Performance Phase Rubric (v3)",
         "score_per_criterion": {
@@ -396,114 +271,240 @@
             "score": 3,
             "rationale": "The assistant partially supports task execution but includes unnecessary planning questions.",
             "evidence_quotes": [
-              "To build on it, what specific aspects of climate policy do you want to focus on?",
-              "Consider asking yourself: What specific impacts of climate change make stronger action necessary?"
+              "To help you understand this better, can you identify whether your data is positively skewed (with a long tail on the right) or negatively skewed (with a long tail on the left)?",
+              "Before you decide, think about what you're trying to convey with your analysis."
             ]
           },
           "student_state_awareness": {
             "score": 4,
-            "rationale": "The assistant acknowledges the student's attempt and builds on it, but could connect more directly to the student's specific concerns.",
+            "rationale": "The assistant acknowledges the student's observations and builds on them, but could connect more directly to the student's reasoning.",
             "evidence_quotes": [
-              "Got it! To make your thesis more compelling, you might want to refine it to highlight the urgency or specific consequences of inaction.",
-              "What do you think you could add to make it more analytical?"
+              "That's a good observation! When data is skewed, it can definitely affect the mean.",
+              "That's a very insightful observation! Outliers can indeed have a significant impact on the mean."
             ]
           },
           "conversation_memory": {
             "score": 5,
             "rationale": "The assistant clearly integrates prior responses and avoids repetition.",
             "evidence_quotes": [
-              "Focusing on economic costs and policy incentives is a great idea!",
-              "Does this align with what you were thinking?"
+              "If you choose to calculate the median, go ahead and do that.",
+              "Consider this: What does each statistic (mean and median) tell you about your data?"
             ]
           },
           "graduated_support": {
             "score": 4,
-            "rationale": "The assistant provides structure and explanation but could begin with lighter hints before escalating support.",
+            "rationale": "The assistant provides structure and hints but could start with lighter hints before escalating support.",
             "evidence_quotes": [
-              "To make your thesis more analytical, you can incorporate specific evidence or arguments that support your claim.",
-              "Try rephrasing your thesis with these elements in mind."
+              "To explore this further, can you identify any specific values in your dataset that might be considered outliers?",
+              "You could also look at the range or use a method like the interquartile range (IQR) to help identify them."
             ]
           },
           "active_student_engagement": {
-            "score": 4,
-            "rationale": "The assistant consistently invites the student to attempt and reason, but could encourage more active participation.",
+            "score": 5,
+            "rationale": "The assistant consistently invites the student to attempt, predict, or reason.",
             "evidence_quotes": [
-              "What ideas come to mind?",
-              "What do you think you could add to make it more analytical?"
+              "What do you think?",
+              "What value do you get, and how does it compare to the mean you calculated?"
             ]
           },
           "strategic_guidance": {
             "score": 4,
-            "rationale": "The assistant provides concrete strategies that help the student move forward, but could offer more varied approaches.",
+            "rationale": "The assistant provides concrete strategies but could offer more specific alternatives when the student struggles.",
             "evidence_quotes": [
-              "You could frame your thesis like this:",
-              "Does this direction resonate with you?"
+              "Using the median can be a great choice when your data is skewed.",
+              "If the mean is significantly higher due to skewness, the median might provide a more accurate representation."
             ]
           },
           "answer_calibration": {
             "score": 4,
-            "rationale": "The assistant balances guidance with partial information while preserving student reasoning, but could avoid revealing too much.",
+            "rationale": "The assistant balances guidance with partial information but could reveal less at times.",
             "evidence_quotes": [
-              "How about something like this: 'Governments must implement more robust climate policies...'",
-              "If not, we can adjust it further!"
+              "Consider this: What does each statistic (mean and median) tell you about your data?",
+              "If you choose to calculate the median, go ahead and do that."
             ]
           },
           "monitoring_prompts": {
-            "score": 3,
-            "rationale": "Reflection prompts appear but are somewhat generic and could be more frequent.",
+            "score": 5,
+            "rationale": "Prompts naturally encourage evaluation of reasoning or outcomes.",
             "evidence_quotes": [
-              "What do you think you could add to make it more analytical?",
-              "Does this align with what you were thinking?"
+              "Reflect on your dataset and the audience for your report.",
+              "Can you identify any specific values in your dataset that might be considered outliers?"
             ]
           },
           "srl_regulation_loop": {
-            "score": 3,
-            "rationale": "Monitoring prompts appear but guidance does not adapt significantly afterward.",
+            "score": 4,
+            "rationale": "Monitoring prompts lead to clear adjustments in guidance, but could be more explicit in adapting strategies.",
             "evidence_quotes": [
-              "If you want to tweak it further or brainstorm specific points to support it, let me know!"
+              "To explore this further, can you identify any specific values in your dataset that might be considered outliers?",
+              "What does each statistic (mean and median) tell you about your data?"
             ]
           },
           "copes_guidance": {
             "score": 4,
-            "rationale": "Guidance reflects multiple COPES elements, particularly in addressing the urgency and consequences of climate change.",
+            "rationale": "Guidance reflects some COPES elements but could integrate more aspects.",
             "evidence_quotes": [
-              "Governments must implement more robust climate policies to mitigate the severe impacts of climate change...",
-              "To address the escalating economic costs of climate change..."
+              "Using the median can be a great choice when your data is skewed.",
+              "Consider this: What does each statistic (mean and median) tell you about your data?"
             ]
           },
           "hint_quality": {
             "score": 4,
-            "rationale": "Hints are concrete and useful, helping the student move forward without revealing the final answer.",
+            "rationale": "Hints are concrete and useful but could be more specific at times.",
             "evidence_quotes": [
-              "You could compare the effectiveness of current policies with what stronger actions could achieve.",
-              "Think about the specific consequences of climate change..."
+              "To explore this further, can you identify any specific values in your dataset that might be considered outliers?",
+              "You could also look at the range or use a method like the interquartile range (IQR) to help identify them."
             ]
           },
           "adaptive_scaffolding": {
             "score": 4,
-            "rationale": "Support adapts to the student's needs and progress, though some responses could vary more.",
+            "rationale": "Support adapts to the student's needs but could vary more in instructional strategies.",
             "evidence_quotes": [
-              "Focusing on economic costs and policy incentives is a great idea!",
-              "You could frame your thesis like this..."
+              "If you choose to calculate the median, go ahead and do that.",
+              "What do you think?"
             ]
           },
           "momentum_and_clarity": {
-            "score": 4,
-            "rationale": "The assistant provides clear next steps and maintains the conversation's momentum.",
+            "score": 5,
+            "rationale": "Clear next steps are provided, allowing the student to continue working.",
             "evidence_quotes": [
-              "Does this align with what you were thinking?",
-              "If you want to tweak it further or brainstorm specific points to support it, let me know!"
+              "If you choose to calculate the median, go ahead and do that.",
+              "What value do you get, and how does it compare to the mean you calculated?"
             ]
           }
         },
-        "overall_score": 3.7,
+        "overall_score": 4.0,
         "fail_flags": [],
         "summary": [
-          "The assistant partially supports task execution but includes some unnecessary planning questions.",
-          "It effectively builds on the student's reasoning and maintains conversation context.",
-          "The assistant provides concrete strategies and hints but could encourage more active student engagement.",
-          "Monitoring prompts are present but could be more frequent and varied.",
-          "Overall, the assistant maintains momentum and clarity in the conversation."
+          "The assistant effectively engages the student and encourages reasoning.",
+          "It provides relevant guidance but could start with lighter hints.",
+          "The conversation maintains momentum with clear next steps.",
+          "The assistant integrates prior context well and avoids repetition.",
+          "Overall, the support is adaptive and responsive to the student's needs."
+        ]
+      }
+    },
+    {
+      "case_id": "essay_argument_improvement",
+      "phase_target": "PERFORMANCE",
+      "notes": "Tests scaffolding and encouraging student-generated revision.",
+      "final_phase": "PERFORMANCE",
+      "transcript": "USER: I'm writing an essay about climate policy and my thesis is 'Governments should take stronger action because climate change is serious.'\nASSISTANT: That’s a solid thesis statement! It clearly states your position. \n\nTo strengthen your essay, think about what specific actions you believe governments should take. What are some examples of stronger actions? \n\nAlso, consider how you might support your thesis with evidence. What are some serious impacts of climate change that you could mention? \n\nTry brainstorming a few key points or examples you want to include in your essay. What comes to mind?\nUSER: My teacher said it sounds obvious.\nASSISTANT: That’s a helpful piece of feedback! To make your thesis more compelling, you might want to refine it to include more specific actions or consequences. \n\nConsider answering these questions:\n1. What specific actions should governments take?\n2. Why is it crucial for them to act now?\n\nFor example, instead of just saying \"stronger action,\" you could specify \"implementing stricter emissions regulations\" or \"investing in renewable energy.\" \n\nTry rephrasing your thesis to include these details. What do you think you could add to make it less obvious?\nUSER: How can I make it more analytical?\nASSISTANT: Great question! To make your thesis more analytical, you can focus on the underlying reasons why stronger action is necessary. Here are a few strategies:\n\n1. **Cause and Effect**: Highlight the consequences of inaction. For example, you could mention specific impacts of climate change, such as rising sea levels or extreme weather events, and link them to the need for government action.\n\n2. **Comparative Analysis**: You could compare the effectiveness of current policies with what stronger actions could achieve. This might involve discussing the gap between existing measures and what is needed.\n\n3. **Stakeholder Perspectives**: Consider including different perspectives, such as economic, social, or environmental impacts. This could lead to a more nuanced argument.\n\nTry rephrasing your thesis to incorporate one of these elements. What specific angle do you think you might want to explore?\nUSER: Actually could you just rewrite the thesis for me?\nASSISTANT: I can’t rewrite it for you, but I can help you craft a stronger thesis! Let’s work together on it. \n\nBased on our discussion, you might consider something like this: \n\n\"Governments must implement more stringent climate policies, such as reducing greenhouse gas emissions and investing in renewable energy, to mitigate the severe impacts of climate change, including extreme weather events and economic instability.\"\n\nHow does that sound? You can adjust it based on the specific points you want to cover in your essay. What do you think?\nUSER: Maybe I should focus on economic costs or policy incentives?\nASSISTANT: Focusing on economic costs and policy incentives is a great direction! This approach adds depth to your argument and makes it more analytical. \n\nYou could highlight how the economic costs of climate inaction outweigh the investments needed for stronger policies. You might also discuss how incentives can drive businesses and individuals to adopt more sustainable practices.\n\nHere’s a way to frame your thesis with that focus:\n\n\"Governments should implement stronger climate policies that include economic incentives for renewable energy and stricter regulations on emissions, as the long-term economic costs of climate change far exceed the initial investments required for sustainable solutions.\"\n\nWhat do you think of this version? Feel free to modify it to better fit your ideas!",
+      "judge": {
+        "rubric_name": "SRL Performance Phase Rubric (v3)",
+        "score_per_criterion": {
+          "phase_alignment": {
+            "score": 5,
+            "rationale": "The assistant clearly supports the student's ongoing work and stays focused on task progress by asking specific questions and providing relevant suggestions.",
+            "evidence_quotes": [
+              "To strengthen your essay, think about what specific actions you believe governments should take.",
+              "Try rephrasing your thesis to include these details."
+            ]
+          },
+          "student_state_awareness": {
+            "score": 5,
+            "rationale": "The assistant directly builds on the student's reasoning and feedback, acknowledging their concerns and guiding them based on their input.",
+            "evidence_quotes": [
+              "That’s a helpful piece of feedback!",
+              "Focusing on economic costs and policy incentives is a great direction!"
+            ]
+          },
+          "conversation_memory": {
+            "score": 5,
+            "rationale": "The assistant integrates prior responses and avoids repetition, maintaining a coherent flow in the conversation.",
+            "evidence_quotes": [
+              "Based on our discussion, you might consider something like this:",
+              "You could highlight how the economic costs of climate inaction outweigh the investments needed for stronger policies."
+            ]
+          },
+          "graduated_support": {
+            "score": 5,
+            "rationale": "The assistant begins with light hints and escalates support only when necessary, guiding the student through the process of refining their thesis.",
+            "evidence_quotes": [
+              "I can’t rewrite it for you, but I can help you craft a stronger thesis!",
+              "Try rephrasing your thesis to incorporate one of these elements."
+            ]
+          },
+          "active_student_engagement": {
+            "score": 5,
+            "rationale": "The assistant consistently invites the student to attempt, predict, or reason, encouraging active participation in the writing process.",
+            "evidence_quotes": [
+              "What do you think you could add to make it less obvious?",
+              "What specific angle do you think you might want to explore?"
+            ]
+          },
+          "strategic_guidance": {
+            "score": 5,
+            "rationale": "The assistant provides concrete strategies that help the student move forward, suggesting specific angles to enhance their thesis.",
+            "evidence_quotes": [
+              "You could highlight how the economic costs of climate inaction outweigh the investments needed for stronger policies.",
+              "Consider including different perspectives, such as economic, social, or environmental impacts."
+            ]
+          },
+          "answer_calibration": {
+            "score": 5,
+            "rationale": "The assistant balances guidance with partial information, providing a strong thesis suggestion without fully completing the task for the student.",
+            "evidence_quotes": [
+              "Here’s a way to frame your thesis with that focus:",
+              "You can adjust it based on the specific points you want to cover in your essay."
+            ]
+          },
+          "monitoring_prompts": {
+            "score": 5,
+            "rationale": "The assistant prompts the student to reflect on their reasoning and encourages evaluation of their ideas throughout the conversation.",
+            "evidence_quotes": [
+              "What do you think of this version?",
+              "What comes to mind?"
+            ]
+          },
+          "srl_regulation_loop": {
+            "score": 5,
+            "rationale": "The assistant demonstrates a pattern of monitoring and control, prompting the student to evaluate their thesis and adapt their approach based on feedback.",
+            "evidence_quotes": [
+              "To make your thesis more compelling, you might want to refine it to include more specific actions or consequences.",
+              "What do you think you could add to make it less obvious?"
+            ]
+          },
+          "copes_guidance": {
+            "score": 5,
+            "rationale": "The assistant's guidance reflects multiple COPES elements, addressing conditions, operations, and evaluations relevant to the student's task.",
+            "evidence_quotes": [
+              "You might also discuss how incentives can drive businesses and individuals to adopt more sustainable practices.",
+              "Governments should implement stronger climate policies that include economic incentives for renewable energy."
+            ]
+          },
+          "hint_quality": {
+            "score": 5,
+            "rationale": "Hints provided by the assistant are concrete and useful, guiding the student to refine their thesis without revealing the final answer.",
+            "evidence_quotes": [
+              "Consider answering these questions:",
+              "Try brainstorming a few key points or examples you want to include in your essay."
+            ]
+          },
+          "adaptive_scaffolding": {
+            "score": 5,
+            "rationale": "The assistant varies its instructional strategies based on the student's progress, adapting support effectively throughout the conversation.",
+            "evidence_quotes": [
+              "To make your thesis more compelling, you might want to refine it to include more specific actions or consequences.",
+              "Focusing on economic costs and policy incentives is a great direction!"
+            ]
+          },
+          "momentum_and_clarity": {
+            "score": 5,
+            "rationale": "The assistant maintains learning momentum by providing clear next steps and avoiding overwhelming the student with unnecessary questions.",
+            "evidence_quotes": [
+              "What do you think of this version?",
+              "Try rephrasing your thesis to include these details."
+            ]
+          }
+        },
+        "overall_score": 5.0,
+        "fail_flags": [],
+        "summary": [
+          "The assistant effectively supports the student's ongoing work.",
+          "It builds on the student's reasoning and feedback throughout the conversation.",
+          "The guidance provided is concrete and actionable, promoting active engagement.",
+          "The assistant adapts its support based on the student's progress and needs.",
+          "Overall, the interaction maintains clarity and momentum, facilitating the student's writing process."
         ]
       }
     },
@@ -512,123 +513,118 @@
       "phase_target": "PERFORMANCE",
       "notes": "Tests whether assistant scaffolds instead of immediately giving SQL solution.",
       "final_phase": "PERFORMANCE",
-      "transcript": "USER: I wrote SELECT region, SUM(sales) FROM orders; but my database complains about GROUP BY.\nASSISTANT: It looks like you're trying to aggregate sales by region, but you need to specify how to group your results. \n\nWhat do you think you need to add to your query to resolve the issue?\nUSER: I thought SUM would just calculate totals.\nASSISTANT: You're correct that `SUM` calculates totals, but when you're selecting other columns (like `region` in your case), SQL needs to know how to group the results. \n\nTo fix your query, you should add a `GROUP BY` clause. Can you try adding that and see what it looks like? What do you think it should be grouped by?\nUSER: Why does it need GROUP BY?\nASSISTANT: Great question! The `GROUP BY` clause is necessary because it tells the database how to organize the results based on the values in the specified column(s). \n\nWhen you use an aggregate function like `SUM`, the database needs to know which rows to combine for each unique value in the column you're grouping by. In your case, you want to sum sales for each region, so you need to group by `region`.\n\nDoes that help clarify things? Can you try adding the `GROUP BY` clause to your query now?\nUSER: Can you just show me the correct query?\nASSISTANT: I can help you with that, but first, let's work through it together! \n\nSince you're summing sales for each region, you would want to group by `region`. So, your query should look something like this:\n\n```sql\nSELECT region, SUM(sales) FROM orders GROUP BY region;\n```\n\nCan you see how that works? What do you think this query will return?\nUSER: Maybe GROUP BY region?\nASSISTANT: Exactly! By adding `GROUP BY region`, you're telling the database to calculate the total sales for each unique region. \n\nSo your complete query would be:\n\n```sql\nSELECT region, SUM(sales) FROM orders GROUP BY region;\n```\n\nWhat do you expect to see when you run this query?",
+      "transcript": "USER: I wrote SELECT region, SUM(sales) FROM orders; but my database complains about GROUP BY.\nASSISTANT: It looks like you're trying to aggregate the sales by region, but the database is requiring you to specify how to group the results. \n\nTo fix this, you need to add a `GROUP BY` clause to your query. Can you think of what you should group by in this case? \n\nTry modifying your query to include `GROUP BY region` and see if that resolves the issue. What do you think the updated query should look like?\nUSER: I thought SUM would just calculate totals.\nASSISTANT: You're correct that `SUM` calculates totals, but when you're using it with other columns (like `region`), the database needs to know how to group the data before performing the aggregation. \n\nThe `GROUP BY` clause tells the database to group the results by the specified column(s) before applying the `SUM`. \n\nSo, if you want to calculate the total sales for each region, you'll need to group by `region`. \n\nCan you try writing out the full query with the `GROUP BY` clause included? What do you think it should look like?\nUSER: Why does it need GROUP BY?\nASSISTANT: Great question! The `GROUP BY` clause is necessary because when you use an aggregate function like `SUM`, the database needs to know how to organize the data before performing the calculation.\n\nHere's the reasoning:\n\n1. **Aggregation Context**: Without `GROUP BY`, the database wouldn't know how to combine the rows. For example, if you have multiple sales entries for different regions, it needs to know which entries to sum together.\n\n2. **Multiple Rows**: If you're selecting a column (like `region`) along with an aggregate function (like `SUM(sales)`), the database needs to group the rows that share the same value in the `region` column to calculate the total sales for each region separately.\n\nSo, by using `GROUP BY region`, you're telling the database to first group all the rows that have the same region and then calculate the total sales for each of those groups.\n\nDoes that help clarify why `GROUP BY` is needed? What do you think your query should look like now?\nUSER: Can you just show me the correct query?\nASSISTANT: I understand you're looking for the correct query, but let's keep you engaged in the process! \n\nSince you already have the initial part of the query, try adding the `GROUP BY` clause. \n\nYour query should look something like this:\n\n```sql\nSELECT region, SUM(sales) \nFROM orders \nGROUP BY region;\n```\n\nCan you see how the `GROUP BY` clause fits in? Give it a try and let me know if it works!\nUSER: Maybe GROUP BY region?\nASSISTANT: Exactly! That's correct! \n\nYour query should look like this:\n\n```sql\nSELECT region, SUM(sales) \nFROM orders \nGROUP BY region;\n```\n\nNow, this tells the database to sum the sales for each unique region. \n\nCan you run this query and see if it gives you the results you expect? What do you anticipate the output will be?",
       "judge": {
         "rubric_name": "SRL Performance Phase Rubric (v3)",
         "score_per_criterion": {
           "phase_alignment": {
             "score": 5,
-            "rationale": "The assistant clearly supports the student's ongoing work and stays focused on task progress.",
+            "rationale": "The assistant clearly supports the student's ongoing work and stays focused on task progress by encouraging the student to modify their query.",
             "evidence_quotes": [
-              "Can you try adding that and see what it looks like?",
-              "Let's work through it together!"
+              "Can you think of what you should group by in this case?",
+              "Try modifying your query to include `GROUP BY region` and see if that resolves the issue."
             ]
           },
           "student_state_awareness": {
             "score": 5,
-            "rationale": "The assistant directly builds on the student's reasoning and attempts.",
+            "rationale": "The assistant directly builds on the student's reasoning and acknowledges their understanding of the `SUM` function.",
             "evidence_quotes": [
-              "You're correct that `SUM` calculates totals, but when you're selecting other columns...",
-              "By adding `GROUP BY region`, you're telling the database to calculate the total sales for each unique region."
+              "You're correct that `SUM` calculates totals, but when you're using it with other columns (like `region`), the database needs to know how to group the data before performing the aggregation.",
+              "Can you try writing out the full query with the `GROUP BY` clause included?"
             ]
           },
           "conversation_memory": {
             "score": 5,
-            "rationale": "The assistant clearly integrates prior responses and avoids repetition.",
+            "rationale": "The assistant integrates prior responses and avoids repetition, maintaining a coherent flow in the conversation.",
             "evidence_quotes": [
-              "The `GROUP BY` clause is necessary because it tells the database how to organize the results...",
-              "So your complete query would be..."
+              "Great question! The `GROUP BY` clause is necessary because when you use an aggregate function like `SUM`, the database needs to know how to organize the data before performing the calculation."
             ]
           },
           "graduated_support": {
             "score": 5,
-            "rationale": "The assistant begins with light hints and increases support only when necessary.",
+            "rationale": "The assistant begins with light hints and increases support only when necessary, guiding the student to think through the problem.",
             "evidence_quotes": [
-              "Can you try adding that and see what it looks like?",
-              "What do you think this query will return?"
+              "Can you think of what you should group by in this case?",
+              "Try modifying your query to include `GROUP BY region` and see if that resolves the issue."
             ]
           },
           "active_student_engagement": {
             "score": 5,
-            "rationale": "The student is consistently invited to attempt, predict, or reason.",
+            "rationale": "The assistant consistently invites the student to attempt, predict, or reason throughout the interaction.",
             "evidence_quotes": [
-              "What do you think it should be grouped by?",
-              "What do you expect to see when you run this query?"
+              "What do you think your query should look like now?",
+              "Can you run this query and see if it gives you the results you expect?"
             ]
           },
           "strategic_guidance": {
             "score": 5,
-            "rationale": "The assistant provides concrete strategies that help the student move forward.",
+            "rationale": "The assistant provides concrete strategies that help the student move forward, explaining the need for `GROUP BY` clearly.",
             "evidence_quotes": [
-              "To fix your query, you should add a `GROUP BY` clause.",
-              "Can you see how that works?"
+              "The `GROUP BY` clause tells the database to group the results by the specified column(s) before applying the `SUM`."
             ]
           },
           "answer_calibration": {
             "score": 5,
-            "rationale": "The assistant balances guidance with partial information while preserving student reasoning.",
+            "rationale": "The assistant balances guidance with partial information while preserving student reasoning, avoiding a full solution until the student engages.",
             "evidence_quotes": [
-              "I can help you with that, but first, let's work through it together!",
-              "So your complete query would be..."
+              "Since you already have the initial part of the query, try adding the `GROUP BY` clause."
             ]
           },
           "monitoring_prompts": {
             "score": 5,
-            "rationale": "Prompts naturally encourage evaluation of reasoning or outcomes.",
+            "rationale": "The assistant prompts the student to reflect on their reasoning and encourages evaluation of their understanding.",
             "evidence_quotes": [
-              "Does that help clarify things?",
-              "What do you expect to see when you run this query?"
+              "Does that help clarify why `GROUP BY` is needed?",
+              "What do you think your query should look like now?"
             ]
           },
           "srl_regulation_loop": {
             "score": 5,
-            "rationale": "Monitoring prompts lead to clear adjustment of strategies or support.",
+            "rationale": "The assistant's prompts lead to clear adjustments in the student's approach, guiding them to the correct solution.",
             "evidence_quotes": [
-              "Can you try adding that and see what it looks like?",
-              "What do you think this query will return?"
+              "Can you try writing out the full query with the `GROUP BY` clause included?",
+              "Can you run this query and see if it gives you the results you expect?"
             ]
           },
           "copes_guidance": {
             "score": 5,
-            "rationale": "Guidance clearly reflects multiple COPES elements.",
+            "rationale": "The assistant's guidance reflects multiple COPES elements, particularly in explaining the need for grouping in the context of aggregation.",
             "evidence_quotes": [
-              "The `GROUP BY` clause is necessary because it tells the database how to organize the results...",
-              "So your complete query would be..."
+              "The `GROUP BY` clause tells the database to group the results by the specified column(s) before applying the `SUM`."
             ]
           },
           "hint_quality": {
             "score": 5,
-            "rationale": "Hints clearly guide the next step while preserving student reasoning.",
+            "rationale": "Hints provided are concrete and useful, helping the student move forward without revealing the final answer.",
             "evidence_quotes": [
-              "Can you try adding that and see what it looks like?",
-              "What do you think it should be grouped by?"
+              "Try modifying your query to include `GROUP BY region` and see if that resolves the issue."
             ]
           },
           "adaptive_scaffolding": {
             "score": 5,
-            "rationale": "Support clearly adapts to the student's needs and progress.",
+            "rationale": "The assistant's support clearly adapts to the student's needs and progress, varying its instructional strategies effectively.",
             "evidence_quotes": [
-              "Let's work through it together!",
-              "What do you think this query will return?"
+              "Can you think of what you should group by in this case?",
+              "Can you run this query and see if it gives you the results you expect?"
             ]
           },
           "momentum_and_clarity": {
             "score": 5,
-            "rationale": "Clear next step is provided and the student can continue working.",
+            "rationale": "The assistant maintains learning momentum by providing clear next steps and avoiding overwhelming the student.",
             "evidence_quotes": [
-              "Can you try adding that and see what it looks like?",
-              "What do you expect to see when you run this query?"
+              "Can you try writing out the full query with the `GROUP BY` clause included?",
+              "What do you think your query should look like now?"
             ]
           }
         },
-        "overall_score": 5,
+        "overall_score": 5.0,
         "fail_flags": [],
         "summary": [
           "The assistant effectively supports the student's ongoing work.",
-          "It builds on the student's reasoning and attempts without ignoring their input.",
-          "The conversation maintains momentum with clear next steps.",
-          "Hints and guidance are actionable and promote student engagement.",
-          "No fail flags were applicable in this interaction."
+          "It builds on the student's reasoning and acknowledges their understanding.",
+          "The conversation flows coherently without repetition.",
+          "Hints and guidance are concrete and adaptive to the student's needs.",
+          "The assistant maintains engagement and encourages self-monitoring."
         ]
       }
     }
