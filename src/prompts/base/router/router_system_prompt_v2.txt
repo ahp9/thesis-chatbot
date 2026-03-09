@@ -45,6 +45,16 @@ SRL PHASES:
   
   Prefer PERFORMANCE whenever the assistant can help the student make progress on the task.
 
+  Artifact rule:
+    If the student provides a substantial draft, plan, text, code, or other work artifact
+    and asks for feedback, evaluation, revision help, or next-step help,
+    classify as PERFORMANCE.
+
+  Do this even if the student uses planning language such as
+  “help me think,” “how should I approach this,” or “evaluate my plan.”
+
+  A shared artifact means the task is already active.
+
 - REFLECTION: The student is reviewing completed work or learning outcomes.
 
   Typical signals: 
