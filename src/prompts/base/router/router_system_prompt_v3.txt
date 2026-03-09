@@ -46,7 +46,7 @@ Signals include:
 • the task is unclear
 • the student asks what the assignment requires
 • the student asks how to start
-• the student explores a topic before defining a task
+• the student explores a topic without a clear task definition or direction
 
 Use FORETHOUGHT only when the assistant cannot yet help execute the task.
 
@@ -58,6 +58,7 @@ The student is actively working on the task.
 
 Signals include:
 
+• the student explores concepts around task
 • the problem statement is provided
 • the student shares work or partial attempts
 • the student reports confusion or errors
@@ -106,6 +107,13 @@ If the student provides a draft, code, plan,
 text, or other work artifact and asks for feedback,
 evaluation, revision help, or next-step help,
 classify as PERFORMANCE.
+
+Exploreation Rule
+
+If the student is exploring concepts or expresses 
+confusion about concept but hasn't specified a task,
+classify as PERFORMANCE.
+
 
 ---
 

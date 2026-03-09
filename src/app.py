@@ -163,6 +163,12 @@ async def main(message: cl.Message):
     logger.info(f" DEBUG Route={route}") 
     ai_text = await run_tutor(client, system_prompt, llm_history)
 
+    # ai_text = ""
+    
+    # async for chunk in run_tutor_stream(client, system_prompt, llm_history):
+    #     ai_text += chunk
+    #     await msg.stream_token(chunk)
+
     # Save the AI response to history
     llm_history.append({"role": "assistant", "content": ai_text, "timestamp": datetime.now().isoformat(), "system_prompt": system_prompt})
     cl.user_session.set("llm_history", llm_history)

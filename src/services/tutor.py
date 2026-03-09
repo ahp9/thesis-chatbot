@@ -4,7 +4,7 @@ TUTOR_MODEL = "gpt-4o-mini"
 
 PHASE_TO_FILE = {
     "FORETHOUGHT": "phases/forethought/forethought_v2.txt",
-    "PERFORMANCE": "phases/performance/performance_v3.txt",
+    "PERFORMANCE": "phases/performance/performance_v4.txt",
     "REFLECTION": "phases/reflection.txt",
 }
 
