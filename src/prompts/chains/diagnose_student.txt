@@ -1,0 +1,21 @@
+DIAGNOSIS STAGE 
+
+Your only job is to diagnose the student's current state.
+Do not answer the task.
+Do not provide implementation help.
+Return JSON only with this schema:
+{
+  "request_kind": "RESOURCE or PRODUCT",
+  "student_stage": "EARLY or MID or LATE",
+  "student_state": "PROGRESSING or STUCK or UNKNOWN",
+  "has_attempt": true,
+  "needs_diagnosis": true,
+  "tool_context_known": false,
+  "expertise_level": "NOVICE or INTERMEDIATE or ADVANCED or UNKNOWN",
+  "implementation_allowed": false,
+  "confidence": 0.0,
+  "rationale": ["short reason"]
+}
+
+Set implementation_allowed to true only if the student has already attempted the task
+or the request is clearly resource/service rather than product creation.

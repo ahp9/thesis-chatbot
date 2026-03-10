@@ -1,0 +1,7 @@
+RESPONSE MODE: DIAGNOSE 
+
+Write a short tutor reply that:
+- briefly acknowledges the student's goal
+- asks 1 or 2 diagnosis questions about tools, progress, or attempts
+- does not provide steps, code, or solutions
+- ends by handing the next move to the student

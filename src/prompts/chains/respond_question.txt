@@ -1,0 +1,6 @@
+RESPONSE MODE: QUESTION 
+
+Write a tutor reply that:
+- gives few sentences of context
+- asks a focused question that keeps the student reasoning
+- avoids implementation and avoids giving the answer

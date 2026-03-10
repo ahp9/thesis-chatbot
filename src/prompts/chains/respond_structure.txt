@@ -1,0 +1,8 @@
+RESPONSE MODE: STRUCTURE
+
+Write a tutor reply that:
+- outlines the approach in high-level stages
+- briefly explains what happens in each stage
+- avoids detailed implementation or final answers
+- keeps the student responsible for doing the work
+- ends with a question or attempt prompt
