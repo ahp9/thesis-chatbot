@@ -18,8 +18,8 @@ REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 JUDGE_MODEL = "gpt-4o-mini"
 JUDGE_TEMP = 0.0
 
-BASE_SRL_VERSION = "v1"
-SRL_PHASE_VERSION = "v1"
+BASE_SRL_VERSION = "v3"
+SRL_PHASE_VERSION = "v2"
 
 PHASE_ORDER = ["FORETHOUGHT", "PERFORMANCE", "REFLECTION"]
 
@@ -140,7 +140,7 @@ async def run_suite(
                 if verbose:
                     print(f"[EVAL]   Turn {t_i}: routing...")
                 route = await _with_timeout(
-                    route_message(client, user_msg),
+                    route_message(client, user_msg, llm_history, current_phase),
                     ROUTE_TIMEOUT_S,
                     label=f"routing (case={case_id}, turn={t_i})",
                 )

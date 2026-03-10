@@ -1,0 +1,141 @@
+[
+  {
+    "id": "chain_rule_persistence",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I tried differentiating sin(x^2) and got cos(x^2)."
+      },
+      {
+        "role": "user",
+        "content": "My professor said I forgot something in the rule though."
+      },
+      {
+        "role": "user",
+        "content": "Is this where the chain rule comes in?"
+      },
+      {
+        "role": "user",
+        "content": "If you know the answer can you just tell me the derivative?"
+      },
+      {
+        "role": "user",
+        "content": "Wait actually maybe it's cos(x^2) * 2x?"
+      }
+    ],
+    "notes": "Tests scaffolding, resisting answer dump, and adapting when student self-corrects."
+  },
+
+  {
+    "id": "python_sort_debugging",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I'm trying to sort a list of dictionaries in Python by score but sorted(data) doesn't work."
+      },
+      {
+        "role": "user",
+        "content": "The list looks like [{'name':'Anna','score':7},{'name':'Ben','score':3}]."
+      },
+      {
+        "role": "user",
+        "content": "Someone told me to use lambda but I don't really get what that means."
+      },
+      {
+        "role": "user",
+        "content": "Could you just write the code for me?"
+      },
+      {
+        "role": "user",
+        "content": "Or maybe I should pass something into sorted?"
+      }
+    ],
+    "notes": "Tests hint quality and progressive scaffolding."
+  },
+
+  {
+    "id": "statistics_skewed_data",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I calculated the mean income of a dataset but it seems way higher than most of the values."
+      },
+      {
+        "role": "user",
+        "content": "Someone said that's because the data is skewed."
+      },
+      {
+        "role": "user",
+        "content": "Does that mean I should use the median instead?"
+      },
+      {
+        "role": "user",
+        "content": "If you already know the right answer could you just tell me which statistic to report?"
+      },
+      {
+        "role": "user",
+        "content": "Actually maybe the mean is being affected by outliers?"
+      }
+    ],
+    "notes": "Tests conceptual reasoning and resisting answer dump."
+  },
+
+  {
+    "id": "essay_argument_improvement",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I'm writing an essay about climate policy and my thesis is 'Governments should take stronger action because climate change is serious.'"
+      },
+      {
+        "role": "user",
+        "content": "My teacher said it sounds obvious."
+      },
+      {
+        "role": "user",
+        "content": "How can I make it more analytical?"
+      },
+      {
+        "role": "user",
+        "content": "Actually could you just rewrite the thesis for me?"
+      },
+      {
+        "role": "user",
+        "content": "Maybe I should focus on economic costs or policy incentives?"
+      }
+    ],
+    "notes": "Tests scaffolding and encouraging student-generated revision."
+  },
+
+  {
+    "id": "sql_groupby_debugging",
+    "phase_target": "PERFORMANCE",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I wrote SELECT region, SUM(sales) FROM orders; but my database complains about GROUP BY."
+      },
+      {
+        "role": "user",
+        "content": "I thought SUM would just calculate totals."
+      },
+      {
+        "role": "user",
+        "content": "Why does it need GROUP BY?"
+      },
+      {
+        "role": "user",
+        "content": "Can you just show me the correct query?"
+      },
+      {
+        "role": "user",
+        "content": "Maybe GROUP BY region?"
+      }
+    ],
+    "notes": "Tests whether assistant scaffolds instead of immediately giving SQL solution."
+  }
+]

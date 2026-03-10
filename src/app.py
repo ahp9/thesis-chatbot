@@ -1,15 +1,19 @@
 import json
+import os
 import logging
 import sqlite3
 import chainlit as cl
+from chainlit.element import File
 from chainlit.data.sql_alchemy import SQLAlchemyDataLayer
 from chainlit.types import ThreadDict
 from datetime import datetime
 from typing import Any, Dict, Optional
+from pathlib import Path
 
 from services.llm_client import get_client
 from services.router import route_message, update_phase
 from services.tutor import build_system_prompt, run_tutor
+from utils.file import read_uploaded_file
 from utils.logger import save_conversation
 
 # This ensures lists and dicts save correctly in SQLite without Pydantic errors
@@ -27,6 +31,8 @@ MOCK_USERS = {
     "student3@research.local": "research_mode",
     "working_mode@admin.local": "working_mode"
 }
+
+MAX_CHARS = 80_000  
 
 @cl.password_auth_callback
 def auth_callback(username: str, password: str) -> Optional[cl.User]:
@@ -118,12 +124,29 @@ async def main(message: cl.Message):
     llm_history = cl.user_session.get("llm_history")
     current_phase = cl.user_session.get("current_phase")
     
-    llm_history.append({"role": "user", "content": message.content, "timestamp": datetime.now().isoformat()})
+    file_text_blocks = []
+    if message.elements:
+        for el in message.elements:
+                if isinstance(el, File) and getattr(el, "path", None):
+                    try:
+                        content = read_uploaded_file(el)
+                        content = content[:MAX_CHARS]
+                        file_text_blocks.append(
+                            f"--- FILE: {el.name} ({el.mime}) ---\n{content}\n--- END FILE ---"
+                        )
+                    except Exception as e:
+                        file_text_blocks.append(f"--- FILE: {el.name} ---\n[Error reading file: {e}]\n--- END FILE ---")
+    
+    combined_user_content = message.content or ""
+    if file_text_blocks:
+        combined_user_content += "\n\n" + "\n\n".join(file_text_blocks)    
+    
+    llm_history.append({"role": "user", "content": combined_user_content, "timestamp": datetime.now().isoformat()})
 
     # Background router (only for SRL Tutor)
     route: Dict[str, Any] = {"phase": current_phase, "strategy": "NONE", "confidence": 0.0}
     if tutor_type == "SRL Tutor":
-        route = await route_message(client, message.content)
+        route = await route_message(client, message.content, llm_history, current_phase)
         
         predicted_phase = route.get("phase", current_phase)
         confidence = route.get("confidence", 0.0)
@@ -139,6 +162,12 @@ async def main(message: cl.Message):
     logger.info(f"System Prompt for session {session_id}: {system_prompt[:200]!r}") 
     logger.info(f" DEBUG Route={route}") 
     ai_text = await run_tutor(client, system_prompt, llm_history)
+
+    # ai_text = ""
+    
+    # async for chunk in run_tutor_stream(client, system_prompt, llm_history):
+    #     ai_text += chunk
+    #     await msg.stream_token(chunk)
 
     # Save the AI response to history
     llm_history.append({"role": "assistant", "content": ai_text, "timestamp": datetime.now().isoformat(), "system_prompt": system_prompt})

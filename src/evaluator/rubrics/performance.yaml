@@ -1,0 +1,190 @@
+name: "SRL Performance Phase Rubric (v3)"
+
+scale:
+  min: 1
+  max: 5
+
+criteria:
+
+  - id: "phase_alignment"
+    title: "Operates correctly within the performance phase"
+    description: >
+      The assistant should recognize that the student is already working
+      on the task and focus on supporting execution and progress rather
+      than returning to forethought-style planning or reflection.
+
+    anchors:
+      1: "Responds with planning questions or unrelated guidance instead of supporting the active task."
+      3: "Partially supports task execution but includes unnecessary planning questions."
+      5: "Clearly supports the student's ongoing work and stays focused on task progress."
+
+  - id: "student_state_awareness"
+    title: "Recognizes the student's current attempt and knowledge state"
+    description: >
+      The assistant should identify what the student has already attempted,
+      what they understand, and where confusion lies. Guidance should build
+      directly on the student's reasoning or partial work.
+
+    anchors:
+      1: "Ignores the student's attempt or restarts explanation from scratch."
+      3: "Acknowledges the student's attempt but guidance only loosely connects to it."
+      5: "Directly builds on the student's reasoning, attempt, or misconception."
+
+  - id: "conversation_memory"
+    title: "Maintains awareness of previous turns"
+    description: >
+      The assistant should use earlier context from the conversation and avoid
+      repeating questions or restarting explanations already covered.
+
+    anchors:
+      1: "Repeats questions or explanations already addressed earlier."
+      3: "Occasionally references prior context but still repeats some scaffolding."
+      5: "Clearly integrates prior responses and avoids repetition."
+
+  - id: "graduated_support"
+    title: "Uses graduated scaffolding"
+    description: >
+      The assistant should provide help in increasing levels of support
+      (direction → hint → structure → explanation → solution).
+      It should begin with minimal support and escalate only when needed.
+
+    anchors:
+      1: "Immediately provides a full solution or near-complete answer."
+      3: "Provides structure or explanation but escalates help too quickly."
+      5: "Begins with light hints and increases support only when necessary."
+
+  - id: "active_student_engagement"
+    title: "Maintains student cognitive involvement"
+    description: >
+      The assistant should encourage the student to reason, attempt steps,
+      or explain their thinking rather than completing the work for them.
+
+    anchors:
+      1: "Student plays little or no role in the reasoning process."
+      3: "Student involvement appears occasionally but is limited."
+      5: "Student is consistently invited to attempt, predict, or reason."
+
+  - id: "strategic_guidance"
+    title: "Supports strategy adjustment when the student struggles"
+    description: >
+      When the student appears stuck or repeatedly asks for answers,
+      the assistant should propose alternative strategies or ways
+      to break down the problem.
+
+    anchors:
+      1: "Provides the answer instead of addressing the difficulty."
+      3: "Suggests vague strategies with limited practical guidance."
+      5: "Provides concrete strategies that help the student move forward."
+
+  - id: "answer_calibration"
+    title: "Calibrates how much of the solution is revealed"
+    description: >
+      The assistant may provide partial reasoning or intermediate steps,
+      but should avoid giving a full ready-to-submit solution unless the
+      student has already substantially engaged with the problem.
+
+    anchors:
+      1: "Provides a complete ready-to-submit answer without engagement."
+      3: "Reveals large portions of the solution unnecessarily."
+      5: "Balances guidance with partial information while preserving student reasoning."
+
+  - id: "monitoring_prompts"
+    title: "Encourages self-monitoring"
+    description: >
+      The assistant should prompt the student to reflect on their reasoning,
+      predictions, or results during the task.
+
+    anchors:
+      1: "No prompts encourage the student to monitor their reasoning."
+      3: "Reflection prompts appear but are generic or infrequent."
+      5: "Prompts naturally encourage evaluation of reasoning or outcomes."
+
+  - id: "srl_regulation_loop"
+    title: "Supports the SRL regulation cycle"
+    description: >
+      The assistant should demonstrate a pattern of monitoring and control:
+      prompting the student to evaluate progress and then adapting guidance
+      or strategies based on that evaluation.
+
+    anchors:
+      1: "No monitoring or adjustment of strategies occurs."
+      3: "Monitoring prompts appear but guidance does not adapt afterward."
+      5: "Monitoring prompts lead to clear adjustment of strategies or support."
+
+  - id: "copes_guidance"
+    title: "Uses COPES-informed guidance"
+    description: >
+      The assistant's guidance should reflect elements of the COPES model
+      (Conditions, Operations, Products, Evaluations, Standards) by referencing
+      constraints, strategies, produced results, evaluation of outcomes,
+      or success criteria.
+
+    anchors:
+      1: "Guidance is generic and disconnected from the task state."
+      3: "Some reference to the student's results or task requirements."
+      5: "Guidance clearly reflects multiple COPES elements."
+
+  - id: "hint_quality"
+    title: "Provides actionable hints"
+    description: >
+      Hints should be concrete and useful, helping the student move forward
+      without revealing the final answer.
+
+    anchors:
+      1: "Hints are vague or unhelpful."
+      3: "Hints provide some direction but lack specificity."
+      5: "Hints clearly guide the next step while preserving student reasoning."
+
+  - id: "adaptive_scaffolding"
+    title: "Demonstrates flexible and adaptive support"
+    description: >
+      The assistant should vary its instructional strategies
+      (questions, hints, explanations, examples) depending on
+      the student's progress rather than repeating the same response pattern.
+
+    anchors:
+      1: "Responses repeat the same scaffolding pattern across turns."
+      3: "Some variation appears but adaptation is inconsistent."
+      5: "Support clearly adapts to the student's needs and progress."
+
+  - id: "momentum_and_clarity"
+    title: "Maintains learning momentum"
+    description: >
+      The assistant should keep the interaction moving forward
+      with clear next steps and avoid overwhelming the student
+      with unnecessary questions.
+
+    anchors:
+      1: "Conversation stalls or overwhelms the student."
+      3: "Progress occurs but pacing is uneven."
+      5: "Clear next step is provided and the student can continue working."
+
+fail_flags:
+
+  - id: "solution_dump"
+    description: "Assistant provides a full ready-to-submit answer without prior student engagement."
+
+  - id: "student_bypass"
+    description: "Assistant completes the reasoning process instead of involving the student."
+
+  - id: "attempt_ignored"
+    description: "Student provided an attempt but the assistant ignored it."
+
+  - id: "phase_confusion"
+    description: "Assistant shifts into forethought-style planning instead of supporting execution."
+
+  - id: "repeated_prompt"
+    description: "Assistant repeats scaffolding questions that were already answered earlier."
+
+  - id: "pattern_lock"
+    description: "Assistant repeatedly uses the same response pattern instead of adapting support."
+
+  - id: "over_scaffold"
+    description: "Assistant adds excessive structure or questioning that prevents student engagement."
+
+output_requirements:
+  must_include:
+    - "score_per_criterion"
+    - "overall_score"
+    - "evidence_quotes"
+    - "fail_flags"
