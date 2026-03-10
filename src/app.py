@@ -29,6 +29,8 @@ MOCK_USERS = {
     "student2@research.local": "study2026",
     "student3@research.local": "research_mode",
     "working_mode@admin.local": "working_mode",
+    "user_1@usability_test_1.local": "usability1",
+    "user_2@usability_test_2.local": "usability2",
 }
 
 MAX_CHARS = 80_000
@@ -157,7 +159,7 @@ async def main(message: cl.Message):
                 "diagnosis": chain_result["diagnosis"],
                 "decision": chain_result["decision"],
                 "check": chain_result["check"],
-                "draft_reply": chain_result["draft_reply"],
+                "draft_reply": chain_result["reply"],
             }
         )
     else:
