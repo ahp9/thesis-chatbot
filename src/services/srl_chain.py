@@ -14,6 +14,7 @@ CHAIN_MODEL = "gpt-4o-mini"
 class DiagnosisResult:
     request_kind: str
     student_stage: str
+    student_state: str
     has_attempt: bool
     needs_diagnosis: bool
     tool_context_known: bool
@@ -49,20 +50,20 @@ BASE_PROMPT_FILES = {
     "phase_forethought": "phases/forethought_core.txt",
     "phase_performance": "phases/performance_core.txt",
     "phase_reflection": "phases/reflection_core.txt",
-    "diagnose": "chains/diagnose_student.txt",
-    "decide_support": "chains/choose_support_level.txt",
-    "check_reply": "chains/check_solution_leak.txt",
-    "rewrite_reply": "chains/fallback_rewrite.txt",
+    "diagnose": "chains/diagnose_student_v1.txt",
+    "decide_support": "chains/choose_support_level_v1.txt",
+    "check_reply": "chains/check_solution_leak_v1.txt",
+    "rewrite_reply": "chains/fallback_rewrite_v1.txt",
 }
 
 RESPONSE_PROMPT_FILES = {
-    "DIAGNOSE": "chains/respond_diagnose.txt",
-    "QUESTION": "chains/respond_question.txt",
-    "HINT": "chains/respond_hint.txt",
-    "STRUCTURE": "chains/respond_structure.txt",
-    "EXPLAIN": "chains/respond_explain.txt",
-    "PARTIAL": "chains/respond_partial.txt",
-    "REFLECT": "chains/respond_reflect.txt",
+    "DIAGNOSE": "responses/respond_diagnose.txt",
+    "QUESTION": "responses/respond_question.txt",
+    "HINT": "responses/respond_hint.txt",
+    "STRUCTURE": "responses/respond_structure.txt",
+    "EXPLAIN": "responses/respond_explain.txt",
+    "PARTIAL": "responses/respond_partial.txt",
+    "REFLECT": "responses/respond_reflect.txt",
 }
 
 
@@ -142,6 +143,7 @@ async def diagnose_student(
     return DiagnosisResult(
         request_kind=(data.get("request_kind") or "PRODUCT").upper(),
         student_stage=(data.get("student_stage") or "EARLY").upper(),
+        student_state=(data.get("student_state") or "UNKNOWN").upper(),
         has_attempt=bool(data.get("has_attempt", False)),
         needs_diagnosis=bool(data.get("needs_diagnosis", True)),
         tool_context_known=bool(data.get("tool_context_known", False)),
@@ -241,8 +243,6 @@ async def check_reply(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> CheckResult:
-    # Self-reflection prompting asks the model to critique its own draft.
-    # [Ch. 3.3.2, pp. 69-70]
     system_prompt = load_prompt(BASE_PROMPT_FILES["check_reply"])
     payload = {
         "route": route,
@@ -271,8 +271,6 @@ async def rewrite_reply(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> str:
-    # Fallback prompting provides a stricter backup prompt when the first draft over-helps.
-    # [Ch. 3.3.12, pp. 79-80]
     system_prompt = "\n\n".join(
         [
             load_prompt(BASE_PROMPT_FILES["identity"]),
@@ -298,8 +296,6 @@ async def run_srl_chain(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> Dict[str, Any]:
-    # The chain below follows the book's assembly-line framing for complex tasks.
-    # [Ch. 3.3.1, pp. 68-69]
     diagnosis = await diagnose_student(client, route, llm_history, user_message)
     decision = await choose_support_level(client, route, diagnosis, llm_history, user_message)
     draft_reply = await generate_reply(client, route, diagnosis, decision, llm_history, user_message)
