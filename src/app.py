@@ -62,7 +62,8 @@ async def chat_profile(current_user: cl.User | None) -> list[cl.ChatProfile]:
             markdown_description="Phase-aware chained tutoring with pushback.",
         ),
         cl.ChatProfile(
-            name="Basic Tutor", markdown_description="Direct answers and code support."
+            name="Basic Tutor",
+            markdown_description="Direct answers and code support.",
         ),
     ]
 
@@ -105,12 +106,16 @@ async def on_chat_resume(thread: ThreadDict):
     steps = thread.get("steps", [])
     llm_history = []
     for step in steps:
-        role = "assistant" if step.get("type") == "assistant_message" else "user"
+        role = (
+            "assistant" if step.get("type") == "assistant_message" else "user"
+        )
         content = step.get("output") or step.get("input") or ""
         llm_history.append({"role": role, "content": content})
 
     cl.user_session.set("llm_history", llm_history)
-    cl.user_session.set("current_phase", metadata.get("current_phase", "FORETHOUGHT"))
+    cl.user_session.set(
+        "current_phase", metadata.get("current_phase", "FORETHOUGHT")
+    )
 
 
 def maybe_save(session_id: str, student_id: str, tutor_type: str, llm_history):
@@ -128,7 +133,9 @@ async def main(message: cl.Message):
     tutor_type = cl.user_session.get("tutor_type")
     session_id = cl.user_session.get("session_id")
     student_id = cl.user_session.get("user_id")
-    llm_history: list[dict[str, Any]] = cl.user_session.get("llm_history") or []
+    llm_history: list[dict[str, Any]] = (
+        cl.user_session.get("llm_history") or []
+    )
     current_phase = cl.user_session.get("current_phase")
 
     file_text_blocks = []
@@ -164,7 +171,9 @@ async def main(message: cl.Message):
         "confidence": 0.0,
     }
     if tutor_type == "SRL Tutor":
-        route = await route_message(client, message.content, llm_history, current_phase)
+        route = await route_message(
+            client, message.content, llm_history, current_phase
+        )
         predicted_phase = route.get("phase", current_phase)
         confidence = route.get("confidence", 0.0)
         new_phase = update_phase(current_phase, predicted_phase, confidence)

@@ -46,7 +46,9 @@ def require_file(path: Path, kind: str):
         raise FileNotFoundError(f"{kind} file not found: {path}")
 
 
-def format_transcript(turns: List[Dict[str, str]], assistant_turns: List[str]) -> str:
+def format_transcript(
+    turns: List[Dict[str, str]], assistant_turns: List[str]
+) -> str:
     out = []
     a_i = 0
     for t in turns:
@@ -67,7 +69,9 @@ async def _with_timeout(coro, seconds: int, label: str):
         raise TimeoutError(f"Timed out during {label} after {seconds}s") from e
 
 
-def _update_phase(current_phase: str, predicted_phase: str, confidence: float) -> str:
+def _update_phase(
+    current_phase: str, predicted_phase: str, confidence: float
+) -> str:
     current_phase = (current_phase or "FORETHOUGHT").upper()
     predicted_phase = (predicted_phase or current_phase).upper()
     confidence = float(confidence or 0.0)
@@ -138,20 +142,28 @@ async def run_suite(
             user_msg = turn["content"]
             llm_history.append({"role": "user", "content": user_msg})
 
-            route = {"phase": current_phase, "strategy": "NONE", "confidence": 0.0}
+            route = {
+                "phase": current_phase,
+                "strategy": "NONE",
+                "confidence": 0.0,
+            }
 
             if tutor_type == "SRL Tutor":
                 if verbose:
                     print(f"[EVAL]   Turn {t_i}: routing...")
                 route = await _with_timeout(
-                    route_message(client, user_msg, llm_history, current_phase),
+                    route_message(
+                        client, user_msg, llm_history, current_phase
+                    ),
                     ROUTE_TIMEOUT_S,
                     label=f"routing (case={case_id}, turn={t_i})",
                 )
 
                 predicted_phase = route.get("phase", current_phase)
                 conf = float(route.get("confidence", 0.0))
-                current_phase = _update_phase(current_phase, predicted_phase, conf)
+                current_phase = _update_phase(
+                    current_phase, predicted_phase, conf
+                )
                 route["phase"] = current_phase
 
                 if verbose:
@@ -170,7 +182,9 @@ async def run_suite(
             )
 
             assistant_outputs.append(assistant_text)
-            llm_history.append({"role": "assistant", "content": assistant_text})
+            llm_history.append(
+                {"role": "assistant", "content": assistant_text}
+            )
 
         transcript = format_transcript(turns, assistant_outputs)
 
@@ -196,7 +210,10 @@ async def run_suite(
         try:
             judge_json = json.loads(judge_content)
         except json.JSONDecodeError:
-            judge_json = {"error": "judge_json_parse_failed", "raw": judge_content}
+            judge_json = {
+                "error": "judge_json_parse_failed",
+                "raw": judge_content,
+            }
 
         results.append(
             {

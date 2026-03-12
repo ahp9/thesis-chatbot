@@ -68,7 +68,9 @@ RESPONSE_PROMPT_FILES = {
 }
 
 
-async def _call_json(client, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+async def _call_json(
+    client, system_prompt: str, user_prompt: str
+) -> Dict[str, Any]:
     """Use direct instruction prompting and template-based prompting for machine-readable control.
     [Ch. 3.1.1, p. 38; Ch. 3.1.10, p. 47]"""
     resp = await client.chat.completions.create(
@@ -83,12 +85,17 @@ async def _call_json(client, system_prompt: str, user_prompt: str) -> Dict[str, 
     try:
         return json.loads(content)
     except json.JSONDecodeError:
-        logger.warning("JSON parse failed for control prompt: %s", content[:500])
+        logger.warning(
+            "JSON parse failed for control prompt: %s", content[:500]
+        )
         return {}
 
 
 async def _call_text(
-    client, system_prompt: str, messages: List[Dict[str, str]], temperature: float = 0.2
+    client,
+    system_prompt: str,
+    messages: List[Dict[str, str]],
+    temperature: float = 0.2,
 ) -> str:
     resp = await client.chat.completions.create(
         model=CHAIN_MODEL,
@@ -174,7 +181,9 @@ async def choose_support_level(
         ]
     )
     payload = _make_chain_context(route, llm_history, user_message)
-    payload += "\n\nDIAGNOSIS_JSON:\n" + json.dumps(diagnosis.__dict__, indent=2)
+    payload += "\n\nDIAGNOSIS_JSON:\n" + json.dumps(
+        diagnosis.__dict__, indent=2
+    )
 
     data = await _call_json(client, system_prompt, payload)
     support_level = (data.get("support_level") or "DIAGNOSE").upper()
@@ -225,7 +234,9 @@ async def generate_reply(
         "decision": decision.__dict__,
     }
 
-    logger.info("Route: %s, Diagnosis: %s, Decision: %s", route, diagnosis, decision)
+    logger.info(
+        "Route: %s, Diagnosis: %s, Decision: %s", route, diagnosis, decision
+    )
 
     messages = [
         {
@@ -263,7 +274,9 @@ async def check_reply(
         "current_user_message": user_message,
         "draft_reply": draft_reply,
     }
-    data = await _call_json(client, system_prompt, json.dumps(payload, indent=2))
+    data = await _call_json(
+        client, system_prompt, json.dumps(payload, indent=2)
+    )
     return CheckResult(
         is_safe=bool(data.get("is_safe", False)),
         leaks_solution=bool(data.get("leaks_solution", True)),
@@ -312,7 +325,9 @@ async def run_srl_chain(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> Dict[str, Any]:
-    diagnosis = await diagnose_student(client, route, llm_history, user_message)
+    diagnosis = await diagnose_student(
+        client, route, llm_history, user_message
+    )
     decision = await choose_support_level(
         client, route, diagnosis, llm_history, user_message
     )
@@ -320,7 +335,13 @@ async def run_srl_chain(
         client, route, diagnosis, decision, llm_history, user_message
     )
     check = await check_reply(
-        client, route, diagnosis, decision, draft_reply, llm_history, user_message
+        client,
+        route,
+        diagnosis,
+        decision,
+        draft_reply,
+        llm_history,
+        user_message,
     )
 
     final_reply = draft_reply
