@@ -11,7 +11,9 @@ ROUTER_MODEL = "gpt-4o-mini"
 PHASE_ORDER = ["FORETHOUGHT", "PERFORMANCE", "REFLECTION"]
 
 
-def update_phase(current_phase: str, predicted_phase: str, confidence: float) -> str:
+def update_phase(
+    current_phase: str, predicted_phase: str, confidence: float
+) -> str:
     current_phase = (current_phase or "FORETHOUGHT").upper()
     predicted_phase = (predicted_phase or current_phase).upper()
     confidence = float(confidence or 0.0)
@@ -30,7 +32,9 @@ def update_phase(current_phase: str, predicted_phase: str, confidence: float) ->
     return current_phase
 
 
-async def route_message(client, user_message: str, llm_history: list, current_phase: str) -> Dict[str, Any]:
+async def route_message(
+    client, user_message: str, llm_history: list, current_phase: str
+) -> Dict[str, Any]:
     # Direct instruction prompting is still appropriate for a narrow JSON routing task.
     # [Ch. 3.1.1, p. 38]
     router_system = load_prompt("base/router/router_system_prompt_v4.txt")
@@ -43,7 +47,9 @@ async def route_message(client, user_message: str, llm_history: list, current_ph
         if content:
             context_lines.append(f"{role}: {content}")
 
-    context_text = "\n".join(context_lines) if context_lines else "(no prior context)"
+    context_text = (
+        "\n".join(context_lines) if context_lines else "(no prior context)"
+    )
 
     router_input = f"""RECENT_CONTEXT (most recent messages):
 {context_text}

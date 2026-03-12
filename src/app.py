@@ -37,9 +37,15 @@ MAX_CHARS = 80_000
 
 
 @cl.password_auth_callback
-def auth_callback(username: str, password: str) -> Optional[cl.User]:
+async def auth_callback(username: str, password: str) -> Optional[cl.User]:
     if username in MOCK_USERS and MOCK_USERS[username] == password:
-        return cl.User(identifier=username, name=username.split("@")[0])
+        return cl.User(
+            identifier=username,
+            metadata={
+                "display_name": username.split("@")[0],
+                "provider": "credentials",
+            },
+        )
     return None
 
 
@@ -49,10 +55,16 @@ def get_data_layer():
 
 
 @cl.set_chat_profiles
-async def chat_profile():
+async def chat_profile(current_user: cl.User | None) -> list[cl.ChatProfile]:
     return [
-        cl.ChatProfile(name="SRL Tutor", markdown_description="Phase-aware chained tutoring with pushback."),
-        cl.ChatProfile(name="Basic Tutor", markdown_description="Direct answers and code support."),
+        cl.ChatProfile(
+            name="SRL Tutor",
+            markdown_description="Phase-aware chained tutoring with pushback.",
+        ),
+        cl.ChatProfile(
+            name="Basic Tutor",
+            markdown_description="Direct answers and code support.",
+        ),
     ]
 
 
@@ -72,12 +84,17 @@ async def start():
 
 @cl.on_chat_resume
 async def on_chat_resume(thread: ThreadDict):
-    metadata = thread.get("metadata", {})
-    if isinstance(metadata, str):
+    raw_metadata = thread.get("metadata", {})
+    metadata: dict[str, Any]
+    if isinstance(raw_metadata, str):
         try:
-            metadata = json.loads(metadata)
+            metadata = json.loads(raw_metadata)
         except json.JSONDecodeError:
             metadata = {}
+    elif isinstance(raw_metadata, dict):
+        metadata = raw_metadata
+    else:
+        metadata = {}
 
     student_id = metadata.get("user_id", "Unknown")
     tutor_type = metadata.get("tutor_type", "SRL Tutor")
@@ -89,12 +106,17 @@ async def on_chat_resume(thread: ThreadDict):
     steps = thread.get("steps", [])
     llm_history = []
     for step in steps:
-        role = "assistant" if step.get("type") == "assistant_message" else "user"
+        role = (
+            "assistant" if step.get("type") == 
+            "assistant_message" else "user"
+        )
         content = step.get("output") or step.get("input") or ""
         llm_history.append({"role": role, "content": content})
 
     cl.user_session.set("llm_history", llm_history)
-    cl.user_session.set("current_phase", metadata.get("current_phase", "FORETHOUGHT"))
+    cl.user_session.set(
+        "current_phase", metadata.get("current_phase", "FORETHOUGHT")
+    )
 
 
 def maybe_save(session_id: str, student_id: str, tutor_type: str, llm_history):
@@ -112,7 +134,9 @@ async def main(message: cl.Message):
     tutor_type = cl.user_session.get("tutor_type")
     session_id = cl.user_session.get("session_id")
     student_id = cl.user_session.get("user_id")
-    llm_history = cl.user_session.get("llm_history")
+    llm_history: list[dict[str, Any]] = (
+        cl.user_session.get("llm_history") or []
+    )
     current_phase = cl.user_session.get("current_phase")
 
     file_text_blocks = []
@@ -122,33 +146,51 @@ async def main(message: cl.Message):
                 try:
                     content = read_uploaded_file(el)
                     content = content[:MAX_CHARS]
-                    file_text_blocks.append(f"--- FILE: {el.name} ({el.mime}) ---\n{content}\n--- END FILE ---")
+                    file_text_blocks.append(
+                        f"--- FILE: {el.name} ({el.mime}) ---\n{content}\n"
+                        f"--- END FILE ---"
+                    )
                 except Exception as exc:
-                    file_text_blocks.append(f"--- FILE: {el.name} ---\n[Error reading file: {exc}]\n--- END FILE ---")
+                    file_text_blocks.append(
+                        f"--- FILE: {el.name} ---\n"
+                        f"[Error reading file: {exc}]\n"
+                        f"--- END FILE ---"
+                    )
 
     combined_user_content = message.content or ""
     if file_text_blocks:
         combined_user_content += "\n\n" + "\n\n".join(file_text_blocks)
 
-    llm_history.append({
-        "role": "user",
-        "content": combined_user_content,
-        "timestamp": datetime.now().isoformat(),
-    })
+    llm_history.append(
+        {
+            "role": "user",
+            "content": combined_user_content,
+            "timestamp": datetime.now().isoformat(),
+        }
+    )
 
-    route: Dict[str, Any] = {"phase": current_phase, "strategy": "NONE", "confidence": 0.0}
+    route: Dict[str, Any] = {
+        "phase": current_phase,
+        "strategy": "NONE",
+        "confidence": 0.0,
+    }
     if tutor_type == "SRL Tutor":
-        route = await route_message(client, message.content, llm_history, current_phase)
+        route = await route_message(
+            client, message.content, llm_history, current_phase
+        )
         predicted_phase = route.get("phase", current_phase)
         confidence = route.get("confidence", 0.0)
-        new_phase = update_phase(current_phase, predicted_phase, confidence)
+        new_phase = update_phase(current_phase, 
+                                    predicted_phase, confidence)
         cl.user_session.set("current_phase", new_phase)
         route["phase"] = new_phase
 
     cl.user_session.set("last_route", route)
 
     if tutor_type == "SRL Tutor":
-        chain_result = await run_srl_chain(client, route, llm_history, message.content or "")
+        chain_result = await run_srl_chain(
+            client, route, llm_history, message.content or ""
+        )
         ai_text = chain_result["reply"]
         llm_history.append(
             {
@@ -175,7 +217,12 @@ async def main(message: cl.Message):
         )
 
     cl.user_session.set("llm_history", llm_history)
-    maybe_save(session_id=session_id, student_id=student_id, tutor_type=tutor_type, llm_history=llm_history)
+    maybe_save(
+        session_id=session_id,
+        student_id=student_id,
+        tutor_type=tutor_type,
+        llm_history=llm_history,
+    )
     await cl.Message(content=ai_text).send()
 
 
@@ -185,4 +232,9 @@ async def end():
     student_id = cl.user_session.get("user_id")
     tutor_type = cl.user_session.get("tutor_type") or "SRL Tutor"
     llm_history = cl.user_session.get("llm_history")
-    maybe_save(session_id=session_id, student_id=student_id, tutor_type=tutor_type, llm_history=llm_history)
+    maybe_save(
+        session_id=session_id,
+        student_id=student_id,
+        tutor_type=tutor_type,
+        llm_history=llm_history,
+    )
