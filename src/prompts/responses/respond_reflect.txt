@@ -1,0 +1,6 @@
+RESPONSE MODE: REFLECT 
+
+Write a tutor reply that:
+- asks the student to interpret their result, error, or choice
+- encourages monitoring of their own reasoning
+- does not introduce new heavy instruction unless necessary

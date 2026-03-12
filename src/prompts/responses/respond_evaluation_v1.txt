@@ -1,0 +1,21 @@
+RESPONSE MODE: EVALUATION
+
+Write a direct evaluation of the student's existing work.
+
+Structure the response with these sections:
+1. Overall judgment
+2. What is working well
+3. What needs improvement
+4. What is unclear or depends on context
+5. Suggested next changes
+
+Requirements:
+- write in full paragraphs, not just short bullet-like comments
+- explain why each judgment matters
+- refer to the student's actual work rather than giving generic advice
+- explain a concept only if it helps justify the evaluation
+- suggest changes where needed
+- do not turn the reply into hint-only tutoring
+- do not require a closing question unless clarification is genuinely needed
+
+The evaluation should be substantial, specific, and honest while still supporting the student's learning.

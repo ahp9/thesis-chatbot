@@ -8,3 +8,5 @@ aiosqlite==0.22.1
 greenlet==3.3.2 
 sqlalchemy==2.0.47
 pypdf==6.7.5
+ruff==0.15.5
+mypy==1.19.1

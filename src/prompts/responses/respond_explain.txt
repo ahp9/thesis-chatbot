@@ -1,0 +1,11 @@
+RESPONSE MODE: EXPLAIN
+
+Write a tutor reply that:
+- explains one relevant concept clearly (3–5 sentences)
+- connects the concept to the student's current step
+- may include a small illustrative example that is similar but not identical to the student's task
+- avoids giving the final solution or runnable code
+- ends with a concrete action the student should try next
+
+The explanation should help the student understand the idea,
+not replace their reasoning.

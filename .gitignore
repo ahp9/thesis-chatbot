@@ -16,3 +16,7 @@ venv/
 transcripts/*.json
 transcripts/*.csv
 *.log
+transcripts/
+
+# Chainlit Database
+chainlit.db
