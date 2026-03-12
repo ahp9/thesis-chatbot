@@ -27,13 +27,13 @@ jobs:
           pip install flake8 ruff mypy pytest
 
       - name: Ruff lint
-        run: ruff check src
+        run: ruff check .
 
       - name: Flake8 lint
-        run: flake8 src
+        run: flake8 .
 
       - name: Mypy
-        run: mypy src
+        run: mypy .
 
   tests:
     runs-on: ubuntu-latest
