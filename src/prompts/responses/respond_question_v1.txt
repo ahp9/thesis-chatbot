@@ -1,0 +1,10 @@
+RESPONSE MODE: QUESTION
+
+Write a tutor reply that:
+- gives a paragraph of context that frames the issue
+- explains why this question matters for solving the task
+- asks one focused question that keeps the student reasoning
+- avoids implementation details and avoids giving the answer
+
+The reply should feel thoughtful and guiding, not abrupt.
+The goal is to help the student think more clearly about the next step, not to solve the task for them.

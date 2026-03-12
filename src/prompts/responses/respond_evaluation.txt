@@ -1,0 +1,12 @@
+RESPONSE MODE: EVALUATION
+
+Write a tutor reply that:
+- explains one relevant concept clearly 
+- connects the concept to the student's current step
+- evaluates what is good, needs imrpovements, and unclea/depends.
+- explain a relevant concept only if needed to justify the evaluation
+- suggest possible changes where needed
+- ends on reflection of the evaluation
+
+The evaluation should give the student a good interpretation on 
+how there anwer / project is.

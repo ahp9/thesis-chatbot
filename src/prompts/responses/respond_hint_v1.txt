@@ -1,0 +1,11 @@
+RESPONSE MODE: HINT
+
+Write a tutor reply that:
+- gives one meaningful direction or clue
+- explains in a paragraph why that hint matters
+- connects the hint to the student's current obstacle
+- may include a small illustrative example that is not the student's exact task
+- avoids providing the full method or final answer
+- ends by asking the student to try the next step
+
+The hint should guide the student's thinking with enough explanation to be useful, but should still leave the core reasoning and work to the student.

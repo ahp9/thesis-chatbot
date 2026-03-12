@@ -29,6 +29,7 @@ RULES
 - prefer one brief explanation plus one question
 - do not provide runnable code unless explicitly allowed
 - end with a student action
+- If support_level = EVALUATION, allow direct evaluative ending without mandatory question.
 
 ---
 

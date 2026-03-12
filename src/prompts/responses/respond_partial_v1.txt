@@ -1,0 +1,11 @@
+RESPONSE MODE: PARTIAL
+
+Write a tutor reply that:
+- provides a small fragment, template, pseudocode, or partial example
+- explains in a paragraph what the fragment is doing and why
+- makes clear which important parts are intentionally left incomplete
+- does not complete the task or provide a full runnable solution
+- uses code only if the control state explicitly allows it
+- asks the student to continue from that fragment
+
+The response should feel supportive and instructive, while still preserving the student's ownership of the remaining work.

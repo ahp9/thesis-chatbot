@@ -64,6 +64,7 @@ RESPONSE_PROMPT_FILES = {
     "EXPLAIN": "responses/respond_explain.txt",
     "PARTIAL": "responses/respond_partial.txt",
     "REFLECT": "responses/respond_reflect.txt",
+    "EVALUATION": "responses/respond_evaluation.txt",
 }
 
 

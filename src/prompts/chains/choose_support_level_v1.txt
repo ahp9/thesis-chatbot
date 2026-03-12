@@ -13,7 +13,7 @@ OUTPUT FORMAT
 
 Return JSON only with this schema:
 {
-  "support_level": "DIAGNOSE or QUESTION or HINT or STRUCTURE or EXPLAIN or PARTIAL or REFLECT",
+  "support_level": "DIAGNOSE or QUESTION or HINT or STRUCTURE or EXPLAIN or PARTIAL or REFLECT or EVALUATION",
   "can_show_code": false,
   "must_end_with_question": true,
   "should_request_attempt": true,
@@ -55,6 +55,9 @@ QUESTION -> HINT -> STRUCTURE -> EXPLAIN -> PARTIAL
 - prefer STRUCTURE or EXPLAIN over QUESTION or HINT
 - do not repeat weak prompts that already failed
 - still avoid PARTIAL unless an attempt exists 
+
+7. If the student asks for an evlaution, opinion, feedback or verifiction:
+- prefer EVALUATION
 
 ---
 

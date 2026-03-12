@@ -33,7 +33,7 @@ def update_phase(current_phase: str, predicted_phase: str, confidence: float) ->
 async def route_message(client, user_message: str, llm_history: list, current_phase: str) -> Dict[str, Any]:
     # Direct instruction prompting is still appropriate for a narrow JSON routing task.
     # [Ch. 3.1.1, p. 38]
-    router_system = load_prompt("base/router/router_system_prompt_v3.txt")
+    router_system = load_prompt("base/router/router_system_prompt_v4.txt")
 
     recent = llm_history[-6:] if llm_history else []
     context_lines = []
