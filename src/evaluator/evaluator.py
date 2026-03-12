@@ -92,8 +92,8 @@ async def run_suite(
     suite_file: str,
     rubric_file: str,
     tutor_type: str = "SRL Tutor",
-    max_cases: Optional[int] = None,   
-    verbose: bool = True,              
+    max_cases: Optional[int] = None,
+    verbose: bool = True,
 ):
     client = get_client()
 
@@ -112,7 +112,9 @@ async def run_suite(
         print(f"[EVAL] Suite: {suite_path} ({len(suite)} cases)")
         print(f"[EVAL] Rubric: {rubric_path}")
         print(f"[EVAL] Tutor type: {tutor_type}")
-        print(f"[EVAL] Timeouts: route={ROUTE_TIMEOUT_S}s tutor={TUTOR_TIMEOUT_S}s judge={JUDGE_TIMEOUT_S}s")
+        print(
+            f"[EVAL] Timeouts: route={ROUTE_TIMEOUT_S}s tutor={TUTOR_TIMEOUT_S}s judge={JUDGE_TIMEOUT_S}s"
+        )
 
     results = []
 
@@ -125,7 +127,9 @@ async def run_suite(
         current_phase = case.get("start_phase", "FORETHOUGHT").upper()
 
         if verbose:
-            print(f"\n[EVAL] Case {idx}/{len(suite)}: {case_id} (start_phase={current_phase}, turns={len(turns)})")
+            print(
+                f"\n[EVAL] Case {idx}/{len(suite)}: {case_id} (start_phase={current_phase}, turns={len(turns)})"
+            )
 
         for t_i, turn in enumerate(turns, start=1):
             if turn["role"] != "user":
@@ -151,7 +155,9 @@ async def run_suite(
                 route["phase"] = current_phase
 
                 if verbose:
-                    print(f"[EVAL]   Turn {t_i}: route.phase={route.get('phase')} conf={conf:.2f} strategy={route.get('strategy','NONE')}")
+                    print(
+                        f"[EVAL]   Turn {t_i}: route.phase={route.get('phase')} conf={conf:.2f} strategy={route.get('strategy', 'NONE')}"
+                    )
 
             system_prompt = build_system_prompt(tutor_type, route)
 
@@ -180,7 +186,7 @@ async def run_suite(
                     {"role": "user", "content": judge_user},
                 ],
                 temperature=JUDGE_TEMP,
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
             ),
             JUDGE_TIMEOUT_S,
             label=f"judging (case={case_id})",
@@ -192,14 +198,16 @@ async def run_suite(
         except json.JSONDecodeError:
             judge_json = {"error": "judge_json_parse_failed", "raw": judge_content}
 
-        results.append({
-            "case_id": case_id,
-            "phase_target": case.get("phase_target"),
-            "notes": case.get("notes"),
-            "final_phase": current_phase,
-            "transcript": transcript,
-            "judge": judge_json,
-        })
+        results.append(
+            {
+                "case_id": case_id,
+                "phase_target": case.get("phase_target"),
+                "notes": case.get("notes"),
+                "final_phase": current_phase,
+                "transcript": transcript,
+                "judge": judge_json,
+            }
+        )
 
         if verbose:
             overall = judge_json.get("overall_score", None)
@@ -213,7 +221,7 @@ async def run_suite(
         if not report_path.exists():
             break
         version += 1
-    
+
     report_data = {
         "metadata": {
             "suite_file": suite_file,
@@ -223,13 +231,12 @@ async def run_suite(
             "forethought_version": SRL_PHASE_VERSION,
             "judge_model": JUDGE_MODEL,
         },
-        "results": results
+        "results": results,
     }
 
     report_path.write_text(
-    json.dumps(report_data, ensure_ascii=False, indent=2),
-    encoding="utf-8"
-)
+        json.dumps(report_data, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     if verbose:
         print(f"\n[EVAL] Wrote report: {report_path}")
 

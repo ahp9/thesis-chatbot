@@ -87,7 +87,9 @@ async def _call_json(client, system_prompt: str, user_prompt: str) -> Dict[str, 
         return {}
 
 
-async def _call_text(client, system_prompt: str, messages: List[Dict[str, str]], temperature: float = 0.2) -> str:
+async def _call_text(
+    client, system_prompt: str, messages: List[Dict[str, str]], temperature: float = 0.2
+) -> str:
     resp = await client.chat.completions.create(
         model=CHAIN_MODEL,
         messages=[{"role": "system", "content": system_prompt}, *messages],
@@ -96,7 +98,7 @@ async def _call_text(client, system_prompt: str, messages: List[Dict[str, str]],
     return resp.choices[0].message.content or ""
 
 
-def _phase_prompt_file(phase: str) -> str:
+def _phase_prompt_file(phase: str | None) -> str:
     phase = (phase or "PERFORMANCE").upper()
     if phase == "FORETHOUGHT":
         return BASE_PROMPT_FILES["phase_forethought"]
@@ -116,7 +118,9 @@ def _compact_history(llm_history: List[Dict[str, Any]], limit: int = 8) -> str:
     return "\n".join(lines) if lines else "(no prior context)"
 
 
-def _make_chain_context(route: Dict[str, Any], llm_history: List[Dict[str, Any]], user_message: str) -> str:
+def _make_chain_context(
+    route: Dict[str, Any], llm_history: List[Dict[str, Any]], user_message: str
+) -> str:
     return (
         f"CURRENT_PHASE: {route.get('phase', 'PERFORMANCE')}\n"
         f"ROUTER_STRATEGY: {route.get('strategy', 'NONE')}\n"
@@ -171,13 +175,19 @@ async def choose_support_level(
     )
     payload = _make_chain_context(route, llm_history, user_message)
     payload += "\n\nDIAGNOSIS_JSON:\n" + json.dumps(diagnosis.__dict__, indent=2)
-    
+
     data = await _call_json(client, system_prompt, payload)
     support_level = (data.get("support_level") or "DIAGNOSE").upper()
-    
-    logger.info("Support decision: %s (confidence: %.2f)", support_level, float(data.get("confidence", 0.0) or 0.0))
-    
-    response_prompt_file = RESPONSE_PROMPT_FILES.get(support_level, RESPONSE_PROMPT_FILES["DIAGNOSE"])
+
+    logger.info(
+        "Support decision: %s (confidence: %.2f)",
+        support_level,
+        float(data.get("confidence", 0.0) or 0.0),
+    )
+
+    response_prompt_file = RESPONSE_PROMPT_FILES.get(
+        support_level, RESPONSE_PROMPT_FILES["DIAGNOSE"]
+    )
     return SupportDecision(
         support_level=support_level,
         response_prompt_file=response_prompt_file,
@@ -214,9 +224,9 @@ async def generate_reply(
         "diagnosis": diagnosis.__dict__,
         "decision": decision.__dict__,
     }
-    
+
     logger.info("Route: %s, Diagnosis: %s, Decision: %s", route, diagnosis, decision)
-    
+
     messages = [
         {
             "role": "user",
@@ -288,7 +298,12 @@ async def rewrite_reply(
         "current_user_message": user_message,
         "draft_reply": draft_reply,
     }
-    return await _call_text(client, system_prompt, [{"role": "user", "content": json.dumps(payload, indent=2)}], temperature=0.1)
+    return await _call_text(
+        client,
+        system_prompt,
+        [{"role": "user", "content": json.dumps(payload, indent=2)}],
+        temperature=0.1,
+    )
 
 
 async def run_srl_chain(
@@ -298,9 +313,15 @@ async def run_srl_chain(
     user_message: str,
 ) -> Dict[str, Any]:
     diagnosis = await diagnose_student(client, route, llm_history, user_message)
-    decision = await choose_support_level(client, route, diagnosis, llm_history, user_message)
-    draft_reply = await generate_reply(client, route, diagnosis, decision, llm_history, user_message)
-    check = await check_reply(client, route, diagnosis, decision, draft_reply, llm_history, user_message)
+    decision = await choose_support_level(
+        client, route, diagnosis, llm_history, user_message
+    )
+    draft_reply = await generate_reply(
+        client, route, diagnosis, decision, llm_history, user_message
+    )
+    check = await check_reply(
+        client, route, diagnosis, decision, draft_reply, llm_history, user_message
+    )
 
     final_reply = draft_reply
     if not check.is_safe or check.leaks_solution or check.skipped_diagnosis:

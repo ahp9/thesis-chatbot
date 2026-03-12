@@ -9,6 +9,7 @@ Return ONLY valid JSON matching the requested schema.
 Do not provide advice to the student. Do not rewrite the assistant response.
 """
 
+
 def build_judge_user_prompt(rubric: Dict[str, Any], transcript: str) -> str:
     return f"""
 RUBRIC (YAML converted to JSON):
