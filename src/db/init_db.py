@@ -8,7 +8,8 @@ def init_db():
     # 1. USERS
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE IF 
+          NOT EXISTS users (
             id TEXT PRIMARY KEY,
             identifier TEXT NOT NULL UNIQUE,
             metadata TEXT NOT NULL,
@@ -20,7 +21,8 @@ def init_db():
     # 2. THREADS
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS threads (
+        CREATE TABLE IF 
+          NOT EXISTS threads (
             id TEXT PRIMARY KEY,
             createdAt TEXT,
             name TEXT,
@@ -28,7 +30,8 @@ def init_db():
             userIdentifier TEXT,
             metadata TEXT,
             tags TEXT,
-            FOREIGN KEY (userId) REFERENCES users(id)
+            FOREIGN KEY (userId) 
+                REFERENCES users(id)
         )
         """
     )
@@ -36,7 +39,8 @@ def init_db():
     # 3. STEPS
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS steps (
+        CREATE TABLE IF 
+          NOT EXISTS steps (
             id TEXT PRIMARY KEY,
             name TEXT,
             type TEXT,
@@ -58,7 +62,8 @@ def init_db():
             indent INTEGER,
             defaultOpen BOOLEAN DEFAULT 0,
             feedback TEXT,
-            FOREIGN KEY (threadId) REFERENCES threads(id)
+            FOREIGN KEY (threadId) 
+                REFERENCES threads(id)
         )
         """
     )
@@ -66,7 +71,8 @@ def init_db():
     # 4. ELEMENTS
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS elements (
+        CREATE TABLE IF 
+          NOT EXISTS elements (
             id TEXT PRIMARY KEY,
             threadId TEXT,
             type TEXT,
@@ -81,7 +87,8 @@ def init_db():
             forId TEXT,
             mime TEXT,
             props TEXT,
-            FOREIGN KEY (threadId) REFERENCES threads(id)
+            FOREIGN KEY (threadId) 
+                REFERENCES threads(id)
         )
         """
     )
@@ -89,7 +96,8 @@ def init_db():
     # 5. FEEDBACKS
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS feedbacks (
+        CREATE TABLE IF 
+          NOT EXISTS feedbacks (
             id TEXT PRIMARY KEY,
             forId TEXT,
             value INTEGER,
