@@ -107,7 +107,8 @@ async def on_chat_resume(thread: ThreadDict):
     llm_history = []
     for step in steps:
         role = (
-            "assistant" if step.get("type") == "assistant_message" else "user"
+            "assistant" if step.get("type") == 
+            "assistant_message" else "user"
         )
         content = step.get("output") or step.get("input") or ""
         llm_history.append({"role": role, "content": content})
@@ -146,11 +147,14 @@ async def main(message: cl.Message):
                     content = read_uploaded_file(el)
                     content = content[:MAX_CHARS]
                     file_text_blocks.append(
-                        f"--- FILE: {el.name} ({el.mime}) ---\n{content}\n--- END FILE ---"
+                        f"--- FILE: {el.name} ({el.mime}) ---\n{content}\n"
+                        f"--- END FILE ---"
                     )
                 except Exception as exc:
                     file_text_blocks.append(
-                        f"--- FILE: {el.name} ---\n[Error reading file: {exc}]\n--- END FILE ---"
+                        f"--- FILE: {el.name} ---\n"
+                        f"[Error reading file: {exc}]\n"
+                        f"--- END FILE ---"
                     )
 
     combined_user_content = message.content or ""
@@ -176,7 +180,8 @@ async def main(message: cl.Message):
         )
         predicted_phase = route.get("phase", current_phase)
         confidence = route.get("confidence", 0.0)
-        new_phase = update_phase(current_phase, predicted_phase, confidence)
+        new_phase = update_phase(current_phase, 
+                                    predicted_phase, confidence)
         cl.user_session.set("current_phase", new_phase)
         route["phase"] = new_phase
 

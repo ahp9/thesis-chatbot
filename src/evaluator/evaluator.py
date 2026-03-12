@@ -117,7 +117,8 @@ async def run_suite(
         print(f"[EVAL] Rubric: {rubric_path}")
         print(f"[EVAL] Tutor type: {tutor_type}")
         print(
-            f"[EVAL] Timeouts: route={ROUTE_TIMEOUT_S}s tutor={TUTOR_TIMEOUT_S}s judge={JUDGE_TIMEOUT_S}s"
+            f"\n[EVAL] Case {idx}/{len(suite)}: {case_id} "
+            f"(start_phase={current_phase}, turns={len(turns)})"
         )
 
     results = []
@@ -132,7 +133,9 @@ async def run_suite(
 
         if verbose:
             print(
-                f"\n[EVAL] Case {idx}/{len(suite)}: {case_id} (start_phase={current_phase}, turns={len(turns)})"
+                f"[EVAL]   Turn {t_i}: route.phase={route.get('phase')} "
+                f"conf={conf:.2f} "
+                f"strategy={route.get('strategy', 'NONE')}"
             )
 
         for t_i, turn in enumerate(turns, start=1):
@@ -168,7 +171,8 @@ async def run_suite(
 
                 if verbose:
                     print(
-                        f"[EVAL]   Turn {t_i}: route.phase={route.get('phase')} conf={conf:.2f} strategy={route.get('strategy', 'NONE')}"
+                        f"[EVAL]   Turn {t_i}: route.phase={route.get('phase')}"
+                        f"conf={conf:.2f} strategy={route.get('strategy', 'NONE')}"
                     )
 
             system_prompt = build_system_prompt(tutor_type, route)
