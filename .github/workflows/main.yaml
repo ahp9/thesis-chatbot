@@ -1,0 +1,31 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to registry
+        run: echo "login step here"
+
+      - name: Build image
+        run: docker build -f src/Dockerfile -t my-image:${{ github.sha }} .
+
+      - name: Push image
+        run: echo "push step here"
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment: staging
+    steps:
+      - name: Deploy
+        run: echo "deploy step here"
+
+      - name: Health check
+        run: echo "health check here"

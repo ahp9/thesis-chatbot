@@ -1,40 +1,70 @@
-name: Python Lint and Dependency Check
+name: CI
 
 on:
-  push:
-    branches: [ "main", "master" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [main, master]
+  push:
+    branches: [main, master]
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8
-        # This will now find the file in the root correctly
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 ruff mypy pytest
 
-    - name: Lint with flake8
-      run: |
-        # We tell flake8 to specifically look inside the src folder
-        flake8 src --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 src --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Ruff lint
+        run: ruff check src
 
-    - name: Test Docker Build
-      run: |
-        docker build -t thesis-tutor-test -f src/Dockerfile .
+      - name: Flake8 lint
+        run: flake8 src
+
+      - name: Mypy
+        run: mypy src
+
+  tests:
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run tests
+        run: pytest
+
+  build:
+    runs-on: ubuntu-latest
+    needs: tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Docker build
+        run: docker build -f src/Dockerfile -t app:test .
