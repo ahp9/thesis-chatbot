@@ -15,3 +15,19 @@ services:
       - ./chainlit.db:/app/chainlit.db
     working_dir: /app
     restart: unless-stopped
+
+  judge:
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    container_name: judge
+    env_file:
+      - ./.env
+    volumes:
+      - ./src:/app
+      - ./prompts:/prompts
+      - ./transcripts:/app/transcripts
+    working_dir: /app
+    profiles:
+      - eval
+    command: python -m evaluator.evaluator

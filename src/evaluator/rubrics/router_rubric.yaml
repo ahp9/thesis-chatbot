@@ -1,0 +1,93 @@
+rubric_name: "SRL Router — Phase Classification"
+rubric_type: router
+
+criteria:
+ 
+  phase_signal_accuracy:
+    what_to_evaluate: >
+      Evaluate whether each signal in route.signals is traceable to an actual phrase,
+      action, or omission in STUDENT_MESSAGE or RECENT_CONTEXT. Signals must be
+      genuine observations, not fabricated rationalisations invented after the phase
+      was chosen.
+    score_3: "All signals map directly to observable student behaviour. Nothing is invented or inferred."
+    score_2: "Most signals are grounded. One is a slight stretch or vaguely phrased."
+    score_1: "At least one signal is fabricated or contradicts the student message."
+    score_0: "Signals are absent from or directly contradict the student message."
+    do_not_accept:
+      - Signals describing what the student might have meant rather than what they wrote
+      - Generic signals that could apply to any message regardless of content
+      - Signals inferred from the tutor response rather than the student input
+ 
+  phase_correctness:
+    what_to_evaluate: >
+      Evaluate whether the selected phase is correct given the routing rules.
+      FORETHOUGHT is only valid when the task is still undefined and the tutor cannot
+      yet help execute it. PERFORMANCE is correct once the task is defined.
+      REFLECTION is correct only when the student is evaluating a completed product
+      or learning outcome — not when they are mid-task.
+    score_3: "Phase is unambiguously correct given the student message and context."
+    score_2: "Phase is correct but a reasonable alternative exists and the signals are borderline."
+    score_1: "Phase is adjacent but not optimal — the correct phase is clearly preferable."
+    score_0: "Wrong phase selected. This would trigger an inappropriate response mode."
+    do_not_accept:
+      - FORETHOUGHT after the task has been clearly defined in prior turns
+      - REFLECTION for a clarification question asked while actively working
+      - PERFORMANCE for a student explicitly asking to evaluate a finished submission
+ 
+  forward_only_discipline:
+    what_to_evaluate: >
+      Evaluate whether the phase held, advanced, or regressed. Once a phase is
+      established the router must not move backward without strong explicit evidence
+      that the student has returned to goal-setting or task-definition.
+    score_3: "Phase advanced at the right moment, or held correctly when evidence was insufficient."
+    score_2: "Phase advanced correctly but one turn late, or held with minor hesitation."
+    score_1: "Phase held at the current level despite clear forward signals in the student message."
+    score_0: "Phase regressed to an earlier stage without explicit evidence of regression."
+    do_not_accept:
+      - Phase regression justified only by a slight wording change in the student message
+      - Returning to FORETHOUGHT because the student asked a follow-up question mid-task
+ 
+  confidence_calibration:
+    what_to_evaluate: >
+      Evaluate whether the reported confidence matches the clarity of the signals.
+      Confidence above 0.60 should only appear when signals are unambiguous.
+      Ambiguous or mixed-signal messages warrant confidence below 0.60 so the
+      phase-update function can choose to hold the current state.
+    score_3: "Confidence is well-calibrated: high (≥0.80) only for clear signals, low (<0.60) for genuinely ambiguous messages."
+    score_2: "Confidence is slightly over- or under-stated but still within an actionable range."
+    score_1: "Confidence is noticeably miscalibrated relative to signal clarity."
+    score_0: "High confidence (≥0.80) reported for an ambiguous or borderline student message."
+    do_not_accept:
+      - Confidence ≥ 0.80 when the student message contains mixed or contradictory signals
+      - Confidence < 0.40 when the phase is clearly unambiguous from the message
+ 
+  artifact_rule_applied:
+    applicability: >
+      Score this criterion only if the student provided a draft, code, plan, text,
+      or other completed work artifact in STUDENT_MESSAGE or RECENT_CONTEXT.
+      If no artifact is present, return score: null and rationale: "N/A — no artifact present."
+    what_to_evaluate: >
+      Evaluate whether the router correctly distinguished between two artifact intents:
+      (a) evaluation / opinion / verification / critique → should route to REFLECTION
+      (b) continuation / revision / next-step support → should route to PERFORMANCE
+    score_3: "Correct phase selected, artifact cited in signals, and the evaluation-versus-continuation distinction is explicitly stated."
+    score_2: "Correct phase selected and artifact is noted but the intent distinction is not fully stated."
+    score_1: "Correct phase selected but artifact is not mentioned in signals at all."
+    score_0: "Artifact present and the intent was assigned to the wrong phase."
+    do_not_accept:
+      - Classifying an evaluation request as PERFORMANCE because the student also asked a follow-up question
+      - Classifying a continuation request as REFLECTION because a code artifact was submitted
+ 
+fail_flags:
+  - id: FORETHOUGHT_AFTER_TASK_DEFINED
+    trigger: "FORETHOUGHT selected when the task is clearly defined in prior context"
+  - id: REFLECTION_ON_MID_TASK_CLARIFICATION
+    trigger: "REFLECTION selected for a clarification or help request during active work"
+  - id: HIGH_CONFIDENCE_ON_AMBIGUOUS_MESSAGE
+    trigger: "Confidence ≥ 0.80 when signals are mixed or the message is clearly ambiguous"
+  - id: PHASE_REGRESSION_WITHOUT_EVIDENCE
+    trigger: "Phase moved backward without explicit evidence of a return to goal-setting"
+  - id: ARTIFACT_MISCLASSIFIED
+    trigger: "Artifact present but evaluation or continuation intent assigned to wrong phase"
+  - id: SIGNALS_NOT_GROUNDED_IN_INPUT
+    trigger: "One or more signals describe inferred intent rather than observable student behaviour"

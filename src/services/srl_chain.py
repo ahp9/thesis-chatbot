@@ -50,10 +50,10 @@ BASE_PROMPT_FILES = {
     "phase_forethought": "phases/forethought_core.txt",
     "phase_performance": "phases/performance_core.txt",
     "phase_reflection": "phases/reflection_core.txt",
-    "diagnose": "chains/diagnose_student_v1.txt",
-    "decide_support": "chains/choose_support_level_v1.txt",
-    "check_reply": "chains/check_solution_leak_v1.txt",
-    "rewrite_reply": "chains/fallback_rewrite_v1.txt",
+    "diagnose": "chains/diagnose_student.txt",
+    "decide_support": "chains/choose_support_level.txt",
+    "check_reply": "chains/check_solution_leak.txt",
+    "rewrite_reply": "chains/fallback_rewrite.txt",
 }
 
 RESPONSE_PROMPT_FILES = {
