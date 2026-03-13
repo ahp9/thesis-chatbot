@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
-from evaluator.judge import JUDGE_SYSTEM, build_judge_user_prompt
+from evaluator.judge_v1 import JUDGE_SYSTEM, build_judge_user_prompt
 from services.llm_client import get_client
 from services.router import route_message
 from services.srl_chain import run_srl_chain

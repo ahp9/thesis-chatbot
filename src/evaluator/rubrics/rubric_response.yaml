@@ -90,7 +90,7 @@ criteria:
     score_1: "Response includes one weak or generic metacognitive prompt not tied to the specific task."
     score_0: "Response delivers content without prompting any planning, monitoring, or evaluative thinking about the student's own process."
     do_not_accept:
-      - "Think carefully before you start" as a metacognitive prompt
+      - Think carefully before you start as a metacognitive prompt
       - Restating the task requirements as metacognitive guidance
       - A closing question that only asks for the student's output, not their reasoning process
  

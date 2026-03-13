@@ -18,4 +18,4 @@ CMD ["chainlit", "run", "app.py", "--host", "0.0.0.0", "--port", "8000"]
 # ── judge: evaluation runner ──────────────────────────────────────────────────
 FROM base AS judge
  
-CMD ["python", "-m", "evaluator.evaluator"]
+CMD ["python", "-m", "evaluator.evaluator_v1"]
