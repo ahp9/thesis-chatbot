@@ -28,40 +28,35 @@ criteria:
       - Signals derived from tutor response rather than student input
 
   phase_correctness:
-      what_to_evaluate: >
-       Evaluate whether the selected SRL phase matches the student's actual learning state.
+    what_to_evaluate: >
+      Evaluate whether the selected SRL phase matches the student's actual learning state.
 
-       FORETHOUGHT (Planning / Orientation): The student is still orienting, defining the task, 
-       identifying constraints, clarifying goals, or deciding how to begin. This phase applies 
-       when the task is not yet sufficiently defined for concrete technical progress. 
-       Simply expressing a need to start an assignment, naming a subject area, or asking for 
-       general direction remains FORETHOUGHT if the specific objective is still unclear. 
-       If the tutor must still ask what the assignment is, what the goal is, or what exactly 
-       needs to be done, the interaction remains in FORETHOUGHT.
+      FORETHOUGHT:
+      Student is still orienting, defining the task, identifying constraints,
+      or deciding how to begin.
 
+      PERFORMANCE:
+      Student has a sufficiently defined task or subtask and is actively trying
+      to progress, even if they have not yet produced an artifact.
 
-        PERFORMANCE (Execution / Active Help): The student has a sufficiently defined task, 
-        goal, or subtask and is actively trying to progress within the assignment. This begins 
-        once the task definition or concrete objective is clear enough that technical, conceptual, 
-        or procedural support can be given. The student does not need to have produced an artifact yet; 
-        PERFORMANCE includes working through the assignment after task definition, 
-        asking how to perform a step, how to proceed, or how to implement a known objective.
+      REFLECTION:
+      Student is evaluating completed work, interpreting results, reviewing mistakes,
+      or judging learning outcomes.
 
-        REFLECTION (Evaluation / Review): The student is evaluating completed work, interpreting results, 
-        reviewing mistakes, judging correctness, or assessing learning outcomes. This phase applies when 
-        the primary intent is to assess or interpret existing work rather than continue task execution.
-      score_3: >
-        Phase is clearly correct and best supported by the message.
-      score_2: >
-        Phase is correct but adjacent competition exists.
-      score_1: >
-        Adjacent phase would fit better.
-      score_0: >
-        Wrong phase selected; response mode would likely become inappropriate.
-      do_not_accept:
-        - Phase stagnation (e.g., staying in a planning phase after an actionable objective is established).
-        - Phase prematureness (e.g., selecting an execution phase before the objective is defined).
-        - Phase misalignment (e.g., selecting an evaluative phase while the student is still actively building/modifying).
+      Task specificity alone does not force PERFORMANCE unless meaningful execution
+      support can begin immediately.
+    score_3: >
+      Phase is clearly correct and best supported by the message.
+    score_2: >
+      Phase is correct but adjacent competition exists.
+    score_1: >
+      Adjacent phase would fit better.
+    score_0: >
+      Wrong phase selected; response mode would likely become inappropriate.
+    do_not_accept:
+      - FORETHOUGHT when prior turns already define an executable task
+      - PERFORMANCE when student is clearly evaluating finished work
+      - REFLECTION during active task continuation
 
   confidence_calibration:
     what_to_evaluate: >
