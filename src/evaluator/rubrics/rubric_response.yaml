@@ -1,0 +1,148 @@
+rubric_name: "SRL Response — Pedagogical Quality"
+rubric_type: response
+
+criteria:
+ 
+  solution_containment:
+    what_to_evaluate: >
+      Evaluate whether the response respects the full-solution rule for PRODUCT
+      requests. A full solution is any response that would let the student directly
+      submit, run, or use the result without performing the key reasoning or
+      implementation themselves — including complete runnable code, fully worked
+      algorithms, or step-by-step walkthroughs that leave nothing meaningful to do.
+      RESOURCE requests (explain, summarise, evaluate, give feedback) are exempt
+      and should receive complete, direct answers.
+    score_3: "Response provides the minimum help needed for the next step and leaves substantial thinking or implementation to the student, or correctly delivers a full answer for a RESOURCE request."
+    score_2: "Response stops short of a full solution but provides so much scaffolding that the student's remaining work is minor."
+    score_1: "Response is borderline — nearly complete but technically stops one step short."
+    score_0: "Response provides a full solution for a PRODUCT request — complete runnable code, a fully worked answer, or a tutorial that leaves nothing for the student."
+    do_not_accept:
+      - Complete runnable code when no attempt was made by the student
+      - A full step-by-step implementation with only blank variable names left for the student to fill in
+      - Justifying a full solution by framing it as an "example" or "illustration"
+ 
+  phase_alignment:
+    what_to_evaluate: >
+      Evaluate whether the response's behaviour matches the phase in ROUTE.
+      FORETHOUGHT responses should help the student clarify the goal, define the
+      task, or decide how to begin — they must not execute the task.
+      PERFORMANCE responses should scaffold the next step while preserving
+      the student's reasoning process.
+      REFLECTION responses should promote self-assessment, evaluation of completed
+      work, or lessons learned — they must not do new task work.
+    score_3: "Response fully matches the phase in both content and instructional stance."
+    score_2: "Response matches the phase with minor contamination from an adjacent phase."
+    score_1: "Response is roughly in the right mode but includes significant content from a different phase."
+    score_0: "Response behaviour directly contradicts the phase — e.g., executes the task in FORETHOUGHT, or does new task work in REFLECTION."
+    do_not_accept:
+      - A FORETHOUGHT response that begins implementing the task
+      - A REFLECTION response that introduces new concepts the student was not evaluating
+      - A PERFORMANCE response that does the student's reasoning instead of scaffolding it
+ 
+  support_level_fidelity:
+    what_to_evaluate: >
+      Evaluate whether the content depth and instructional stance of the response
+      matches the support_level in DECISION. Use these benchmarks:
+      DIAGNOSE — asks for missing context before helping.
+      QUESTION — a single open question that returns the next move to the student.
+      HINT — a small directional nudge; does not explain the mechanism.
+      STRUCTURE — an outline or skeleton that still requires the student to fill in reasoning.
+      EXPLAIN — a thorough conceptual explanation without implementation.
+      PARTIAL — a code fragment or partial solution that leaves important work to the student.
+      REFLECT — guides the student to review and evaluate their own work.
+      EVALUATION — direct assessment of quality with clear criteria.
+    score_3: "Response precisely matches the decided support level in depth and stance."
+    score_2: "Response matches the decided level with minor tonal drift or slight over/under-delivery."
+    score_1: "Response is one level away from the decision in a meaningful way."
+    score_0: "Response is two or more levels away from the decision — the decision stage had no apparent effect."
+    do_not_accept:
+      - A HINT that reads as a full EXPLAIN
+      - A STRUCTURE that includes so much scaffolding it functions as a PARTIAL
+      - A QUESTION that is actually a complete explanation followed by a rhetorical tag
+ 
+  socratic_quality:
+    what_to_evaluate: >
+      Evaluate whether the response returns cognitive agency to the student.
+      For PERFORMANCE and FORETHOUGHT phases, the response should end with a
+      substantive question, a concrete student action, or an explicit invitation
+      to attempt — not with a closed or trivially answerable question.
+      EVALUATION and RESOURCE responses that deliver a direct answer are exempt
+      from requiring a closing question.
+    score_3: "Response ends with a well-targeted question or action that requires the student to plan, attempt, predict, or explain — returning full cognitive agency."
+    score_2: "Response ends with an open question that requires some cognitive engagement."
+    score_1: "Response ends with a closed or trivially answerable question that does not require substantive student engagement."
+    score_0: "Response ends with the answer or delivered solution. Agency remains with the tutor."
+    do_not_accept:
+      - Does that make sense? as a closing question
+      - Let me know if you have questions as a substitute for a Socratic prompt
+      - A question appended to a full solution that leaves nothing for the student to do
+ 
+  metacognitive_activation:
+    what_to_evaluate: >
+      Evaluate whether the response actively prompts the student to engage in
+      a named metacognitive process — not just to attempt the task.
+      Planning: prompts the student to clarify inputs, outputs, or approach before coding.
+      Monitoring: prompts the student to predict errors, explain reasoning, or trace execution.
+      Evaluation: prompts the student to check generalisation, boundary cases, or correctness criteria.
+      Generic encouragement ("think about what you want to achieve") does not qualify.
+    score_3: "Response explicitly activates a named metacognitive process (planning, monitoring, or evaluation) targeted to the student's current stage."
+    score_2: "Response includes a substantive metacognitive prompt tied to the task but does not name the process type."
+    score_1: "Response includes one weak or generic metacognitive prompt not tied to the specific task."
+    score_0: "Response delivers content without prompting any planning, monitoring, or evaluative thinking about the student's own process."
+    do_not_accept:
+      - Think carefully before you start as a metacognitive prompt
+      - Restating the task requirements as metacognitive guidance
+      - A closing question that only asks for the student's output, not their reasoning process
+ 
+  request_kind_respect:
+    what_to_evaluate: >
+      Evaluate whether the response mode matches the request_kind in DIAGNOSIS.
+      RESOURCE requests (explain, summarise, evaluate, give feedback) must receive
+      direct, complete answers — Socratic evasion is unhelpful and condescending here.
+      PRODUCT requests (write code, solve the problem, produce the essay) must
+      receive scaffolded support — a complete answer removes the learning opportunity.
+    score_3: "Response is cleanly in the correct mode: direct and complete for RESOURCE, scaffolded and student-led for PRODUCT."
+    score_2: "Correct mode applied with minor contamination from the other mode."
+    score_1: "Roughly correct mode but with significant contamination — e.g., heavy hedging for a RESOURCE request, or hints of a direct answer for a PRODUCT request."
+    score_0: "Wrong mode applied: Socratic scaffolding for a RESOURCE request, or a full solution delivered for a PRODUCT request."
+    do_not_accept:
+      - Responding to "explain X" with Socratic questions instead of an explanation
+      - Responding to "write me code for X" with a complete, runnable solution
+ 
+  multi_turn_coherence:
+    applicability: >
+      Score this criterion only when RECENT_CONTEXT contains at least one prior
+      tutor response in the same session.
+      If this is the first turn, return score: null and rationale: "N/A — single-turn case."
+    what_to_evaluate: >
+      Evaluate whether the response builds on prior turns without repeating
+      failed support or ignoring the student's demonstrated progress. The response
+      must not restate a hint that already failed, and must acknowledge or build
+      on what the student has attempted since the last turn.
+    score_3: "Response builds directly on prior context, acknowledges student progress, and does not repeat failed support."
+    score_2: "Response is coherent with prior turns but does not explicitly acknowledge progress."
+    score_1: "Response partially ignores prior context or restates advice already given."
+    score_0: "Response repeats a hint or question that demonstrably failed in a prior turn."
+    do_not_accept:
+      - Repeating the same conceptual explanation the student already received
+      - Ignoring an attempt the student shared in the previous turn
+ 
+fail_flags:
+  - id: FULL_SOLUTION_FOR_PRODUCT_REQUEST
+    trigger: "Complete runnable code or fully worked solution delivered for a PRODUCT request"
+  - id: RUNNABLE_CODE_WITHOUT_ATTEMPT
+    trigger: "Code that can be run or submitted delivered when has_attempt=false"
+  - id: NO_STUDENT_ACTION_IN_PERFORMANCE_RESPONSE
+    trigger: "PERFORMANCE response ends with delivered content and no question or student action"
+  - id: REFLECTION_RESPONSE_DOES_NEW_TASK_WORK
+    trigger: "REFLECTION phase response introduces new implementations or concepts instead of evaluating existing work"
+  - id: FORETHOUGHT_RESPONSE_EXECUTES_TASK
+    trigger: "FORETHOUGHT phase response begins implementing or solving the task"
+  - id: SUPPORT_LEVEL_IGNORED_BY_RESPONSE
+    trigger: "Response depth or stance differs from the decided support_level by two or more levels"
+  - id: RESOURCE_REQUEST_ANSWERED_WITH_SOCRATIC_QUESTIONS
+    trigger: "Student asked for an explanation, summary, or feedback but received questions instead of a direct answer"
+  - id: NO_METACOGNITIVE_PROMPT_IN_PERFORMANCE_OR_FORETHOUGHT
+    trigger: "PERFORMANCE or FORETHOUGHT response delivers content with no planning, monitoring, or evaluation prompt"
+  - id: PRIOR_FAILED_HINT_REPEATED
+    trigger: "Multi-turn: same hint or question repeated after it did not unblock the student"

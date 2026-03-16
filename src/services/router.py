@@ -8,7 +8,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 ROUTER_MODEL = "gpt-4o-mini"
-PHASE_ORDER = ["FORETHOUGHT", "PERFORMANCE", "REFLECTION"]
+
+VALID_PHASES = {"FORETHOUGHT", "PERFORMANCE", "REFLECTION"}
+
+ALLOWED_TRANSITIONS = {
+    "FORETHOUGHT": {"FORETHOUGHT", "PERFORMANCE", "REFLECTION"},
+    "PERFORMANCE": {"FORETHOUGHT", "PERFORMANCE", "REFLECTION"},
+    "REFLECTION": {"FORETHOUGHT", "PERFORMANCE", "REFLECTION"},
+}
 
 
 def update_phase(
@@ -18,17 +25,19 @@ def update_phase(
     predicted_phase = (predicted_phase or current_phase).upper()
     confidence = float(confidence or 0.0)
 
-    if current_phase not in PHASE_ORDER:
+    if current_phase not in VALID_PHASES:
         current_phase = "FORETHOUGHT"
-    if predicted_phase not in PHASE_ORDER:
+    if predicted_phase not in VALID_PHASES:
         predicted_phase = current_phase
 
+    # Stay put if confidence is too low
     if confidence < 0.60:
         return current_phase
-    if PHASE_ORDER.index(predicted_phase) > PHASE_ORDER.index(current_phase):
+
+    # Allow transition only if it is valid from the current phase
+    if predicted_phase in ALLOWED_TRANSITIONS[current_phase]:
         return predicted_phase
-    if predicted_phase == "REFLECTION":
-        return "REFLECTION"
+
     return current_phase
 
 
@@ -37,7 +46,7 @@ async def route_message(
 ) -> Dict[str, Any]:
     # Direct instruction prompting is still appropriate for a narrow JSON routing task.
     # [Ch. 3.1.1, p. 38]
-    router_system = load_prompt("base/router/router_system_prompt_v4.txt")
+    router_system = load_prompt("base/router/router_system_prompt_v5.txt")
 
     recent = llm_history[-6:] if llm_history else []
     context_lines = []

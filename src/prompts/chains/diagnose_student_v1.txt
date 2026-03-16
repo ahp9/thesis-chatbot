@@ -41,8 +41,70 @@ RULES
 Use both history and latest message together
 Use prior turns if they reveal attempt, tool, or task context.
 
-Set implementation_allowed to true only if the student has already attempted the task
-or the request is clearly resource/service rather than product creation.
+If the student provides any artifact such as:
+
+- code
+- equations
+- written draft
+- partial answer
+- structured reasoning
+
+then:
+
+- has_attempt = true
+
+If the artifact contains meaningful task logic:
+
+- student_stage cannot remain EARLY unlessa artifact is only a stub
+- implementation_allowed = true unless the student is asking for full
+  answer without reasoning.
+
+---
+
+REQUEST KIND
+
+RESOURCE:
+- asks for explanation
+- asks for concept understanding
+- asks for definition
+- asks for factual clarification
+
+PRODUCT:
+asks to build, write, solve, complete, debug, continue, evaluate own work
+
+---
+
+NEEDS_DIAGNOSIS
+
+Set needs_diagnosis = true only if missing context prevents safe support choice.
+
+Use needs_diagnosis = true when:
+- task goal unclear
+- student says stuck but gives no attempt
+- bug source unclear
+- request intent ambiguous
+
+Use needs_diagnosis = false when enough evidence already exists to choose support safely.
+
+Examples where diagnosis is usually NOT needed:
+- clear concept explanation request
+- artifact + evaluation request
+- clear continuation request with visible attempt
+- direct bug question with shown code
+
+---
+
+ATTEMPT RULE
+
+Do NOT infer has_attempt=true only from emotional language.
+
+"I'm stuck" alone does NOT prove attempt.
+
+Need evidence such as:
+- shown code
+- described approach
+- reported error
+- prior attempt in history
 
 ---
 

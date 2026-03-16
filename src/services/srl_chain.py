@@ -57,14 +57,14 @@ BASE_PROMPT_FILES = {
 }
 
 RESPONSE_PROMPT_FILES = {
-    "DIAGNOSE": "responses/respond_diagnose.txt",
-    "QUESTION": "responses/respond_question.txt",
-    "HINT": "responses/respond_hint.txt",
-    "STRUCTURE": "responses/respond_structure.txt",
-    "EXPLAIN": "responses/respond_explain.txt",
-    "PARTIAL": "responses/respond_partial.txt",
-    "REFLECT": "responses/respond_reflect.txt",
-    "EVALUATION": "responses/respond_evaluation.txt",
+    "DIAGNOSE": "responses/respond_diagnose_v1.txt",
+    "QUESTION": "responses/respond_question_v1.txt",
+    "HINT": "responses/respond_hint_v1.txt",
+    "STRUCTURE": "responses/respond_structure_v1.txt",
+    "EXPLAIN": "responses/respond_explain_v1.txt",
+    "PARTIAL": "responses/respond_partial_v1.txt",
+    "REFLECT": "responses/respond_reflect_v1.txt",
+    "EVALUATION": "responses/respond_evaluation_v1.txt",
 }
 
 

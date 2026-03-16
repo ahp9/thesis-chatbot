@@ -1,0 +1,111 @@
+rubric_name: "SRL Chain — Diagnosis and Support-Level Decision"
+rubric_type: chain
+
+criteria:
+ 
+  diagnosis_accuracy:
+    what_to_evaluate: >
+      Evaluate whether the diagnosis correctly identified request_kind
+      (RESOURCE vs PRODUCT), student_stage (EARLY / MID / LATE), student_state
+      (PROGRESSING / STUCK / UNKNOWN), has_attempt, and expertise_level.
+      Check that the rationale cites specific evidence from STUDENT_MESSAGE or
+      RECENT_CONTEXT for each non-UNKNOWN field.
+    score_3: "All fields are correct and rationale cites specific evidence for each non-UNKNOWN field."
+    score_2: "All fields are correct but rationale is thin or only partially evidenced."
+    score_1: "One field is clearly wrong or rationale cites no evidence for a definite claim."
+    score_0: "Two or more fields are wrong, or a definite claim is made with no supporting evidence."
+    do_not_accept:
+      - PRODUCT classified as RESOURCE because the student asked a question mid-task
+      - has_attempt=true when no attempt is visible in STUDENT_MESSAGE or RECENT_CONTEXT
+      - Definite student_state or expertise_level set to a non-UNKNOWN value with no evidence
+ 
+  implementation_gate:
+    what_to_evaluate: >
+      Evaluate whether implementation_allowed is set correctly.
+      It must be false unless the student has already made a visible attempt at the
+      task, or the request is clearly RESOURCE (explain, summarise, evaluate).
+      Check the rationale explains which of these two conditions was met.
+    score_3: "Gate is correctly set and rationale explicitly references the attempt evidence or RESOURCE classification."
+    score_2: "Gate is correctly set but rationale is brief or does not fully cite the evidence."
+    score_1: "Gate is set on a borderline case without adequate justification."
+    score_0: "implementation_allowed=true with no prior attempt and a PRODUCT request."
+    do_not_accept:
+      - Opening the gate because the student phrased their question confidently
+      - Opening the gate because a concept was explained in an earlier turn
+      - Opening the gate when has_attempt=false and request_kind=PRODUCT
+ 
+  support_proportionality:
+    what_to_evaluate: >
+      Evaluate whether the chosen support_level is the lowest level that would
+      enable the student's next meaningful step. The escalation ladder is:
+      QUESTION → HINT → STRUCTURE → EXPLAIN → PARTIAL.
+      Check that the rationale explains why a lower level would be insufficient,
+      not just why the chosen level is appropriate.
+    score_3: "Level is optimal and rationale explicitly explains why a lower level would fail the student."
+    score_2: "Level is optimal but rationale only justifies the chosen level without comparing to lower ones."
+    score_1: "Level is one step above optimal — the student could have been unblocked with less."
+    score_0: "Level is two or more steps above optimal, or PARTIAL chosen when no attempt exists."
+    do_not_accept:
+      - PARTIAL without a prior attempt (gate violation handled separately)
+      - Choosing EXPLAIN when HINT or QUESTION would clearly have unblocked the student
+      - Choosing QUESTION when the student is visibly stuck and has already tried a hint
+ 
+  escalation_logic:
+    applicability: >
+      Score this criterion only in multi-turn cases where the same student has
+      received at least one prior support response in RECENT_CONTEXT.
+      If this is the first turn, return score: null and rationale: "N/A — single-turn case."
+    what_to_evaluate: >
+      Evaluate whether the support level escalated appropriately after a prior
+      weaker level demonstrably failed to unblock the student. The system must
+      not repeat the same weak support level when the student shows they are
+      still stuck after receiving it.
+    score_3: "Level escalated correctly and rationale references the prior turn failure as the trigger."
+    score_2: "Level escalated at the correct turn but rationale does not mention the prior failure."
+    score_1: "Level escalated but one turn too late."
+    score_0: "Same support level repeated after it demonstrably failed to unblock the student."
+    do_not_accept:
+      - Repeating QUESTION when the student already received a question and remained stuck
+      - Escalating without acknowledging what failed in the prior turn
+ 
+  diagnosis_skip_detection:
+    what_to_evaluate: >
+      Evaluate whether the system correctly handled a case where diagnosis.needs_diagnosis=true.
+      When needs_diagnosis is true the support_level must be DIAGNOSE, and the
+      check object must confirm skipped_diagnosis=false, meaning the draft reply
+      asked for student context rather than proceeding to content-level help.
+    score_3: "needs_diagnosis=true → DIAGNOSE chosen → check.skipped_diagnosis=false — all three conditions satisfied."
+    score_2: "DIAGNOSE correctly chosen but check object not verified or not reported."
+    score_1: "needs_diagnosis=true and DIAGNOSE chosen but check flagged skipped_diagnosis=true."
+    score_0: "needs_diagnosis=true but support_level is HINT, STRUCTURE, EXPLAIN, or PARTIAL — diagnosis was skipped."
+    do_not_accept:
+      - Proceeding to HINT or EXPLAIN when the student's state or tool context is unknown
+      - Treating an ambiguous message as sufficient context to skip the DIAGNOSE level
+ 
+  check_rewrite_consistency:
+    what_to_evaluate: >
+      Evaluate whether the check-rewrite loop functioned correctly.
+      If check.leaks_solution=true or check.skipped_diagnosis=true, then
+      was_rewritten must be true. If was_rewritten=true, evaluate whether the
+      rewritten reply resolved the flagged problem while remaining helpful.
+    score_3: "Check passed cleanly, or check flagged a problem and the rewrite resolved it while preserving helpfulness."
+    score_2: "Rewrite was triggered and the flagged problem was resolved but the response lost significant helpfulness."
+    score_1: "Rewrite was triggered but the flagged problem is still present in the rewritten reply."
+    score_0: "Check flagged a problem (leaks_solution or skipped_diagnosis) but was_rewritten=false."
+    do_not_accept:
+      - A rewrite that resolves the leak by refusing to help at all
+      - Treating a clean check as passing without confirming the check fields are present
+ 
+fail_flags:
+  - id: IMPLEMENTATION_GATE_OPEN_WITHOUT_ATTEMPT
+    trigger: "implementation_allowed=true when has_attempt=false and request_kind=PRODUCT"
+  - id: PARTIAL_WITHOUT_ATTEMPT
+    trigger: "support_level=PARTIAL when has_attempt=false"
+  - id: DIAGNOSE_SKIPPED_WHEN_NEEDED
+    trigger: "needs_diagnosis=true but support_level is not DIAGNOSE"
+  - id: SAME_SUPPORT_LEVEL_REPEATED_AFTER_FAILURE
+    trigger: "Identical support level chosen in consecutive turns when prior level did not unblock the student"
+  - id: CHECK_FAILED_NO_REWRITE
+    trigger: "check.leaks_solution=true or check.skipped_diagnosis=true but was_rewritten=false"
+  - id: REWRITE_DID_NOT_FIX_FLAGGED_PROBLEM
+    trigger: "was_rewritten=true but the flagged problem (leak or skipped diagnosis) remains in the final reply"
