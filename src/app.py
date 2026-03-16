@@ -31,6 +31,7 @@ MOCK_USERS = {
     "working_mode@admin.local": "working_mode",
     "user_1@usability_test_1.local": "usability1",
     "user_2@usability_test_2.local": "usability2",
+    "user_3@usability_test_3.local": "usability3",
 }
 
 MAX_CHARS = 80_000

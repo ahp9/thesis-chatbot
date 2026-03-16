@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: src/Dockerfile
+      target: dev
     container_name: chainlit
     ports:
       - "8000:8000"
@@ -20,6 +21,7 @@ services:
     build:
       context: .
       dockerfile: src/Dockerfile
+      target: judge
     container_name: judge
     env_file:
       - ./.env

@@ -24,9 +24,9 @@ JUDGE_TEMP = 0.0
 # Update these when you change the corresponding prompt file so reports are
 # automatically stamped with the exact configuration that produced them.
 VERSION_BASE_SRL    = "v5"   # srl_model_v{N}.txt
-VERSION_ROUTER      = "v4"   # router_system_prompt_v{N}.txt
-VERSION_CHAIN       = "v0"   # srl_chain.py / chain prompt files
-VERSION_RESPOND     = "v0"   # response_generation_prompt_v{N}.txt
+VERSION_ROUTER      = "v5"   # router_system_prompt_v{N}.txt
+VERSION_CHAIN       = "v1"   # srl_chain.py / chain prompt files
+VERSION_RESPOND     = "v1"   # response_generation_prompt_v{N}.txt
 VERSION_FORETHOUGHT = "v3"   # forethought_core.txt
 VERSION_PERFORMANCE = "v5"   # performance_core.txt
 VERSION_REFLECTION  = "v1"   # reflection_core.txt

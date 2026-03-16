@@ -50,21 +50,21 @@ BASE_PROMPT_FILES = {
     "phase_forethought": "phases/forethought_core.txt",
     "phase_performance": "phases/performance_core.txt",
     "phase_reflection": "phases/reflection_core.txt",
-    "diagnose": "chains/diagnose_student.txt",
-    "decide_support": "chains/choose_support_level.txt",
-    "check_reply": "chains/check_solution_leak.txt",
-    "rewrite_reply": "chains/fallback_rewrite.txt",
+    "diagnose": "chains/diagnose_student_v1.txt",
+    "decide_support": "chains/choose_support_level_v1.txt",
+    "check_reply": "chains/check_solution_leak_v1.txt",
+    "rewrite_reply": "chains/fallback_rewrite_v1.txt",
 }
 
 RESPONSE_PROMPT_FILES = {
-    "DIAGNOSE": "responses/respond_diagnose.txt",
-    "QUESTION": "responses/respond_question.txt",
-    "HINT": "responses/respond_hint.txt",
-    "STRUCTURE": "responses/respond_structure.txt",
-    "EXPLAIN": "responses/respond_explain.txt",
-    "PARTIAL": "responses/respond_partial.txt",
-    "REFLECT": "responses/respond_reflect.txt",
-    "EVALUATION": "responses/respond_evaluation.txt",
+    "DIAGNOSE": "responses/respond_diagnose_v1.txt",
+    "QUESTION": "responses/respond_question_v1.txt",
+    "HINT": "responses/respond_hint_v1.txt",
+    "STRUCTURE": "responses/respond_structure_v1.txt",
+    "EXPLAIN": "responses/respond_explain_v1.txt",
+    "PARTIAL": "responses/respond_partial_v1.txt",
+    "REFLECT": "responses/respond_reflect_v1.txt",
+    "EVALUATION": "responses/respond_evaluation_v1.txt",
 }
 
 
