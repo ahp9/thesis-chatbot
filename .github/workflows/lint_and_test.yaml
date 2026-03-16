@@ -42,3 +42,5 @@ jobs:
 
       - name: Docker build
         run: docker build -f src/Dockerfile -t app:test .
+
+        
