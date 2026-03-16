@@ -54,6 +54,7 @@ BASE_PROMPT_FILES = {
     "decide_support": "chains/choose_support_level_v1.txt",
     "check_reply": "chains/check_solution_leak_v1.txt",
     "rewrite_reply": "chains/fallback_rewrite_v1.txt",
+    "diagnose_and_decide": "chains/student_state.txt"
 }
 
 RESPONSE_PROMPT_FILES = {
@@ -164,6 +165,62 @@ async def diagnose_student(
         confidence=float(data.get("confidence", 0.0) or 0.0),
         rationale=data.get("rationale", []) or [],
     )
+
+async def diagnose_and_decide(
+    client,
+    route: Dict[str, Any],
+    llm_history: List[Dict[str, Any]],
+    user_message: str,
+) -> tuple[DiagnosisResult, SupportDecision]:
+    system_prompt = "\n\n".join(
+        [
+            load_prompt(BASE_PROMPT_FILES["identity"]),
+            load_prompt(_phase_prompt_file(route.get("phase"))),
+            load_prompt(BASE_PROMPT_FILES["diagnose_and_decide"]),
+        ]
+    )
+
+    payload = _make_chain_context(route, llm_history, user_message)
+    data = await _call_json(client, system_prompt, payload)
+
+    diagnosis_data = data.get("diagnosis", {}) or {}
+    decision_data = data.get("decision", {}) or {}
+
+    diagnosis = DiagnosisResult(
+        request_kind=(diagnosis_data.get("request_kind") or "PRODUCT").upper(),
+        student_stage=(diagnosis_data.get("student_stage") or "EARLY").upper(),
+        student_state=(diagnosis_data.get("student_state") or "UNKNOWN").upper(),
+        has_attempt=bool(diagnosis_data.get("has_attempt", False)),
+        needs_diagnosis=bool(diagnosis_data.get("needs_diagnosis", True)),
+        tool_context_known=bool(diagnosis_data.get("tool_context_known", False)),
+        expertise_level=(diagnosis_data.get("expertise_level") or "UNKNOWN").upper(),
+        implementation_allowed=bool(
+            diagnosis_data.get("implementation_allowed", False)
+        ),
+        confidence=float(diagnosis_data.get("confidence", 0.0) or 0.0),
+        rationale=diagnosis_data.get("rationale", []) or [],
+    )
+
+    support_level = (decision_data.get("support_level") or "DIAGNOSE").upper()
+    response_prompt_file = RESPONSE_PROMPT_FILES.get(
+        support_level, RESPONSE_PROMPT_FILES["DIAGNOSE"]
+    )
+
+    decision = SupportDecision(
+        support_level=support_level,
+        response_prompt_file=response_prompt_file,
+        can_show_code=bool(decision_data.get("can_show_code", False)),
+        must_end_with_question=bool(
+            decision_data.get("must_end_with_question", True)
+        ),
+        should_request_attempt=bool(
+            decision_data.get("should_request_attempt", True)
+        ),
+        confidence=float(decision_data.get("confidence", 0.0) or 0.0),
+        rationale=decision_data.get("rationale", []) or [],
+    )
+
+    return diagnosis, decision  
 
 
 async def choose_support_level(
@@ -325,15 +382,21 @@ async def run_srl_chain(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> Dict[str, Any]:
-    diagnosis = await diagnose_student(
+    # diagnosis = await diagnose_student(
+    #     client, route, llm_history, user_message
+    # )
+    # decision = await choose_support_level(
+    #     client, route, diagnosis, llm_history, user_message
+    # )
+    
+    diagnosis, decision = await diagnose_and_decide(
         client, route, llm_history, user_message
     )
-    decision = await choose_support_level(
-        client, route, diagnosis, llm_history, user_message
-    )
+    
     draft_reply = await generate_reply(
         client, route, diagnosis, decision, llm_history, user_message
     )
+    
     check = await check_reply(
         client,
         route,
