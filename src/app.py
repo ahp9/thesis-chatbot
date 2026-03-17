@@ -209,25 +209,28 @@ async def main(message: cl.Message):
     prefix = ""
     diagnosis = None
     decision = None
-    route = {"phase": current_phase, "strategy": "NONE", "confidence": 0.0}
+    route: dict[str, Any] = {
+        "phase": current_phase,
+        "strategy": "NONE",
+        "confidence": 0.0,
+    }
 
     async with cl.Step(name="Tutor is thinking...") as step:
         if tutor_type == "SRL Tutor":
             # Routing
             route = await route_message(client, combined_user_content, llm_history, current_phase)
-            new_phase = update_phase(current_phase, route.get("phase"), route.get("confidence", 0.0))
+            
+            predicted_phase = cast(str, route.get("phase") or current_phase)
+            confidence = float(route.get("confidence", 0.0) or 0.0)
+            new_phase = update_phase(current_phase, predicted_phase, confidence)
+        
             cl.user_session.set("current_phase", new_phase)
             route["phase"] = new_phase
-            
-            # Diagnosis
-            # diagnosis = await diagnose_student(client, route, llm_history, combined_user_content)
-            # decision = await choose_support_level(client, route, diagnosis, llm_history, combined_user_content)
             
             diagnosis, decision = await diagnose_and_decide(
                 client, route, llm_history, combined_user_content
             )
-            
-            # --- LOGGING: Phase, Diagnosis, Decision ---
+        
             logger.info("="*40)
             logger.info(f"SRL SESSION: {session_id} | USER: {student_id}")
             logger.info(f"PHASE: {route['phase']} (Confidence: {route.get('confidence')})")

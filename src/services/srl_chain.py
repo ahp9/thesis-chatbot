@@ -372,3 +372,17 @@ async def rewrite_reply(client, route, diagnosis, decision, draft_reply, check, 
         temperature=0.1,
     )
     return resp.choices[0].message.content or ""
+
+
+async def run_srl_chain(client, route, llm_history, user_message) -> tuple[str, DiagnosisResult, SupportDecision]:
+    diagnosis, decision = await diagnose_and_decide(client, route, llm_history, user_message)
+    draft_reply = await generate_full_reply(client, route, diagnosis, decision, llm_history, user_message)
+    check = await check_reply(client, route, diagnosis, decision, draft_reply, llm_history, user_message)
+
+    if not check.is_safe or check.leaks_solution:
+        logger.info(f"Safety check failed: {check.reason}. Attempting rewrite...")
+        final_reply = await rewrite_reply(client, route, diagnosis, decision, draft_reply, check, llm_history, user_message)
+    else:
+        final_reply = draft_reply
+
+    return final_reply, diagnosis, decision
