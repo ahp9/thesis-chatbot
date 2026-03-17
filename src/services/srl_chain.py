@@ -19,6 +19,7 @@ class DiagnosisResult:
     needs_diagnosis: bool
     tool_context_known: bool
     expertise_level: str
+    frustration_level: str
     implementation_allowed: bool
     confidence: float
     rationale: List[str]
@@ -46,19 +47,21 @@ class CheckResult:
 # Prompt chaining breaks a complex task into smaller sequential prompts whose outputs
 # become inputs to later prompts. [Ch. 3.3.1, pp. 68-69]
 BASE_PROMPT_FILES = {
-    "identity": "base/srl_model_v1.txt",
+    "identity": "base/srl_model_v2.txt",
     "phase_forethought": "phases/forethought_core.txt",
     "phase_performance": "phases/performance_core.txt",
     "phase_reflection": "phases/reflection_core.txt",
-    "diagnose": "chains/diagnose_student_v1.txt",
-    "decide_support": "chains/choose_support_level_v1.txt",
+    "diagnose": "chains/diagnose_student.txt",
+    "decide_support": "chains/choose_support_level.txt",
     "check_reply": "chains/check_solution_leak_v1.txt",
     "rewrite_reply": "chains/fallback_rewrite_v1.txt",
+    "diagnose_and_decide": "chains/student_state_v1.txt",
+    "file_handler": "base/file.txt",
 }
 
 RESPONSE_PROMPT_FILES = {
     "DIAGNOSE": "responses/respond_diagnose_v1.txt",
-    "QUESTION": "responses/respond_question_v1.txt",
+    "QUESTION": "responses/respond_question_v2.txt",
     "HINT": "responses/respond_hint_v1.txt",
     "STRUCTURE": "responses/respond_structure_v1.txt",
     "EXPLAIN": "responses/respond_explain_v1.txt",
@@ -68,11 +71,7 @@ RESPONSE_PROMPT_FILES = {
 }
 
 
-async def _call_json(
-    client, system_prompt: str, user_prompt: str
-) -> Dict[str, Any]:
-    """Use direct instruction prompting and template-based prompting for machine-readable control.
-    [Ch. 3.1.1, p. 38; Ch. 3.1.10, p. 47]"""
+async def _call_json(client, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
     resp = await client.chat.completions.create(
         model=CHAIN_MODEL,
         messages=[
@@ -85,45 +84,20 @@ async def _call_json(
     try:
         return json.loads(content)
     except json.JSONDecodeError:
-        logger.warning(
-            "JSON parse failed for control prompt: %s", content[:500]
-        )
         return {}
-
-
-async def _call_text(
-    client,
-    system_prompt: str,
-    messages: List[Dict[str, str]],
-    temperature: float = 0.2,
-) -> str:
-    resp = await client.chat.completions.create(
-        model=CHAIN_MODEL,
-        messages=[{"role": "system", "content": system_prompt}, *messages],
-        temperature=temperature,
-    )
-    return resp.choices[0].message.content or ""
-
 
 def _phase_prompt_file(phase: str | None) -> str:
     phase = (phase or "PERFORMANCE").upper()
-    if phase == "FORETHOUGHT":
+    if phase == "FORETHOUGHT": 
         return BASE_PROMPT_FILES["phase_forethought"]
-    if phase == "REFLECTION":
+    if phase == "REFLECTION": 
         return BASE_PROMPT_FILES["phase_reflection"]
     return BASE_PROMPT_FILES["phase_performance"]
 
-
 def _compact_history(llm_history: List[Dict[str, Any]], limit: int = 8) -> str:
     recent = llm_history[-limit:] if llm_history else []
-    lines: List[str] = []
-    for message in recent:
-        role = (message.get("role") or "user").upper()
-        content = (message.get("content") or "").strip()
-        if content:
-            lines.append(f"{role}: {content}")
+    lines = [f"{(m.get('role') or 'user').upper()}: {(m.get('content') or '').strip()}" for m in recent if m.get('content')]
     return "\n".join(lines) if lines else "(no prior context)"
-
 
 def _make_chain_context(
     route: Dict[str, Any], llm_history: List[Dict[str, Any]], user_message: str
@@ -136,6 +110,90 @@ def _make_chain_context(
         f"CURRENT_USER_MESSAGE:\n{user_message}"
     )
 
+def _extract_file_blocks(user_message: str) -> str:
+    """
+    Keeps this tiny:
+    - If upstream already injected FILE: / FILE_BLOCK / CURRENT_USER_INPUT_WITH_FILES,
+      preserve it as-is.
+    - Otherwise, return empty string.
+    """
+    markers = [
+        "FILE:",
+        "FILE_BLOCK:",
+        "FILES:",
+        "CURRENT_USER_INPUT_WITH_FILES:",
+    ]
+    if any(marker in user_message for marker in markers):
+        return user_message
+    return ""
+
+def _build_diagnosis_payload(
+    route: Dict[str, Any],
+    llm_history: List[Dict[str, Any]],
+    user_message: str,
+) -> str:
+    """
+    Match the prompt's expected schema exactly:
+    1. CURRENT_PHASE
+    2. RECENT_HISTORY
+    3. CURRENT_USER_MESSAGE
+
+    If file content already exists in user_message, expose it clearly under FILE_CONTEXT.
+    """
+    file_context = _extract_file_blocks(user_message)
+
+    parts = [
+        f"CURRENT_PHASE:\n{route.get('phase', 'UNKNOWN')}",
+        f"RECENT_HISTORY:\n{_compact_history(llm_history)}",
+        f"CURRENT_USER_MESSAGE:\n{user_message}",
+    ]
+
+    if file_context:
+        parts.append(f"FILE_CONTEXT:\n{file_context}")
+
+    return "\n\n".join(parts)
+
+
+async def diagnose_and_decide(client, route, llm_history, user_message) -> tuple[DiagnosisResult, SupportDecision]:
+    # Cache-friendly system prompt: Large static blocks first
+    system_prompt = "\n\n".join([
+        load_prompt(BASE_PROMPT_FILES["identity"]),
+        load_prompt(_phase_prompt_file(route.get("phase"))),
+        load_prompt(BASE_PROMPT_FILES["diagnose_and_decide"]),
+        load_prompt(BASE_PROMPT_FILES["file_handler"]),
+    ])
+
+    payload = _build_diagnosis_payload(route, llm_history, user_message)
+    data = await _call_json(client, system_prompt, payload)
+
+    diag_raw = data.get("diagnosis", {})
+    dec_raw = data.get("decision", {})
+
+    diagnosis = DiagnosisResult(
+        request_kind=diag_raw.get("request_kind", "RESOUCE").upper(),
+        student_stage=diag_raw.get("student_stage", "EARLY").upper(),
+        student_state=diag_raw.get("student_state", "UNKNOWN").upper(),
+        has_attempt=bool(diag_raw.get("has_attempt", False)),
+        needs_diagnosis=bool(diag_raw.get("needs_diagnosis", True)),
+        tool_context_known=bool(diag_raw.get("tool_context_known", False)),
+        expertise_level=diag_raw.get("expertise_level", "UNKNOWN").upper(),
+        frustration_level=diag_raw.get("frustration_level", "UNKNOWN").upper(),
+        implementation_allowed=bool(diag_raw.get("implementation_allowed", False)),
+        confidence=float(diag_raw.get("confidence", 0.0)),
+        rationale=diag_raw.get("rationale", [])
+    )
+
+    support_level = dec_raw.get("support_level", "EXPLAIN").upper()
+    decision = SupportDecision(
+        support_level=support_level,
+        response_prompt_file=RESPONSE_PROMPT_FILES.get(support_level, RESPONSE_PROMPT_FILES["DIAGNOSE"]),
+        can_show_code=bool(dec_raw.get("can_show_code", False)),
+        must_end_with_question=bool(dec_raw.get("must_end_with_question", True)),
+        should_request_attempt=bool(dec_raw.get("should_request_attempt", True)),
+        confidence=float(dec_raw.get("confidence", 0.0)),
+        rationale=dec_raw.get("rationale", [])
+    )
+    return diagnosis, decision
 
 async def diagnose_student(
     client,
@@ -160,6 +218,7 @@ async def diagnose_student(
         needs_diagnosis=bool(data.get("needs_diagnosis", True)),
         tool_context_known=bool(data.get("tool_context_known", False)),
         expertise_level=(data.get("expertise_level") or "UNKNOWN").upper(),
+        frustration_level=(data.get("frustration_level") or "UNKNOWN").upper(),
         implementation_allowed=bool(data.get("implementation_allowed", False)),
         confidence=float(data.get("confidence", 0.0) or 0.0),
         rationale=data.get("rationale", []) or [],
@@ -208,25 +267,20 @@ async def choose_support_level(
     )
 
 
-async def generate_reply(
+
+async def generate_full_reply(    
     client,
     route: Dict[str, Any],
     diagnosis: DiagnosisResult,
     decision: SupportDecision,
     llm_history: List[Dict[str, Any]],
-    user_message: str,
-) -> str:
-    # Template-based prompting uses small reusable prompts per response mode.
-    # [Ch. 3.1.10, p. 47]
-    # Conditional prompting adapts the answer to student state and progress.
-    # [Ch. 3.2.9, p. 60]
-    system_prompt = "\n\n".join(
-        [
-            load_prompt(BASE_PROMPT_FILES["identity"]),
-            load_prompt(_phase_prompt_file(route.get("phase"))),
-            load_prompt(decision.response_prompt_file),
-        ]
-    )
+    user_message: str,) -> str:
+    system_prompt = "\n\n".join([
+        load_prompt(BASE_PROMPT_FILES["identity"]),
+        load_prompt(_phase_prompt_file(route.get("phase"))),
+        load_prompt(decision.response_prompt_file),
+        load_prompt(BASE_PROMPT_FILES["file_handler"]),
+    ])
 
     control_header = {
         "route": route,
@@ -234,133 +288,101 @@ async def generate_reply(
         "decision": decision.__dict__,
     }
 
-    logger.info(
-        "Route: %s, Diagnosis: %s, Decision: %s", route, diagnosis, decision
+    user_payload = (
+        "CONTROL_STATE:\n" + json.dumps(control_header, indent=2) + "\n\n"
+        "RECENT_HISTORY:\n" + _compact_history(llm_history) + "\n\n"
+        "CURRENT_USER_INPUT_WITH_FILES:\n" + user_message
     )
 
-    messages = [
-        {
-            "role": "user",
-            "content": (
-                "CONTROL_STATE:\n"
-                + json.dumps(control_header, indent=2)
-                + "\n\n"
-                + "RECENT_HISTORY:\n"
-                + _compact_history(llm_history)
-                + "\n\n"
-                + "CURRENT_USER_MESSAGE:\n"
-                + user_message
-            ),
-        }
-    ]
-    return await _call_text(client, system_prompt, messages, temperature=0.3)
+    resp = await client.chat.completions.create(
+        model=CHAIN_MODEL,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_payload}
+        ],
+        temperature=0.3,
+    )
+    return resp.choices[0].message.content or ""
 
 
-async def check_reply(
+async def generate_reply_stream(
     client,
     route: Dict[str, Any],
     diagnosis: DiagnosisResult,
     decision: SupportDecision,
-    draft_reply: str,
     llm_history: List[Dict[str, Any]],
     user_message: str,
-) -> CheckResult:
-    system_prompt = load_prompt(BASE_PROMPT_FILES["check_reply"])
-    payload = {
+):
+    # Load prompts
+    system_prompt = "\n\n".join([
+        load_prompt(BASE_PROMPT_FILES["identity"]),
+        load_prompt(_phase_prompt_file(route.get("phase"))),
+        load_prompt(decision.response_prompt_file),
+        load_prompt(BASE_PROMPT_FILES["file_handler"]),
+    ])
+
+    control_header = {
         "route": route,
         "diagnosis": diagnosis.__dict__,
         "decision": decision.__dict__,
-        "recent_history": _compact_history(llm_history),
-        "current_user_message": user_message,
-        "draft_reply": draft_reply,
     }
-    data = await _call_json(
-        client, system_prompt, json.dumps(payload, indent=2)
+
+    user_payload = (
+        "CONTROL_STATE:\n" + json.dumps(control_header, indent=2) + "\n\n"
+        "RECENT_HISTORY:\n" + _compact_history(llm_history) + "\n\n"
+        "CURRENT_USER_INPUT_WITH_FILES:\n" + user_message
     )
+
+    logger.info("--- GENERATING STREAM ---")
+    logger.info(f"Target Support Level: {decision.support_level}")
+    logger.info(f"Phase Context: {route.get('phase')}")
+
+    return await client.chat.completions.create(
+        model=CHAIN_MODEL,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_payload}
+        ],
+        temperature=0.3,
+        stream=True
+    )
+
+
+
+async def check_reply(client, route, diagnosis, decision, draft_reply, llm_history, user_message) -> CheckResult:
+    system_prompt = load_prompt(BASE_PROMPT_FILES["check_reply"])
+    payload = {"diag": diagnosis.__dict__, "dec": decision.__dict__, "draft": draft_reply, "user": user_message}
+    data = await _call_json(client, system_prompt, json.dumps(payload))
     return CheckResult(
         is_safe=bool(data.get("is_safe", False)),
         leaks_solution=bool(data.get("leaks_solution", True)),
         skipped_diagnosis=bool(data.get("skipped_diagnosis", False)),
-        reason=(data.get("reason") or "unknown").strip(),
+        reason=data.get("reason", "unknown")
     )
 
-
-async def rewrite_reply(
-    client,
-    route: Dict[str, Any],
-    diagnosis: DiagnosisResult,
-    decision: SupportDecision,
-    draft_reply: str,
-    check: CheckResult,
-    llm_history: List[Dict[str, Any]],
-    user_message: str,
-) -> str:
-    system_prompt = "\n\n".join(
-        [
-            load_prompt(BASE_PROMPT_FILES["identity"]),
-            load_prompt(_phase_prompt_file(route.get("phase"))),
-            load_prompt(BASE_PROMPT_FILES["rewrite_reply"]),
-        ]
-    )
-    payload = {
-        "route": route,
-        "diagnosis": diagnosis.__dict__,
-        "decision": decision.__dict__,
-        "check": check.__dict__,
-        "recent_history": _compact_history(llm_history),
-        "current_user_message": user_message,
-        "draft_reply": draft_reply,
-    }
-    return await _call_text(
-        client,
-        system_prompt,
-        [{"role": "user", "content": json.dumps(payload, indent=2)}],
+async def rewrite_reply(client, route, diagnosis, decision, draft_reply, check, llm_history, user_message) -> str:
+    system_prompt = "\n\n".join([
+        load_prompt(BASE_PROMPT_FILES["identity"]),
+        load_prompt(BASE_PROMPT_FILES["rewrite_reply"]),
+    ])
+    payload = {"draft": draft_reply, "reason": check.reason, "user": user_message}
+    resp = await client.chat.completions.create(
+        model=CHAIN_MODEL,
+        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": json.dumps(payload)}],
         temperature=0.1,
     )
+    return resp.choices[0].message.content or ""
 
 
-async def run_srl_chain(
-    client,
-    route: Dict[str, Any],
-    llm_history: List[Dict[str, Any]],
-    user_message: str,
-) -> Dict[str, Any]:
-    diagnosis = await diagnose_student(
-        client, route, llm_history, user_message
-    )
-    decision = await choose_support_level(
-        client, route, diagnosis, llm_history, user_message
-    )
-    draft_reply = await generate_reply(
-        client, route, diagnosis, decision, llm_history, user_message
-    )
-    check = await check_reply(
-        client,
-        route,
-        diagnosis,
-        decision,
-        draft_reply,
-        llm_history,
-        user_message,
-    )
+async def run_srl_chain(client, route, llm_history, user_message) -> tuple[str, DiagnosisResult, SupportDecision]:
+    diagnosis, decision = await diagnose_and_decide(client, route, llm_history, user_message)
+    draft_reply = await generate_full_reply(client, route, diagnosis, decision, llm_history, user_message)
+    check = await check_reply(client, route, diagnosis, decision, draft_reply, llm_history, user_message)
 
-    final_reply = draft_reply
-    if not check.is_safe or check.leaks_solution or check.skipped_diagnosis:
-        final_reply = await rewrite_reply(
-            client,
-            route,
-            diagnosis,
-            decision,
-            draft_reply,
-            check,
-            llm_history,
-            user_message,
-        )
+    if not check.is_safe or check.leaks_solution:
+        logger.info(f"Safety check failed: {check.reason}. Attempting rewrite...")
+        final_reply = await rewrite_reply(client, route, diagnosis, decision, draft_reply, check, llm_history, user_message)
+    else:
+        final_reply = draft_reply
 
-    return {
-        "reply": final_reply,
-        "diagnosis": diagnosis.__dict__,
-        "decision": decision.__dict__,
-        "check": check.__dict__,
-        "draft_reply": draft_reply,
-    }
+    return final_reply, diagnosis, decision
