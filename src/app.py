@@ -15,10 +15,8 @@ from services.router import route_message, update_phase
 from services.srl_chain import (
     check_reply,
     choose_support_level, 
-    diagnose_and_decide,
     diagnose_student,
     generate_full_reply, 
-    generate_reply_stream, 
     rewrite_reply
 )
 from services.tutor import build_system_prompt, run_tutor

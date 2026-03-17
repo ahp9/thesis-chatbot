@@ -47,7 +47,7 @@ class CheckResult:
 # Prompt chaining breaks a complex task into smaller sequential prompts whose outputs
 # become inputs to later prompts. [Ch. 3.3.1, pp. 68-69]
 BASE_PROMPT_FILES = {
-    "identity": "base/srl_model_v2.txt",
+    "identity": "base/srl_model_v1.txt",
     "phase_forethought": "phases/forethought_core.txt",
     "phase_performance": "phases/performance_core.txt",
     "phase_reflection": "phases/reflection_core.txt",
@@ -88,8 +88,10 @@ async def _call_json(client, system_prompt: str, user_prompt: str) -> Dict[str, 
 
 def _phase_prompt_file(phase: str | None) -> str:
     phase = (phase or "PERFORMANCE").upper()
-    if phase == "FORETHOUGHT": return BASE_PROMPT_FILES["phase_forethought"]
-    if phase == "REFLECTION": return BASE_PROMPT_FILES["phase_reflection"]
+    if phase == "FORETHOUGHT": 
+        return BASE_PROMPT_FILES["phase_forethought"]
+    if phase == "REFLECTION": 
+        return BASE_PROMPT_FILES["phase_reflection"]
     return BASE_PROMPT_FILES["phase_performance"]
 
 def _compact_history(llm_history: List[Dict[str, Any]], limit: int = 8) -> str:
@@ -331,7 +333,7 @@ async def generate_reply_stream(
         "CURRENT_USER_INPUT_WITH_FILES:\n" + user_message
     )
 
-    logger.info(f"--- GENERATING STREAM ---")
+    logger.info("--- GENERATING STREAM ---")
     logger.info(f"Target Support Level: {decision.support_level}")
     logger.info(f"Phase Context: {route.get('phase')}")
 
