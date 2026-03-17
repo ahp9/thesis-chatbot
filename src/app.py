@@ -1,8 +1,9 @@
+import asyncio
 import json
 import logging
 import sqlite3
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import chainlit as cl
 from chainlit.data.sql_alchemy import SQLAlchemyDataLayer
@@ -11,18 +12,30 @@ from chainlit.types import ThreadDict
 
 from services.llm_client import get_client
 from services.router import route_message, update_phase
-from services.srl_chain import run_srl_chain
+from services.srl_chain import (
+    check_reply,
+    choose_support_level, 
+    diagnose_and_decide,
+    diagnose_student,
+    generate_full_reply, 
+    generate_reply_stream, 
+    rewrite_reply
+)
 from services.tutor import build_system_prompt, run_tutor
 from utils.file import read_uploaded_file
 from utils.logger import save_conversation
 
-# SQLite adapters are unchanged from your current app file.
 sqlite3.register_adapter(list, lambda lst: json.dumps(lst))
 sqlite3.register_adapter(dict, lambda dct: json.dumps(dct))
 
 client = get_client()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    force=True # This 'force' is critical to override Chainlit's default logger
+)
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 MOCK_USERS = {
     "student1@research.local": "password123",
@@ -32,6 +45,7 @@ MOCK_USERS = {
     "user_1@usability_test_1.local": "usability1",
     "user_2@usability_test_2.local": "usability2",
     "user_3@usability_test_3.local": "usability3",
+    "user_3@usability_test_4.local": "usability4",
 }
 
 MAX_CHARS = 80_000
@@ -135,97 +149,110 @@ async def main(message: cl.Message):
     tutor_type = cl.user_session.get("tutor_type")
     session_id = cl.user_session.get("session_id")
     student_id = cl.user_session.get("user_id")
-    llm_history: list[dict[str, Any]] = (
-        cl.user_session.get("llm_history") or []
-    )
+    llm_history = cl.user_session.get("llm_history") or []
     current_phase = cl.user_session.get("current_phase")
 
+    # 1. Process files
     file_text_blocks = []
     if message.elements:
         for el in message.elements:
             if isinstance(el, File) and getattr(el, "path", None):
                 try:
                     content = read_uploaded_file(el)
-                    content = content[:MAX_CHARS]
+                    content = content[:MAX_CHARS] 
                     file_text_blocks.append(
-                        f"--- FILE: {el.name} ({el.mime}) ---\n{content}\n"
-                        f"--- END FILE ---"
+                        f"--- FILE: {el.name} ({el.mime}) --- CONTENT START ---\n{content}\n--- END FILE ---"
                     )
                 except Exception as exc:
-                    file_text_blocks.append(
-                        f"--- FILE: {el.name} ---\n"
-                        f"[Error reading file: {exc}]\n"
-                        f"--- END FILE ---"
-                    )
-
+                    file_text_blocks.append(f"[Error reading file {el.name}: {exc}]")
+    
     combined_user_content = message.content or ""
     if file_text_blocks:
         combined_user_content += "\n\n" + "\n\n".join(file_text_blocks)
 
-    llm_history.append(
-        {
-            "role": "user",
-            "content": combined_user_content,
-            "timestamp": datetime.now().isoformat(),
-        }
-    )
+    # 2. Run the internal SRL Chain (Routing -> Diagnosis -> Generation -> Check)
+    ai_text = ""
+    prefix = ""
+    diagnosis = None
+    decision = None
+    route = {"phase": current_phase, "strategy": "NONE", "confidence": 0.0}
 
-    route: Dict[str, Any] = {
-        "phase": current_phase,
-        "strategy": "NONE",
-        "confidence": 0.0,
+    async with cl.Step(name="Tutor is thinking...") as step:
+        if tutor_type == "SRL Tutor":
+            # Routing
+            route = await route_message(client, combined_user_content, llm_history, current_phase)
+            new_phase = update_phase(current_phase, route.get("phase"), route.get("confidence", 0.0))
+            cl.user_session.set("current_phase", new_phase)
+            route["phase"] = new_phase
+            
+            # Diagnosis
+            diagnosis = await diagnose_student(client, route, llm_history, combined_user_content)
+            decision = await choose_support_level(client, route, diagnosis, llm_history, combined_user_content)
+            # diagnosis, decision = await diagnose_and_decide(
+            #     client, route, llm_history, combined_user_content
+            # )
+            
+            # --- LOGGING: Phase, Diagnosis, Decision ---
+            logger.info("="*40)
+            logger.info(f"SRL SESSION: {session_id} | USER: {student_id}")
+            logger.info(f"PHASE: {route['phase']} (Confidence: {route.get('confidence')})")
+            logger.info(f"DIAGNOSIS: Kind={diagnosis.request_kind} | Stage={diagnosis.student_stage} | Attempt={diagnosis.has_attempt}")
+            logger.info(f"STATE: {diagnosis.student_state} | Expertise={diagnosis.expertise_level}")
+            logger.info(f"DECISION: Level={decision.support_level} | CanShowCode={decision.can_show_code}")
+            logger.info("="*40)
+
+            # Generate internal draft
+            ai_text = await generate_full_reply(
+                client, route, diagnosis, decision, llm_history, combined_user_content
+            )
+            
+            # Safety Check
+            check = await check_reply(
+                client, route, diagnosis, decision, ai_text, llm_history, combined_user_content
+            )
+            
+            logger.info(f"SAFETY CHECK: is_safe={check.is_safe} | leaks_solution={check.leaks_solution} | reason={check.reason}")
+            
+            if not check.is_safe or check.leaks_solution:
+                logger.info(f"SAFETY TRIGGERED: {check.reason}. Rewriting...")
+                ai_text = await rewrite_reply(
+                    client, route, diagnosis, decision, ai_text, check, llm_history, combined_user_content
+                )
+                prefix = "*(Self-Correction)*: "
+        else:
+            # Standard Tutor logic
+            system_prompt = build_system_prompt(tutor_type, route)
+            ai_text = await run_tutor(client, system_prompt, llm_history)
+
+    # Final out
+    msg = cl.Message(content="")
+    
+    if prefix:
+        await msg.stream_token(prefix)
+        
+    for chunk in ai_text.split(" "):
+        await msg.stream_token(chunk + " ")
+        await asyncio.sleep(0.01)  
+    
+    await msg.send()
+    
+    await step.remove()
+
+    # 4. Update History
+    llm_history.append({"role": "user", "content": combined_user_content, "timestamp": datetime.now().isoformat()})
+    
+    history_entry = {
+        "role": "assistant",
+        "content": ai_text,
+        "timestamp": datetime.now().isoformat()
     }
-    if tutor_type == "SRL Tutor":
-        route = await route_message(
-            client, message.content, llm_history, current_phase
-        )
-        predicted_phase = route.get("phase", current_phase)
-        confidence = route.get("confidence", 0.0)
-        new_phase = update_phase(current_phase, 
-                                    predicted_phase, confidence)
-        cl.user_session.set("current_phase", new_phase)
-        route["phase"] = new_phase
-
-    cl.user_session.set("last_route", route)
-
-    if tutor_type == "SRL Tutor":
-        chain_result = await run_srl_chain(
-            client, route, llm_history, message.content or ""
-        )
-        ai_text = chain_result["reply"]
-        llm_history.append(
-            {
-                "role": "assistant",
-                "content": ai_text,
-                "timestamp": datetime.now().isoformat(),
-                "route": route,
-                "diagnosis": chain_result["diagnosis"],
-                "decision": chain_result["decision"],
-                "check": chain_result["check"],
-                "draft_reply": chain_result["reply"],
-            }
-        )
-    else:
-        system_prompt = build_system_prompt(tutor_type, route)
-        ai_text = await run_tutor(client, system_prompt, llm_history)
-        llm_history.append(
-            {
-                "role": "assistant",
-                "content": ai_text,
-                "timestamp": datetime.now().isoformat(),
-                "system_prompt": system_prompt,
-            }
-        )
-
+    if diagnosis and decision:
+        history_entry["diagnosis"] = diagnosis.__dict__
+        history_entry["decision"] = decision.__dict__
+        
+    llm_history.append(history_entry)
     cl.user_session.set("llm_history", llm_history)
-    maybe_save(
-        session_id=session_id,
-        student_id=student_id,
-        tutor_type=tutor_type,
-        llm_history=llm_history,
-    )
-    await cl.Message(content=ai_text).send()
-
+    maybe_save(session_id, student_id, tutor_type, llm_history)
 
 @cl.on_chat_end
 async def end():
