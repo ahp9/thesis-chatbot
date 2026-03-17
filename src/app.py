@@ -1,9 +1,10 @@
 import asyncio
 import json
+import os
 import logging
 import sqlite3
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import chainlit as cl
 from chainlit.data.sql_alchemy import SQLAlchemyDataLayer
@@ -14,8 +15,7 @@ from services.llm_client import get_client
 from services.router import route_message, update_phase
 from services.srl_chain import (
     check_reply,
-    choose_support_level, 
-    diagnose_student,
+    diagnose_and_decide, 
     generate_full_reply, 
     rewrite_reply
 )
@@ -44,9 +44,27 @@ MOCK_USERS = {
     "user_2@usability_test_2.local": "usability2",
     "user_3@usability_test_3.local": "usability3",
     "user_3@usability_test_4.local": "usability4",
+    "user_5@usability_test_5.local": "usability5",
 }
 
 MAX_CHARS = 80_000
+
+LOG_FILE = "transcripts"
+
+def get_log_filename(user_id, session_id):
+    return os.path.join(LOG_FILE, f"user_{user_id}_session_{session_id}.jsonl")
+
+def load_conversation(user_id, session_id):
+    filename = get_log_filename(user_id, session_id)
+    if not os.path.exists(filename):
+        return None
+
+    try:
+        with open(filename, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as exc:
+        logger.error(f"Could not load transcript {filename}: {exc}")
+        return None
 
 
 @cl.password_auth_callback
@@ -99,6 +117,7 @@ async def start():
 async def on_chat_resume(thread: ThreadDict):
     raw_metadata = thread.get("metadata", {})
     metadata: dict[str, Any]
+
     if isinstance(raw_metadata, str):
         try:
             metadata = json.loads(raw_metadata)
@@ -111,26 +130,43 @@ async def on_chat_resume(thread: ThreadDict):
 
     student_id = metadata.get("user_id", "Unknown")
     tutor_type = metadata.get("tutor_type", "SRL Tutor")
+    session_id = thread.get("id")
 
     cl.user_session.set("user_id", student_id)
     cl.user_session.set("tutor_type", tutor_type)
-    cl.user_session.set("session_id", thread.get("id"))
+    cl.user_session.set("session_id", session_id)
 
+    saved = load_conversation(student_id, session_id)
+
+    if saved and isinstance(saved.get("history"), list):
+        llm_history = saved["history"]
+        cl.user_session.set("llm_history", llm_history)
+
+        current_phase = metadata.get("current_phase")
+        if not current_phase:
+            current_phase = "FORETHOUGHT"
+            for item in reversed(llm_history):
+                if item.get("role") == "assistant" and isinstance(item.get("route"), dict):
+                    current_phase = item["route"].get("phase", "FORETHOUGHT")
+                    break
+
+        cl.user_session.set("current_phase", current_phase)
+        logger.info(f"Resumed saved transcript for {student_id}, session {session_id}")
+        return
+
+    # fallback only if no transcript file exists
     steps = thread.get("steps", [])
     llm_history = []
+
     for step in steps:
-        role = (
-            "assistant" if step.get("type") == 
-            "assistant_message" else "user"
-        )
+        role = "assistant" if step.get("type") == "assistant_message" else "user"
         content = step.get("output") or step.get("input") or ""
-        llm_history.append({"role": role, "content": content})
+
+        if content and content != "{}":
+            llm_history.append({"role": role, "content": content})
 
     cl.user_session.set("llm_history", llm_history)
-    cl.user_session.set(
-        "current_phase", metadata.get("current_phase", "FORETHOUGHT")
-    )
-
+    cl.user_session.set("current_phase", metadata.get("current_phase", "FORETHOUGHT"))
 
 def maybe_save(session_id: str, student_id: str, tutor_type: str, llm_history):
     if student_id != "working_mode" and llm_history:
@@ -147,8 +183,8 @@ async def main(message: cl.Message):
     tutor_type = cl.user_session.get("tutor_type")
     session_id = cl.user_session.get("session_id")
     student_id = cl.user_session.get("user_id")
-    llm_history = cl.user_session.get("llm_history") or []
-    current_phase = cl.user_session.get("current_phase")
+    llm_history: list[dict[str, Any]] = cl.user_session.get("llm_history") or []
+    current_phase = cast(str, cl.user_session.get("current_phase") or "FORETHOUGHT")
 
     # 1. Process files
     file_text_blocks = []
@@ -184,11 +220,12 @@ async def main(message: cl.Message):
             route["phase"] = new_phase
             
             # Diagnosis
-            diagnosis = await diagnose_student(client, route, llm_history, combined_user_content)
-            decision = await choose_support_level(client, route, diagnosis, llm_history, combined_user_content)
-            # diagnosis, decision = await diagnose_and_decide(
-            #     client, route, llm_history, combined_user_content
-            # )
+            # diagnosis = await diagnose_student(client, route, llm_history, combined_user_content)
+            # decision = await choose_support_level(client, route, diagnosis, llm_history, combined_user_content)
+            
+            diagnosis, decision = await diagnose_and_decide(
+                client, route, llm_history, combined_user_content
+            )
             
             # --- LOGGING: Phase, Diagnosis, Decision ---
             logger.info("="*40)
@@ -239,14 +276,16 @@ async def main(message: cl.Message):
     # 4. Update History
     llm_history.append({"role": "user", "content": combined_user_content, "timestamp": datetime.now().isoformat()})
     
-    history_entry = {
+    history_entry: dict[str, Any] = {
         "role": "assistant",
         "content": ai_text,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "route": route,
+        "diagnosis": diagnosis.__dict__ if diagnosis else None,
+        "decision": decision.__dict__ if decision else None,
+        "check": check.__dict__ if check else None,
+        "draft_reply": ai_text,
     }
-    if diagnosis and decision:
-        history_entry["diagnosis"] = diagnosis.__dict__
-        history_entry["decision"] = decision.__dict__
         
     llm_history.append(history_entry)
     cl.user_session.set("llm_history", llm_history)
