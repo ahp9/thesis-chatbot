@@ -11,15 +11,15 @@ CHAIN_MODEL = "gpt-4o-mini"
 
 
 @dataclass
-class DiagnosisResult:
+class CheckpointResult:
     request_kind: str
-    student_stage: str
-    student_state: str
+    task_stage: str
+    progress_state: str
     has_attempt: bool
-    needs_diagnosis: bool
-    tool_context_known: bool
+    context_gap: str
     expertise_level: str
     frustration_level: str
+    srl_focus: str
     implementation_allowed: bool
     confidence: float
     rationale: List[str]
@@ -53,19 +53,19 @@ BASE_PROMPT_FILES = {
     "phase_reflection": "phases/reflection_core.txt",
     "diagnose": "chains/diagnose_student.txt",
     "decide_support": "chains/choose_support_level.txt",
-    "check_reply": "chains/check_solution_leak_v1.txt",
+    "check_reply": "chains/check_solution_leak_v2.txt",
     "rewrite_reply": "chains/fallback_rewrite_v1.txt",
-    "diagnose_and_decide": "chains/student_state_v1.txt",
+    "checkpoint_and_decide": "chains/student_state_v2.txt",
     "file_handler": "base/file.txt",
 }
 
 RESPONSE_PROMPT_FILES = {
-    "DIAGNOSE": "responses/respond_diagnose_v1.txt",
+    "CLARIFY": "responses/respond_diagnose_v1.txt",
     "QUESTION": "responses/respond_question_v2.txt",
     "HINT": "responses/respond_hint_v1.txt",
     "STRUCTURE": "responses/respond_structure_v1.txt",
     "EXPLAIN": "responses/respond_explain_v1.txt",
-    "PARTIAL": "responses/respond_partial_v1.txt",
+    "PARTIAL": "responses/respond_partial_v2.txt",
     "REFLECT": "responses/respond_reflect_v1.txt",
     "EVALUATION": "responses/respond_evaluation_v1.txt",
 }
@@ -127,7 +127,7 @@ def _extract_file_blocks(user_message: str) -> str:
         return user_message
     return ""
 
-def _build_diagnosis_payload(
+def _build_checkpoint_payload(
     route: Dict[str, Any],
     llm_history: List[Dict[str, Any]],
     user_message: str,
@@ -154,39 +154,39 @@ def _build_diagnosis_payload(
     return "\n\n".join(parts)
 
 
-async def diagnose_and_decide(client, route, llm_history, user_message) -> tuple[DiagnosisResult, SupportDecision]:
+async def checkpoint_and_decide(client, route, llm_history, user_message) -> tuple[CheckpointResult, SupportDecision]:
     # Cache-friendly system prompt: Large static blocks first
     system_prompt = "\n\n".join([
         load_prompt(BASE_PROMPT_FILES["identity"]),
         load_prompt(_phase_prompt_file(route.get("phase"))),
-        load_prompt(BASE_PROMPT_FILES["diagnose_and_decide"]),
+        load_prompt(BASE_PROMPT_FILES["checkpoint_and_decide"]),
         load_prompt(BASE_PROMPT_FILES["file_handler"]),
     ])
 
-    payload = _build_diagnosis_payload(route, llm_history, user_message)
+    payload = _build_checkpoint_payload(route, llm_history, user_message)
     data = await _call_json(client, system_prompt, payload)
 
-    diag_raw = data.get("diagnosis", {})
+    checkp_raw = data.get("checkpoint", {})
     dec_raw = data.get("decision", {})
 
-    diagnosis = DiagnosisResult(
-        request_kind=diag_raw.get("request_kind", "RESOUCE").upper(),
-        student_stage=diag_raw.get("student_stage", "EARLY").upper(),
-        student_state=diag_raw.get("student_state", "UNKNOWN").upper(),
-        has_attempt=bool(diag_raw.get("has_attempt", False)),
-        needs_diagnosis=bool(diag_raw.get("needs_diagnosis", True)),
-        tool_context_known=bool(diag_raw.get("tool_context_known", False)),
-        expertise_level=diag_raw.get("expertise_level", "UNKNOWN").upper(),
-        frustration_level=diag_raw.get("frustration_level", "UNKNOWN").upper(),
-        implementation_allowed=bool(diag_raw.get("implementation_allowed", False)),
-        confidence=float(diag_raw.get("confidence", 0.0)),
-        rationale=diag_raw.get("rationale", [])
+    diagnosis = CheckpointResult(
+        request_kind=checkp_raw.get("request_kind", "RESOURCE").upper(),
+        task_stage=checkp_raw.get("task_stage", "WORKING").upper(),
+        progress_state=checkp_raw.get("progress_state", "MOVING").upper(),
+        has_attempt=bool(checkp_raw.get("has_attempt", False)),
+        context_gap=checkp_raw.get("context_gap", "SMALL").upper(),
+        expertise_level=checkp_raw.get("expertise_level", "UNKNOWN").upper(),
+        frustration_level=checkp_raw.get("frustration_level", "UNKNOWN").upper(),
+        srl_focus=checkp_raw.get("srl_focus", "NONE").upper(),
+        implementation_allowed=bool(checkp_raw.get("implementation_allowed", False)),
+        confidence=float(checkp_raw.get("confidence", 0.0)),
+        rationale=checkp_raw.get("rationale", []),
     )
 
     support_level = dec_raw.get("support_level", "EXPLAIN").upper()
     decision = SupportDecision(
         support_level=support_level,
-        response_prompt_file=RESPONSE_PROMPT_FILES.get(support_level, RESPONSE_PROMPT_FILES["DIAGNOSE"]),
+        response_prompt_file=RESPONSE_PROMPT_FILES.get(support_level, RESPONSE_PROMPT_FILES["CLARIFY"]),
         can_show_code=bool(dec_raw.get("can_show_code", False)),
         must_end_with_question=bool(dec_raw.get("must_end_with_question", True)),
         should_request_attempt=bool(dec_raw.get("should_request_attempt", True)),
@@ -195,12 +195,12 @@ async def diagnose_and_decide(client, route, llm_history, user_message) -> tuple
     )
     return diagnosis, decision
 
-async def diagnose_student(
+async def checkpoint_student(
     client,
     route: Dict[str, Any],
     llm_history: List[Dict[str, Any]],
     user_message: str,
-) -> DiagnosisResult:
+) -> CheckpointResult:
     system_prompt = "\n\n".join(
         [
             load_prompt(BASE_PROMPT_FILES["identity"]),
@@ -210,7 +210,7 @@ async def diagnose_student(
     )
     payload = _make_chain_context(route, llm_history, user_message)
     data = await _call_json(client, system_prompt, payload)
-    return DiagnosisResult(
+    return CheckpointResult(
         request_kind=(data.get("request_kind") or "PRODUCT").upper(),
         student_stage=(data.get("student_stage") or "EARLY").upper(),
         student_state=(data.get("student_state") or "UNKNOWN").upper(),
@@ -228,7 +228,7 @@ async def diagnose_student(
 async def choose_support_level(
     client,
     route: Dict[str, Any],
-    diagnosis: DiagnosisResult,
+    diagnosis: CheckpointResult,
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> SupportDecision:
@@ -271,7 +271,7 @@ async def choose_support_level(
 async def generate_full_reply(    
     client,
     route: Dict[str, Any],
-    diagnosis: DiagnosisResult,
+    checkpoint: CheckpointResult,
     decision: SupportDecision,
     llm_history: List[Dict[str, Any]],
     user_message: str,) -> str:
@@ -284,7 +284,7 @@ async def generate_full_reply(
 
     control_header = {
         "route": route,
-        "diagnosis": diagnosis.__dict__,
+        "checkpoint": checkpoint.__dict__,
         "decision": decision.__dict__,
     }
 
@@ -305,53 +305,9 @@ async def generate_full_reply(
     return resp.choices[0].message.content or ""
 
 
-async def generate_reply_stream(
-    client,
-    route: Dict[str, Any],
-    diagnosis: DiagnosisResult,
-    decision: SupportDecision,
-    llm_history: List[Dict[str, Any]],
-    user_message: str,
-):
-    # Load prompts
-    system_prompt = "\n\n".join([
-        load_prompt(BASE_PROMPT_FILES["identity"]),
-        load_prompt(_phase_prompt_file(route.get("phase"))),
-        load_prompt(decision.response_prompt_file),
-        load_prompt(BASE_PROMPT_FILES["file_handler"]),
-    ])
-
-    control_header = {
-        "route": route,
-        "diagnosis": diagnosis.__dict__,
-        "decision": decision.__dict__,
-    }
-
-    user_payload = (
-        "CONTROL_STATE:\n" + json.dumps(control_header, indent=2) + "\n\n"
-        "RECENT_HISTORY:\n" + _compact_history(llm_history) + "\n\n"
-        "CURRENT_USER_INPUT_WITH_FILES:\n" + user_message
-    )
-
-    logger.info("--- GENERATING STREAM ---")
-    logger.info(f"Target Support Level: {decision.support_level}")
-    logger.info(f"Phase Context: {route.get('phase')}")
-
-    return await client.chat.completions.create(
-        model=CHAIN_MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_payload}
-        ],
-        temperature=0.3,
-        stream=True
-    )
-
-
-
-async def check_reply(client, route, diagnosis, decision, draft_reply, llm_history, user_message) -> CheckResult:
+async def check_reply(client, route, checkpoint, decision, draft_reply, llm_history, user_message) -> CheckResult:
     system_prompt = load_prompt(BASE_PROMPT_FILES["check_reply"])
-    payload = {"diag": diagnosis.__dict__, "dec": decision.__dict__, "draft": draft_reply, "user": user_message}
+    payload = {"chk": checkpoint.__dict__, "dec": decision.__dict__, "draft": draft_reply, "user": user_message, "recent_history": _compact_history(llm_history), "route": route}
     data = await _call_json(client, system_prompt, json.dumps(payload))
     return CheckResult(
         is_safe=bool(data.get("is_safe", False)),
@@ -360,12 +316,12 @@ async def check_reply(client, route, diagnosis, decision, draft_reply, llm_histo
         reason=data.get("reason", "unknown")
     )
 
-async def rewrite_reply(client, route, diagnosis, decision, draft_reply, check, llm_history, user_message) -> str:
+async def rewrite_reply(client, route, checkpoint, decision, draft_reply, check, llm_history, user_message) -> str:
     system_prompt = "\n\n".join([
         load_prompt(BASE_PROMPT_FILES["identity"]),
         load_prompt(BASE_PROMPT_FILES["rewrite_reply"]),
     ])
-    payload = {"draft": draft_reply, "reason": check.reason, "user": user_message}
+    payload = {"draft": draft_reply, "reason": check.reason, "user": user_message, "recent_history": _compact_history(llm_history), "route": route, "checkpoint": checkpoint.__dict__, "decision": decision.__dict__}
     resp = await client.chat.completions.create(
         model=CHAIN_MODEL,
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": json.dumps(payload)}],
@@ -374,8 +330,8 @@ async def rewrite_reply(client, route, diagnosis, decision, draft_reply, check, 
     return resp.choices[0].message.content or ""
 
 
-async def run_srl_chain(client, route, llm_history, user_message) -> tuple[str, DiagnosisResult, SupportDecision]:
-    diagnosis, decision = await diagnose_and_decide(client, route, llm_history, user_message)
+async def run_srl_chain(client, route, llm_history, user_message) -> tuple[str, CheckpointResult, SupportDecision]:
+    diagnosis, decision = await checkpoint_and_decide(client, route, llm_history, user_message)
     draft_reply = await generate_full_reply(client, route, diagnosis, decision, llm_history, user_message)
     check = await check_reply(client, route, diagnosis, decision, draft_reply, llm_history, user_message)
 

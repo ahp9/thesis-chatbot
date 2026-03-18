@@ -50,6 +50,19 @@ Allow:
 
 Mark skipped_diagnosis=true if the decision required diagnosis first and the draft reply failed to ask for it.
 
+If DECISION.can_show_code = true, allow:
+- a short code fragment
+- a partial function body fragment
+- a template with placeholders
+- pseudocode mixed with 1-5 illustrative lines
+
+Still mark leaks_solution=true if the reply includes:
+- a full function
+- a full runnable block
+- enough code to directly complete the student's task
+- code that removes the key implementation decisions
+
+
 ---
 
 CONSTRAINTS

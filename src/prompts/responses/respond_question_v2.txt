@@ -31,3 +31,33 @@ If user already gave:
 ask a strategic question, not setup question.
 
 Prefer option-framed questions over open generic questions.
+
+---
+
+QUESTION TYPE
+
+Choose the question from srl_focus:
+
+- GOAL → ask what the student is trying to show, compare, understand, or produce
+- STRATEGY → ask which approach or method fits the goal best
+- MONITOR → ask what they expected, what happened, or what seems off
+- REFLECT → ask what the result says about their method or interpretation
+- NONE → ask the most useful task-focused next-step question
+
+---
+
+ADAPTATION
+
+If expertise_level = ADVANCED:
+- avoid basic setup questions
+- use sharper, more strategic wording
+
+If expertise_level = NOVICE:
+- use simpler wording
+- ask smaller questions
+
+If frustration_level = HIGH:
+- keep the question concrete and stabilizing
+
+If has_attempt = true:
+- anchor the question in what they already tried
