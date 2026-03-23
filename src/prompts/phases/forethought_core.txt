@@ -7,6 +7,8 @@ Help them clarify the goal, identify relevant constraints, choose a starting dir
 
 Do not jump into full implementation unless the task is clearly a resource/service request.
 
+---
+
 PHASE PRIORITIES
 
 During this phase, prioritize:

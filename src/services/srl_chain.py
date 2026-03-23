@@ -48,8 +48,8 @@ class CheckResult:
 # become inputs to later prompts. [Ch. 3.3.1, pp. 68-69]
 BASE_PROMPT_FILES = {
     "identity": "base/srl_model_v2.txt",
-    "phase_forethought": "phases/forethought_core.txt",
-    "phase_performance": "phases/performance_core.txt",
+    "phase_forethought": "phases/forethought_core_v1.txt",
+    "phase_performance": "phases/performance_core_v1.txt",
     "phase_reflection": "phases/reflection_core.txt",
     "diagnose": "chains/diagnose_student.txt",
     "decide_support": "chains/choose_support_level.txt",
