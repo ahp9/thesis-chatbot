@@ -11,7 +11,6 @@ services:
       - ./.env
     volumes:
       - ./src:/app
-      - ./prompts:/prompts
       - ./transcripts:/app/transcripts
       - ./chainlit.db:/app/chainlit.db
     working_dir: /app
@@ -27,7 +26,6 @@ services:
       - ./.env
     volumes:
       - ./src:/app
-      - ./prompts:/prompts
       - ./transcripts:/app/transcripts
     working_dir: /app
     profiles:

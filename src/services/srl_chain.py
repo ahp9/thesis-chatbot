@@ -521,13 +521,15 @@ async def run_srl_chain(
     route: Dict[str, Any],
     llm_history: List[Dict[str, Any]],
     user_message: str,
-) -> tuple[str, CheckpointResult, SupportDecision]:
+) -> Dict[str, Any]:
     diagnosis, decision = await checkpoint_and_decide(
         client, route, llm_history, user_message
     )
+
     draft_reply = await generate_full_reply(
         client, route, diagnosis, decision, llm_history, user_message
     )
+
     check = await check_reply(
         client, route, diagnosis, decision, draft_reply, llm_history, user_message
     )
@@ -535,9 +537,23 @@ async def run_srl_chain(
     if not check.is_safe or check.leaks_solution:
         logger.info("Safety check failed: %s. Rewriting...", check.reason)
         final_reply = await rewrite_reply(
-            client, route, diagnosis, decision, draft_reply, check, llm_history, user_message
+            client,
+            route,
+            diagnosis,
+            decision,
+            draft_reply,
+            check,
+            llm_history,
+            user_message,
         )
     else:
         final_reply = draft_reply
 
-    return final_reply, diagnosis, decision
+    return {
+        "reply": final_reply,
+        "draft_reply": draft_reply,
+        "diagnosis": diagnosis.__dict__,
+        "decision": decision.__dict__,
+        "check": check.__dict__,
+        "was_rewritten": final_reply != draft_reply,
+    }
