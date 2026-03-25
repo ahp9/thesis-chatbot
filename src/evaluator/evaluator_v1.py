@@ -21,8 +21,6 @@ JUDGE_MODEL = "gpt-4o-mini"
 JUDGE_TEMP = 0.0
 
 # --- Version tracking ---
-# Update these when you change the corresponding prompt file so reports are
-# automatically stamped with the exact configuration that produced them.
 VERSION_BASE_SRL    = "v5"   # srl_model_v{N}.txt 
 VERSION_ROUTER      = "v5"   # router_system_prompt_v{N}.txt 
 VERSION_CHAIN       = "v2"   # srl_chain.py / chain prompt files 

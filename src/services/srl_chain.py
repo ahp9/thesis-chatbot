@@ -185,7 +185,7 @@ def _compact_history(llm_history: List[Dict[str, Any]], limit: int = 8) -> str:
 
 def _build_native_history(
     llm_history: List[Dict[str, Any]],
-    limit: int = 6,
+    limit: int = 8,
 ) -> List[Dict[str, str]]:
     """
     Build a proper OpenAI-style alternating user/assistant message list.
@@ -408,7 +408,7 @@ async def generate_full_reply(
         f"CURRENT_USER_INPUT_WITH_FILES:\n{user_message}"
     )
 
-    history_turns = _build_native_history(llm_history, limit=6)
+    history_turns = _build_native_history(llm_history)
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(history_turns)
     messages.append({"role": "user", "content": current_turn_content})
