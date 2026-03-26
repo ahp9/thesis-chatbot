@@ -131,20 +131,19 @@ def _extract_json(raw: str) -> Dict[str, Any]:
 
 async def _call_json(
     client, system_prompt: str, user_prompt: str, model: str = CONTROL_MODEL
-) -> Tuple[Dict[str, Any], bool]:
-    # Use response_format to force the model into JSON mode
+) -> Tuple[str, Dict[str, Any], bool]:
     resp = await client.chat.completions.create(
         model=model,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        response_format={"type": "json_object"}, # FORCES JSON OUTPUT
+        response_format={"type": "json_object"},
         temperature=0,
     )
     raw = resp.choices[0].message.content or ""
     data = _extract_json(raw)
-    return data, bool(data)
+    return raw, data, bool(data)
 
 
 # ---------------------------------------------------------------------------
@@ -307,12 +306,7 @@ async def checkpoint_and_decide(
     route: Dict[str, Any],
     llm_history: List[Dict[str, Any]],
     user_message: str,
-) -> tuple[CheckpointResult, SupportDecision]:
-    """
-    Single LLM call: diagnose student state + decide support level.
-    Logs a warning with raw response excerpt if parsing fails so you can
-    see exactly what the model returned instead of silently using defaults.
-    """
+) -> tuple[CheckpointResult, SupportDecision, dict]:
     prompt_parts = [
         load_prompt(BASE_PROMPT_FILES["identity"]),
         load_prompt(_phase_prompt_file(route.get("phase"))),
@@ -323,44 +317,26 @@ async def checkpoint_and_decide(
 
     system_prompt = "\n\n".join(prompt_parts)
     payload = _build_checkpoint_payload(route, llm_history, user_message)
-    data, parse_ok = await _call_json(client, system_prompt, payload, model=CONTROL_MODEL)
+    raw_text, data, parse_ok = await _call_json(
+        client, system_prompt, payload, model=CONTROL_MODEL
+    )
+
+    debug = {
+        "raw_text": raw_text,
+        "parsed_json": data,
+        "parse_ok": parse_ok,
+        "fallback_used": False,
+    }
 
     if not parse_ok:
         logger.warning(
-            "checkpoint_and_decide: JSON parse failed — using fallback values. "
-            "Check logs above for the raw model response."
+            "checkpoint_and_decide: JSON parse failed — using fallback values."
         )
-        return _fallback_checkpoint(), _fallback_decision()
+        debug["fallback_used"] = True
+        return _fallback_checkpoint(), _fallback_decision(), debug
 
     checkp_raw = data.get("checkpoint", {})
     dec_raw = data.get("decision", {})
-
-    # Warn if the top-level keys are missing (partial parse succeeded)
-    if not checkp_raw:
-        logger.warning(
-            "checkpoint_and_decide: 'checkpoint' key missing. Parsed data: %s",
-            json.dumps(data)[:300],
-        )
-    if not dec_raw:
-        logger.warning(
-            "checkpoint_and_decide: 'decision' key missing. Parsed data: %s",
-            json.dumps(data)[:300],
-        )
-
-    # Log any individual fields the model omitted
-    missing = [
-        f for f in [
-            "request_kind", "task_stage", "progress_state", "has_attempt",
-            "context_gap", "expertise_level", "frustration_level", "srl_focus",
-        ]
-        if checkp_raw.get(f) is None
-    ]
-    if missing:
-        logger.warning(
-            "checkpoint_and_decide: model omitted checkpoint fields %s — "
-            "fallback used for those fields only.",
-            missing,
-        )
 
     diagnosis = CheckpointResult(
         request_kind=(checkp_raw.get("request_kind") or "PRODUCT").upper(),
@@ -368,13 +344,20 @@ async def checkpoint_and_decide(
         progress_state=(checkp_raw.get("progress_state") or "MOVING").upper(),
         has_attempt=bool(checkp_raw.get("has_attempt", False)),
         context_gap=(checkp_raw.get("context_gap") or "NONE").upper(),
-        expertise_level=(checkp_raw.get("expertise_level") or ("UNKNOWN" if not llm_history else "INTERMEDIATE")).upper(),
+        expertise_level=(
+            checkp_raw.get("expertise_level")
+            or ("UNKNOWN" if not llm_history else "INTERMEDIATE")
+        ).upper(),
         frustration_level=(checkp_raw.get("frustration_level") or "LOW").upper(),
-        srl_focus=(checkp_raw.get("srl_focus") or ("STRATEGY" if checkp_raw.get("request_kind") == "PRODUCT" else "NONE")).upper(),
+        srl_focus=(
+            checkp_raw.get("srl_focus")
+            or ("STRATEGY" if checkp_raw.get("request_kind") == "PRODUCT" else "NONE")
+        ).upper(),
         implementation_allowed=bool(checkp_raw.get("implementation_allowed", False)),
         confidence=float(checkp_raw.get("confidence") or 0.0),
         rationale=checkp_raw.get("rationale") or [],
-    )   
+        parse_ok=True,
+    )
 
     support_level = (dec_raw.get("support_level") or "QUESTION").upper()
     decision = SupportDecision(
@@ -391,8 +374,7 @@ async def checkpoint_and_decide(
         parse_ok=bool(dec_raw),
     )
 
-    return diagnosis, decision
-
+    return diagnosis, decision, debug
 
 async def generate_full_reply(
     client,
@@ -486,11 +468,20 @@ async def check_reply(
         "recent_history": _compact_history(llm_history, limit=4),
         "route": route,
     }
-    data, parse_ok = await _call_json(client, system_prompt, json.dumps(payload), model=CHECK_MODEL)
+    raw_text, data, parse_ok = await _call_json(
+        client,
+        system_prompt,
+        json.dumps(payload),
+        model=CHECK_MODEL,
+    )
+
+
 
     if not parse_ok:
         # Fail safe: if we can't read the check result, assume the reply needs rewriting
         logger.warning("check_reply: JSON parse failed — defaulting to safe=False")
+
+        logger.warning("check_reply: JSON parse failed. raw_text=%s", raw_text)
         return CheckResult(
             is_safe=False,
             leaks_solution=True,

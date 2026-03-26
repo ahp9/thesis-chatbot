@@ -46,7 +46,7 @@ async def route_message(
 ) -> Dict[str, Any]:
     # Direct instruction prompting is still appropriate for a narrow JSON routing task.
     # [Ch. 3.1.1, p. 38]
-    router_system = load_prompt("base/router/router_system_prompt_v5.txt")
+    router_system = load_prompt("base/router/router_system_prompt_v6.txt")
 
     recent = llm_history[-6:] if llm_history else []
     context_lines = []
@@ -84,12 +84,12 @@ CURRENT_USER_MESSAGE:
     except json.JSONDecodeError:
         data = {
             "phase": current_phase or "PERFORMANCE",
-            "strategy": "NONE",
+            "srl_signal": "NONE",
             "confidence": 0.2,
             "signals": ["router_json_parse_failed"],
             "one_optional_question": "",
         }
 
     data["phase"] = (data.get("phase") or "PERFORMANCE").upper()
-    data["strategy"] = (data.get("strategy") or "NONE").upper()
+    data["srl_signal"] = (data.get("srl_signal") or "NONE").upper()
     return data
