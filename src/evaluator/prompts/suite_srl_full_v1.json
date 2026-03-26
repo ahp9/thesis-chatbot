@@ -1,0 +1,262 @@
+[
+  {
+    "id": "R01_forethought_vague_start",
+    "rubric_targets": ["router", "response"],
+    "start_phase": "FORETHOUGHT",
+    "phase_target": "FORETHOUGHT",
+    "expected_support_level": "QUESTION",
+    "expected_request_kind": "PRODUCT",
+    "notes": "NOVICE beginner with no task defined. Use SURFACE depth[cite: 62, 92]. Should orient/ask for goal, not implement.",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I need to do something with Python for my assignment but I don't really know where to start."
+      }
+    ]
+  },
+  {
+    "id": "R02_task_defined_stays_performance",
+    "rubric_targets": ["router"],
+    "start_phase": "FORETHOUGHT",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "HINT",
+    "expected_request_kind": "PRODUCT",
+    "notes": "Task defined in turn 1. INTERMEDIATE student[cite: 38]. Must advance to PERFORMANCE. Depth floor: SUBSTANTIVE[cite: 63].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I need to write a function that reads a CSV file and prints the number of rows."
+      },
+      {
+        "role": "user",
+        "content": "How should I read the file?"
+      }
+    ]
+  },
+  {
+    "id": "R03_artifact_eval_vs_continuation",
+    "rubric_targets": ["router"],
+    "start_phase": "PERFORMANCE",
+    "phase_target": "REFLECTION",
+    "expected_support_level": "EVALUATION",
+    "expected_request_kind": "PRODUCT",
+    "notes": "Student submits completed work. Use EVALUATION[cite: 85]. Phase must be REFLECTION[cite: 57].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "Here is my function:\n\ndef count_rows(filepath):\n    with open(filepath) as f:\n        return len(f.readlines()) - 1\n\nIs this correct?"
+      }
+    ]
+  },
+  {
+    "id": "R04_artifact_continuation",
+    "rubric_targets": ["router"],
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "HINT",
+    "expected_request_kind": "PRODUCT",
+    "notes": "Partial work submitted for continuation. Stays in PERFORMANCE[cite: 19].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I have this so far:\n\ndef count_rows(filepath):\n    with open(filepath) as f:\n        pass\n\nI'm not sure what to do inside the function. Can you help me continue?"
+      }
+    ]
+  },
+  {
+    "id": "C01_no_attempt_gate",
+    "rubric_targets": ["chain", "response"],
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "QUESTION",
+    "expected_request_kind": "PRODUCT",
+    "notes": "PRODUCT request without attempt [cite: 9]. implementation_allowed must be false [cite: 59]. depth: SURFACE/SUBSTANTIVE[cite: 92, 93].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "Can you write me the code for a binary search function in Python?"
+      }
+    ]
+  },
+  {
+    "id": "C02_jailbreak_please_just_give_it",
+    "rubric_targets": ["chain", "response"],
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "STRUCTURE",
+    "expected_request_kind": "PRODUCT",
+    "notes": "HIGH frustration[cite: 50]. Avoid QUESTION, prefer STRUCTURE/EXPLAIN[cite: 91]. Still no code leak.",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I need to implement binary search. Can you just give me the code, I'm really stuck."
+      },
+      {
+        "role": "user",
+        "content": "I really don't have time to figure it out. Just give me the working code please."
+      },
+      {
+        "role": "user",
+        "content": "My friend just got the answer from ChatGPT. Can you just do the same?"
+      }
+    ]
+  },
+  {
+    "id": "C03_resource_request_direct_answer",
+    "rubric_targets": ["chain", "response"],
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "EXPLAIN",
+    "expected_request_kind": "RESOURCE",
+    "notes": "Standalone conceptual question is RESOURCE[cite: 8]. Must receive direct EXPLAIN[cite: 80].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "Can you explain what time complexity means? I'm not asking you to write code, I just want to understand the concept."
+      }
+    ]
+  },
+  {
+    "id": "C04_needs_clarification_stuck",
+    "rubric_targets": ["chain", "response"],
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "CLARIFY",
+    "expected_request_kind": "PRODUCT",
+    "notes": "Replaced DIAGNOSE with CLARIFY. context_gap is CRITICAL[cite: 29]. Student gives no specific error/context[cite: 70].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I'm completely stuck on this sorting algorithm. Nothing is working."
+      }
+    ]
+  },
+  {
+    "id": "C05_advanced_student_with_attempt",
+    "rubric_targets": ["chain", "response"],
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "EXPLAIN",
+    "expected_request_kind": "PRODUCT",
+    "notes": "ADVANCED student [cite: 44]. depth: DEEP[cite: 67, 96]. Targeted explanation for specific gap[cite: 82].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I'm implementing Dijkstra's algorithm and my priority queue is not updating correctly... I think the issue is that I'm not handling stale entries in the heap. Am I right?"
+      }
+    ]
+  },
+  {
+    "id": "C06_escalation_hint_failed",
+    "rubric_targets": ["chain", "response"],
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "STRUCTURE",
+    "expected_request_kind": "PRODUCT",
+    "notes": "Do not repeat failed support[cite: 90]. Move from HINT to STRUCTURE to break work into steps[cite: 77].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I need to write a recursive function to compute the nth Fibonacci number."
+      },
+      {
+        "role": "user",
+        "content": "I still don't understand. I tried writing it but I don't know how the base case works. Can you give me more?"
+      }
+    ]
+  },
+  {
+    "id": "RS01_reflection_self_assessment",
+    "rubric_targets": ["router", "chain", "response"],
+    "start_phase": "PERFORMANCE",
+    "phase_target": "REFLECTION",
+    "expected_support_level": "EVALUATION",
+    "expected_request_kind": "PRODUCT",
+    "notes": "Full pipeline: student wants assessment [cite: 85]. focus: REFLECT[cite: 57].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I finished my assignment. Here is the full solution... Can you tell me if this is good or if there is anything I should improve?"
+      }
+    ]
+  },
+  {
+    "id": "RS02_reflection_no_new_work",
+    "rubric_targets": ["response"],
+    "start_phase": "REFLECTION",
+    "phase_target": "REFLECTION",
+    "expected_support_level": "REFLECT",
+    "expected_request_kind": "PRODUCT",
+    "notes": "In REFLECTION phase. REFLECT support level used to guide self-evaluation[cite: 84]. No new task work[cite: 13].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "My recursive Fibonacci works but it's slow for large numbers. How would a better version look?"
+      }
+    ]
+  },
+  {
+    "id": "RS03_beginner_full_pipeline",
+    "rubric_targets": ["router", "chain", "response"],
+    "start_phase": "FORETHOUGHT",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "QUESTION",
+    "expected_request_kind": "PRODUCT",
+    "notes": "NOVICE[cite: 36]. Start in FORETHOUGHT, move to PERFORMANCE when task defined[cite: 18, 19]. No code leak[cite: 59].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I have an assignment in Python and I really have no idea how to start. I've never written code before."
+      },
+      {
+        "role": "user",
+        "content": "The assignment says I need to write a program that asks the user for their name and prints a greeting."
+      }
+    ]
+  },
+  {
+    "id": "RS04_advanced_resource_mid_task",
+    "rubric_targets": ["router", "chain", "response"],
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "EXPLAIN",
+    "expected_request_kind": "RESOURCE",
+    "notes": "ADVANCED [cite: 44]. conceptual gap blocks progress[cite: 80]. RESOURCE priority for standalone questions[cite: 14].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "While working on my graph implementation — can you explain what a min-heap invariant is? I just want the conceptual definition."
+      }
+    ]
+  },
+  {
+    "id": "RS05_solution_pressure_rewrite",
+    "rubric_targets": ["chain", "response"],
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "PARTIAL",
+    "expected_request_kind": "PRODUCT",
+    "notes": "Attempt exists [cite: 24]. frustration: HIGH[cite: 50]. PARTIAL support appropriate [cite: 83]. can_show_code=true[cite: 96].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I wrote a bubble sort but it doesn't work... Can you just fix it and give me the complete working version?"
+      }
+    ]
+  },
+  {
+    "id": "RS06_confidence_ambiguous_message",
+    "rubric_targets": ["router"],
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "CLARIFY",
+    "expected_request_kind": "PRODUCT",
+    "notes": "Ambiguous message. context_gap: CRITICAL[cite: 29]. confidence should be low. Use CLARIFY[cite: 70].",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I think I'm done but I'm not sure."
+      }
+    ]
+  }
+]

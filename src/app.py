@@ -15,7 +15,7 @@ from services.llm_client import get_client
 from services.router import route_message, update_phase
 from services.srl_chain import (
     check_reply,
-    diagnose_and_decide, 
+    checkpoint_and_decide, 
     generate_full_reply, 
     rewrite_reply
 )
@@ -207,7 +207,7 @@ async def main(message: cl.Message):
     # 2. Run the internal SRL Chain (Routing -> Diagnosis -> Generation -> Check)
     ai_text = ""
     prefix = ""
-    diagnosis = None
+    checkpoint = None
     decision = None
     route: dict[str, Any] = {
         "phase": current_phase,
@@ -217,48 +217,92 @@ async def main(message: cl.Message):
 
     async with cl.Step(name="Tutor is thinking...") as step:
         if tutor_type == "SRL Tutor":
-            # Routing
-            route = await route_message(client, combined_user_content, llm_history, current_phase)
-            
+
+            # ----------------------------------------------------------------
+            # SPEED: run the router concurrently with any remaining I/O.
+            # File reading already happened above; here we fire the router
+            # immediately and run checkpoint_and_decide the moment it resolves.
+            # This shaves the router's round-trip off the critical path when
+            # there is nothing else to await — and keeps the pattern ready for
+            # when you do have parallel work (e.g. fetching a resource).
+            # ----------------------------------------------------------------
+            route_task = asyncio.create_task(
+                route_message(client, combined_user_content, llm_history, current_phase)
+            )
+            route = await route_task
+
             predicted_phase = cast(str, route.get("phase") or current_phase)
             confidence = float(route.get("confidence", 0.0) or 0.0)
             new_phase = update_phase(current_phase, predicted_phase, confidence)
-        
+
             cl.user_session.set("current_phase", new_phase)
             route["phase"] = new_phase
-            
-            diagnosis, decision = await diagnose_and_decide(
+
+            checkpoint, decision = await checkpoint_and_decide(
                 client, route, llm_history, combined_user_content
             )
-        
-            logger.info("="*40)
+
+            logger.info("=" * 40)
             logger.info(f"SRL SESSION: {session_id} | USER: {student_id}")
             logger.info(f"PHASE: {route['phase']} (Confidence: {route.get('confidence')})")
-            logger.info(f"DIAGNOSIS: Kind={diagnosis.request_kind} | Stage={diagnosis.student_stage} | Attempt={diagnosis.has_attempt}")
-            logger.info(f"STATE: {diagnosis.student_state} | Expertise={diagnosis.expertise_level}")
-            logger.info(f"DECISION: Level={decision.support_level} | CanShowCode={decision.can_show_code}")
-            logger.info("="*40)
+            logger.info(
+                f"CHECKPOINT: "
+                f"Kind={checkpoint.request_kind} | "
+                f"Stage={checkpoint.task_stage} | "
+                f"Progress={checkpoint.progress_state} | "
+                f"Attempt={checkpoint.has_attempt} | "
+                f"Gap={checkpoint.context_gap}"
+            )
+            logger.info(
+                f"LEARNER: "
+                f"Expertise={checkpoint.expertise_level} | "
+                f"Frustration={checkpoint.frustration_level} | "
+                f"SRL={checkpoint.srl_focus} | "
+                f"ImplAllowed={checkpoint.implementation_allowed}"
+            )
+            logger.info(
+                f"DECISION: Level={decision.support_level} | "
+                f"CanShowCode={decision.can_show_code}"
+            )
+            logger.info("=" * 40)
 
-            # Generate internal draft
+            # Generate tutor reply (uses native multi-turn history internally)
             ai_text = await generate_full_reply(
-                client, route, diagnosis, decision, llm_history, combined_user_content
+                client, route, checkpoint, decision, llm_history, combined_user_content
             )
-            
-            # Safety Check
+
+            # ----------------------------------------------------------------
+            # CONDITIONAL SAFETY CHECK
+            # check_reply now skips the LLM call for low-risk support levels
+            # (CLARIFY, QUESTION, HINT, REFLECT) and returns a pre-approved
+            # CheckResult with was_skipped=True.  This removes one sequential
+            # round-trip on the majority of turns.
+            # ----------------------------------------------------------------
             check = await check_reply(
-                client, route, diagnosis, decision, ai_text, llm_history, combined_user_content
+                client, route, checkpoint, decision, ai_text, llm_history, combined_user_content
             )
-            
-            logger.info(f"SAFETY CHECK: is_safe={check.is_safe} | leaks_solution={check.leaks_solution} | reason={check.reason}")
-            
+
+            if check.was_skipped:
+                logger.info(
+                    f"SAFETY CHECK: skipped (support_level={decision.support_level})"
+                )
+            else:
+                logger.info(
+                    f"SAFETY CHECK: is_safe={check.is_safe} | "
+                    f"leaks_solution={check.leaks_solution} | "
+                    f"reason={check.reason}"
+                )
+
             if not check.is_safe or check.leaks_solution:
                 logger.info(f"SAFETY TRIGGERED: {check.reason}. Rewriting...")
                 ai_text = await rewrite_reply(
-                    client, route, diagnosis, decision, ai_text, check, llm_history, combined_user_content
+                    client, route, checkpoint, decision, ai_text, check,
+                    llm_history, combined_user_content
                 )
                 prefix = "*(Self-Correction)*: "
+
         else:
-            # Standard Tutor logic
+            # Standard Tutor logic — unchanged
             system_prompt = build_system_prompt(tutor_type, route)
             ai_text = await run_tutor(client, system_prompt, llm_history)
 
@@ -284,7 +328,7 @@ async def main(message: cl.Message):
         "content": ai_text,
         "timestamp": datetime.now().isoformat(),
         "route": route,
-        "diagnosis": diagnosis.__dict__ if diagnosis else None,
+        "diagnosis": checkpoint.__dict__ if checkpoint else None,
         "decision": decision.__dict__ if decision else None,
         "check": check.__dict__ if check else None,
         "draft_reply": ai_text,

@@ -1,0 +1,64 @@
+rubric_name: "SRL Chain — Diagnosis and Support-Level Decision (V2)"
+rubric_type: chain
+
+criteria:
+ 
+  diagnosis_accuracy:
+    what_to_evaluate: >
+      Evaluate whether the checkpoint correctly identified:
+      - request_kind (RESOURCE vs PRODUCT)
+      - task_stage (STARTING / WORKING / REVIEWING)
+      - progress_state (MOVING / STALLED / DONEISH)
+      - expertise_level (NOVICE / INTERMEDIATE / ADVANCED)
+      - context_gap (NONE / SMALL / CRITICAL)
+      Check that the rationale cites specific evidence from the user message for these fields.
+    score_3: "All fields accurately match the student's message; rationale cites specific evidence for expertise and progress."
+    score_2: "Fields are mostly correct, but rationale is thin or missing evidence for one field."
+    score_1: "One major field (request_kind or expertise) is wrong, or rationale is entirely missing."
+    score_0: "Two or more major fields are wrong; diagnosis does not reflect the student's actual state."
+
+  support_alignment_and_depth:
+    what_to_evaluate: >
+      Evaluate if the support_level and support_depth match the expertise_level floors:
+      - NOVICE: Surface/Substantive
+      - INTERMEDIATE: Substantive floor
+      - ADVANCED: Deep floor
+      Also check if CLARIFY was used when context_gap is CRITICAL, or if QUESTION was used for NOVICE/STARTING.
+    score_3: "Support level is pedagogically perfect for the stage; depth strictly meets or exceeds the expertise floor."
+    score_2: "Support level is appropriate, but depth is one level off (e.g., Surface for an Intermediate)."
+    score_1: "Support level is inappropriate (e.g., HINT when the student is clearly STALLED and needs CLARIFY)."
+    score_0: "Support level violates core SRL rules (e.g., providing PARTIAL support to a NOVICE with no attempt)."
+
+  implementation_gate:
+    what_to_evaluate: >
+      Evaluate whether implementation_allowed and can_show_code are set correctly.
+      Implementation/Code should be FALSE if:
+      - It is a PRODUCT request with no attempt.
+      - Support level is QUESTION, CLARIFY, or HINT.
+      Implementation/Code can be TRUE if:
+      - Support is PARTIAL/EXPLAIN AND (Stalled OR High Frustration OR Novice).
+    score_3: "Gate is correctly closed/open with a rationale that references the 'Can Show Code' rules."
+    score_2: "Gate is technically correct, but the rationale doesn't explain the decision."
+    score_1: "Gate is open (True) in a borderline case where questioning would have been safer."
+    score_0: "Gate is open (True) for a PRODUCT request with no student attempt (Major Violation)."
+
+  check_rewrite_consistency:
+    what_to_evaluate: >
+      Evaluate the internal 'check' field. If the check flagged 'leaks_solution', 
+      'was_rewritten' must be true.
+    score_3: "Check passed cleanly, or check flagged a leak and the rewrite resolved it successfully."
+    score_2: "Rewrite triggered and resolved the leak, but the final response became too brief/unhelpful."
+    score_1: "Rewrite triggered but the leak is still present in the final output."
+    score_0: "Check flagged a leak but was_rewritten=false."
+
+fail_flags:
+  - id: DEPTH_BELOW_FLOOR
+    trigger: "support_depth=SURFACE when expertise_level is INTERMEDIATE or ADVANCED"
+  - id: IMPLEMENTATION_WITHOUT_ATTEMPT
+    trigger: "implementation_allowed=true for PRODUCT request when has_attempt=false"
+  - id: CLARIFY_SKIPPED_ON_CRITICAL_GAP
+    trigger: "context_gap=CRITICAL but support_level is not CLARIFY"
+  - id: CODE_SHOWN_WITHOUT_FRUSTRATION_OR_STALL
+    trigger: "can_show_code=true when frustration=LOW and progress=MOVING and expertise is not NOVICE"
+  - id: CHECK_FAILED_NO_REWRITE
+    trigger: "check.leaks_solution=true but was_rewritten=false"

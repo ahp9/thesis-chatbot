@@ -21,21 +21,19 @@ JUDGE_MODEL = "gpt-4o-mini"
 JUDGE_TEMP = 0.0
 
 # --- Version tracking ---
-# Update these when you change the corresponding prompt file so reports are
-# automatically stamped with the exact configuration that produced them.
-VERSION_BASE_SRL    = "v5"   # srl_model_v{N}.txt
-VERSION_ROUTER      = "v5"   # router_system_prompt_v{N}.txt
-VERSION_CHAIN       = "v1"   # srl_chain.py / chain prompt files
-VERSION_RESPOND     = "v1"   # response_generation_prompt_v{N}.txt
-VERSION_FORETHOUGHT = "v3"   # forethought_core.txt
-VERSION_PERFORMANCE = "v5"   # performance_core.txt
-VERSION_REFLECTION  = "v1"   # reflection_core.txt
+VERSION_BASE_SRL    = "v5"   # srl_model_v{N}.txt 
+VERSION_ROUTER      = "v5"   # router_system_prompt_v{N}.txt 
+VERSION_CHAIN       = "v2"   # srl_chain.py / chain prompt files 
+VERSION_RESPOND     = "v2"   # response_generation_prompt_v{N}.txt 
+VERSION_FORETHOUGHT = "v4"   # forethought_core.txt 
+VERSION_PERFORMANCE = "v6"   # performance_core.txt 
+VERSION_REFLECTION  = "v2"   # reflection_core.txt
 
 PHASE_ORDER = ["FORETHOUGHT", "PERFORMANCE", "REFLECTION"]
 
 # Timeouts (seconds)
 ROUTE_TIMEOUT_S = 45
-CHAIN_TIMEOUT_S = 120   # chain has 4–5 LLM calls internally
+CHAIN_TIMEOUT_S = 120
 JUDGE_TIMEOUT_S = 90
 
 
@@ -94,11 +92,9 @@ def _update_phase(
     if predicted_phase not in PHASE_ORDER:
         predicted_phase = current_phase
 
-    # Low confidence → keep current phase unchanged
     if confidence < 0.60:
         return current_phase
 
-    # Only move forward — never regress to an earlier phase
     if PHASE_ORDER.index(predicted_phase) >= PHASE_ORDER.index(current_phase):
         return predicted_phase
 
@@ -106,10 +102,6 @@ def _update_phase(
 
 
 def _build_version_tag() -> str:
-    """Return a compact version stamp used in report filenames.
-
-    Example: base-v3_router-v4_chain-v1_ft-v1_perf-v1_refl-v1
-    """
     return (
         f"base-{VERSION_BASE_SRL}"
         f"_router-{VERSION_ROUTER}"
@@ -208,7 +200,6 @@ async def run_suite(
                         f"strategy={route.get('strategy', 'NONE')}"
                     )
 
-            # --- Chain ---
             if verbose:
                 print(f"[EVAL]   Turn {t_i}: running chain...")
 
@@ -220,7 +211,7 @@ async def run_suite(
 
             final_reply: str = chain_result["reply"]
             draft_reply: str = chain_result.get("draft_reply", final_reply)
-            was_rewritten: bool = final_reply != draft_reply
+            was_rewritten: bool = bool(chain_result.get("was_rewritten", final_reply != draft_reply))
 
             chain_internals: Dict[str, Any] = {
                 "route": route,
@@ -236,17 +227,17 @@ async def run_suite(
             )
 
             if verbose:
-                support = chain_result.get("decision", {}).get("support_level", "?")
+                support = chain_internals["decision"].get("support_level", "?")
+                leaks = chain_internals["check"].get("leaks_solution", "?")
                 print(
                     f"[EVAL]   Turn {t_i}: support={support} "
                     f"rewritten={was_rewritten} "
-                    f"leaks={chain_result.get('check', {}).get('leaks_solution', '?')}"
+                    f"leaks={leaks}"
                 )
 
             assistant_outputs.append(final_reply)
             llm_history.append({"role": "assistant", "content": final_reply})
 
-        # --- Transcript and aggregated chain internals ---
         transcript = format_transcript(turns, assistant_outputs)
 
         aggregate_chain_internals: Dict[str, Any] = {
@@ -254,7 +245,6 @@ async def run_suite(
             **(turn_chain_snapshots[-1] if turn_chain_snapshots else {}),
         }
 
-        # --- Judge ---
         if verbose:
             print("[EVAL]   Judging...")
 
@@ -304,15 +294,6 @@ async def run_suite(
             flags = judge_json.get("fail_flags", [])
             print(f"[EVAL]   Done. overall_score={overall}  fail_flags={flags}")
 
-    # --- Write report ---
-    # Filename pattern:
-    #   report__{suite}__{rubric}__{version-tag}__v{n}.json
-    #
-    # Example:
-    #   report__forethought_suite__rubric_response__base-v3_router-v4_chain-v1_ft-v1_perf-v1_refl-v1__v0.json
-    #
-    # The run index (v0, v1, ...) increments if you run the exact same
-    # configuration twice, so no report is ever silently overwritten.
     version_tag = _build_version_tag()
     base_name = (
         f"report"
