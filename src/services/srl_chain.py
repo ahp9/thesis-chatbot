@@ -445,7 +445,7 @@ async def generate_full_reply(
     messages.append({"role": "user", "content": current_turn_content})
 
     resp = await client.chat.completions.create(
-        model=CONTROL_MODEL,
+        model=GENERATION_MODEL,
         messages=messages,
         temperature=0.3,
     )
