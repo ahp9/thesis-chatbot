@@ -9,16 +9,16 @@ from services.prompt_loader import load_prompt
 
 logger = logging.getLogger(__name__)
 
-CHAIN_MODEL = "gpt-4o-mini"
+CONTROL_MODEL = "gpt-4.1-mini"     # diagnosis + support decision
+GENERATION_MODEL = "gpt-4o-mini"   # reply writing
+CHECK_MODEL = "gpt-4o-mini"        # safety check
+REWRITE_MODEL = "gpt-4o-mini"      # rewrite if needed
 
 # Support levels where a safety/leak check is actually meaningful.
-# CLARIFY / QUESTION / HINT / REFLECT cannot contain runnable solutions by design.
 SAFETY_CHECK_LEVELS = {"PARTIAL", "EXPLAIN", "STRUCTURE", "EVALUATION"}
 
-# ---------------------------------------------------------------------------
-# Dataclasses
-# ---------------------------------------------------------------------------
 
+# Dataclasses
 @dataclass
 class CheckpointResult:
     request_kind: str
@@ -57,10 +57,7 @@ class CheckResult:
     was_skipped: bool = False
 
 
-# ---------------------------------------------------------------------------
 # Prompt file maps
-# ---------------------------------------------------------------------------
-
 BASE_PROMPT_FILES = {
     "identity": "base/srl_model_v2.txt",
     "phase_forethought": "phases/forethought_core_v1.txt",
@@ -69,8 +66,8 @@ BASE_PROMPT_FILES = {
     "diagnose": "chains/diagnose_student.txt",
     "decide_support": "chains/choose_support_level.txt",
     "check_reply": "chains/check_solution_leak_v2.txt",
-    "rewrite_reply": "chains/fallback_rewrite_v1.txt",
-    "checkpoint_and_decide": "chains/student_state_v2.txt",
+    "rewrite_reply": "chains/fallback_rewrite_v2.txt",
+    "checkpoint_and_decide": "chains/student_state_v3.txt",
     "file_handler": "base/file.txt",
 }
 
@@ -86,10 +83,7 @@ RESPONSE_PROMPT_FILES = {
 }
 
 
-# ---------------------------------------------------------------------------
-# JSON parsing — robust against markdown fences and stray prose
-# ---------------------------------------------------------------------------
-
+# JSON parsing 
 def _extract_json(raw: str) -> Dict[str, Any]:
     """
     Try to extract a JSON object from the model's raw response.
@@ -137,11 +131,11 @@ def _extract_json(raw: str) -> Dict[str, Any]:
 
 
 async def _call_json(
-    client, system_prompt: str, user_prompt: str
+    client, system_prompt: str, user_prompt: str, model: str = CONTROL_MODEL
 ) -> Tuple[Dict[str, Any], bool]:
     # Use response_format to force the model into JSON mode
     resp = await client.chat.completions.create(
-        model=CHAIN_MODEL,
+        model=model,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -214,14 +208,43 @@ def _build_native_history(
 
     return clean
 
+def _recent_control_state(llm_history):
+    for item in reversed(llm_history):
+        if item.get("role") == "assistant":
+            diagnosis = item.get("diagnosis")
+            decision = item.get("decision")
+            if diagnosis and decision:
+                return {
+                    "previous_progress_state": diagnosis.get("progress_state"),
+                    "previous_frustration_level": diagnosis.get("frustration_level"),
+                    "previous_support_level": decision.get("support_level"),
+                    "previous_support_depth": decision.get("support_depth"),
+                }
+    return {}
+
+
+def _last_assistant_reply(llm_history: List[Dict[str, Any]]) -> str:
+    """
+    Return the most recent assistant reply, capped at 800 chars.
+    Used to give generate_full_reply and rewrite_reply awareness of what
+    was just said, so they can avoid producing the same structure again.
+    """
+    for item in reversed(llm_history):
+        if item.get("role") == "assistant":
+            return (item.get("content") or "").strip()[:800]
+    return "(none)"
+
 
 def _build_checkpoint_payload(
     route: Dict[str, Any],
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> str:
+    
+    recent_control = _recent_control_state(llm_history)
     parts = [
         f"CURRENT_PHASE:\n{route.get('phase', 'UNKNOWN')}",
+        f"PREVIOUS_CONTROL:\n{json.dumps(recent_control, indent=2)}",
         f"RECENT_HISTORY:\n{_compact_history(llm_history)}",
         f"CURRENT_USER_MESSAGE:\n{user_message}",
     ]
@@ -301,7 +324,7 @@ async def checkpoint_and_decide(
 
     system_prompt = "\n\n".join(prompt_parts)
     payload = _build_checkpoint_payload(route, llm_history, user_message)
-    data, parse_ok = await _call_json(client, system_prompt, payload)
+    data, parse_ok = await _call_json(client, system_prompt, payload, model=CONTROL_MODEL)
 
     if not parse_ok:
         logger.warning(
@@ -403,8 +426,16 @@ async def generate_full_reply(
         },
         indent=2,
     )
+
+    # Inject the last assistant reply so the generator knows what it just said.
+    # Without this, GPT-4o-mini regenerates the same structural breakdown every
+    # turn because it only sees the decision label (e.g. "STRUCTURE") and not
+    # the actual content it produced for that label last time.
+    previous_reply = _last_assistant_reply(llm_history)
+
     current_turn_content = (
         f"CONTROL_STATE:\n{control_header}\n\n"
+        f"PREVIOUS_REPLY:\n{previous_reply}\n\n"
         f"CURRENT_USER_INPUT_WITH_FILES:\n{user_message}"
     )
 
@@ -414,7 +445,7 @@ async def generate_full_reply(
     messages.append({"role": "user", "content": current_turn_content})
 
     resp = await client.chat.completions.create(
-        model=CHAIN_MODEL,
+        model=CONTROL_MODEL,
         messages=messages,
         temperature=0.3,
     )
@@ -456,7 +487,7 @@ async def check_reply(
         "recent_history": _compact_history(llm_history, limit=4),
         "route": route,
     }
-    data, parse_ok = await _call_json(client, system_prompt, json.dumps(payload))
+    data, parse_ok = await _call_json(client, system_prompt, json.dumps(payload), model=CHECK_MODEL)
 
     if not parse_ok:
         # Fail safe: if we can't read the check result, assume the reply needs rewriting
@@ -492,6 +523,12 @@ async def rewrite_reply(
         load_prompt(BASE_PROMPT_FILES["identity"]),
         load_prompt(BASE_PROMPT_FILES["rewrite_reply"]),
     ])
+
+    # Pass both what the draft said AND what the previous turn said.
+    # The rewrite needs to know both so it doesn't clone either of them.
+    recent_control = _recent_control_state(llm_history)
+    previous_reply = _last_assistant_reply(llm_history)
+
     payload = {
         "draft": draft_reply,
         "reason": check.reason,
@@ -500,9 +537,11 @@ async def rewrite_reply(
         "route": route,
         "checkpoint": checkpoint.__dict__,
         "decision": decision.__dict__,
+        "previous_control": recent_control,
+        "previous_reply": previous_reply,
     }
     resp = await client.chat.completions.create(
-        model=CHAIN_MODEL,
+        model=REWRITE_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": json.dumps(payload)},
