@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from lib.contracts import CombinedControlResult, TurnResult
-from lib.enums import Phase, SupportLevel
+from lib.enums import Phase
+from services.history_adapter import recent_support_levels
 from services.classify_service import ClassifyService
 from services.generate_service import GenerateService
 from services.policy.policy_engine import PolicyEngine
@@ -18,24 +19,6 @@ class Orchestrator:
         self.safety = SafetyService(client)
         self.policy = PolicyEngine()
         self.telemetry = Telemetry()
-
-    def _recent_support_levels(self, llm_history: list[dict]) -> list[SupportLevel]:
-        levels: list[SupportLevel] = []
-        for item in llm_history:
-            if item.get("role") != "assistant":
-                continue
-
-            decision = item.get("decision")
-            if not isinstance(decision, dict):
-                continue
-
-            raw = decision.get("support_level")
-            try:
-                levels.append(SupportLevel(raw))
-            except Exception:
-                continue
-
-        return levels[-3:]
 
     async def handle_turn(
         self,
@@ -75,9 +58,13 @@ class Orchestrator:
         # self.telemetry.event("control.completed", control.to_dict())
         # self.telemetry.event("control.debug", classify_debug)
 
-        recent_support_levels = self._recent_support_levels(llm_history)
+        recent_levels = recent_support_levels(llm_history)
 
-        policy_decision = control.decision
+        policy_decision = self.policy.enforce_decision(
+            checkpoint=control.checkpoint,
+            decision=control.decision,
+            recent_support_levels=recent_levels,
+        )
 
         # self.telemetry.event(
         #     "policy.decision_compare",

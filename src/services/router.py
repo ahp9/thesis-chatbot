@@ -2,6 +2,8 @@ import json
 import logging
 from typing import Any, Dict
 
+from lib.enums import Phase
+from services.policy.policy_config import SWITCH_THRESHOLD, TRANSITIONS
 from services.prompt_loader import load_prompt
 
 logging.basicConfig(level=logging.INFO)
@@ -9,36 +11,28 @@ logger = logging.getLogger(__name__)
 
 ROUTER_MODEL = "gpt-4o-mini"
 
-VALID_PHASES = {"FORETHOUGHT", "PERFORMANCE", "REFLECTION"}
 
-ALLOWED_TRANSITIONS = {
-    "FORETHOUGHT": {"FORETHOUGHT", "PERFORMANCE", "REFLECTION"},
-    "PERFORMANCE": {"FORETHOUGHT", "PERFORMANCE", "REFLECTION"},
-    "REFLECTION": {"FORETHOUGHT", "PERFORMANCE", "REFLECTION"},
-}
+def _coerce_phase(value: str | None) -> Phase:
+    try:
+        return Phase((value or "FORETHOUGHT").upper())
+    except ValueError:
+        return Phase.FORETHOUGHT
 
 
 def update_phase(
     current_phase: str, predicted_phase: str, confidence: float
 ) -> str:
-    current_phase = (current_phase or "FORETHOUGHT").upper()
-    predicted_phase = (predicted_phase or current_phase).upper()
+    current = _coerce_phase(current_phase)
+    predicted = _coerce_phase(predicted_phase or current.value)
     confidence = float(confidence or 0.0)
 
-    if current_phase not in VALID_PHASES:
-        current_phase = "FORETHOUGHT"
-    if predicted_phase not in VALID_PHASES:
-        predicted_phase = current_phase
+    if confidence < SWITCH_THRESHOLD:
+        return current.value
 
-    # Stay put if confidence is too low
-    if confidence < 0.60:
-        return current_phase
+    if predicted in TRANSITIONS[current]:
+        return predicted.value
 
-    # Allow transition only if it is valid from the current phase
-    if predicted_phase in ALLOWED_TRANSITIONS[current_phase]:
-        return predicted_phase
-
-    return current_phase
+    return current.value
 
 
 async def route_message(

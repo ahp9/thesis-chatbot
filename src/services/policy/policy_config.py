@@ -32,3 +32,10 @@ RESPONSE_PROMPT_FILES = {
     SupportLevel.REFLECT: "responses/respond_reflect_v1.txt",
     SupportLevel.EVALUATION: "responses/respond_evaluation_v1.txt",
 }
+
+def response_prompt_file_for(support_level: SupportLevel | str) -> str:
+    try:
+        level = support_level if isinstance(support_level, SupportLevel) else SupportLevel(str(support_level).upper())
+    except Exception:
+        level = SupportLevel.QUESTION
+    return RESPONSE_PROMPT_FILES[level]

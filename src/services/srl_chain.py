@@ -4,6 +4,8 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
+from services.history_adapter import last_assistant_reply, recent_control_state
+from services.policy.policy_config import response_prompt_file_for
 from services.prompt_loader import load_prompt
 
 logger = logging.getLogger(__name__)
@@ -70,16 +72,6 @@ BASE_PROMPT_FILES = {
     "file_handler": "base/file.txt",
 }
 
-RESPONSE_PROMPT_FILES = {
-    "CLARIFY": "responses/respond_diagnose_v1.txt",
-    "QUESTION": "responses/respond_question_v2.txt",
-    "HINT": "responses/respond_hint_v1.txt",
-    "STRUCTURE": "responses/respond_structure_v1.txt",
-    "EXPLAIN": "responses/respond_explain_v1.txt",
-    "PARTIAL": "responses/respond_partial_v2.txt",
-    "REFLECT": "responses/respond_reflect_v1.txt",
-    "EVALUATION": "responses/respond_evaluation_v1.txt",
-}
 
 
 # JSON parsing 
@@ -206,40 +198,13 @@ def _build_native_history(
 
     return clean
 
-def _recent_control_state(llm_history):
-    for item in reversed(llm_history):
-        if item.get("role") == "assistant":
-            diagnosis = item.get("diagnosis")
-            decision = item.get("decision")
-            if diagnosis and decision:
-                return {
-                    "previous_progress_state": diagnosis.get("progress_state"),
-                    "previous_frustration_level": diagnosis.get("frustration_level"),
-                    "previous_support_level": decision.get("support_level"),
-                    "previous_support_depth": decision.get("support_depth"),
-                }
-    return {}
-
-
-def _last_assistant_reply(llm_history: List[Dict[str, Any]]) -> str:
-    """
-    Return the most recent assistant reply, capped at 800 chars.
-    Used to give generate_full_reply and rewrite_reply awareness of what
-    was just said, so they can avoid producing the same structure again.
-    """
-    for item in reversed(llm_history):
-        if item.get("role") == "assistant":
-            return (item.get("content") or "").strip()[:800]
-    return "(none)"
-
-
 def _build_checkpoint_payload(
     route: Dict[str, Any],
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> str:
     
-    recent_control = _recent_control_state(llm_history)
+    recent_control = recent_control_state(llm_history)
     parts = [
         f"CURRENT_PHASE:\n{route.get('phase', 'UNKNOWN')}",
         f"PREVIOUS_CONTROL:\n{json.dumps(recent_control, indent=2)}",
@@ -286,7 +251,7 @@ def _fallback_checkpoint() -> CheckpointResult:
 def _fallback_decision() -> SupportDecision:
     return SupportDecision(
         support_level="QUESTION",
-        response_prompt_file=RESPONSE_PROMPT_FILES["QUESTION"],
+        response_prompt_file=response_prompt_file_for("QUESTION"),
         can_show_code=False,
         must_end_with_question=True,
         should_request_attempt=False,
@@ -362,9 +327,7 @@ async def checkpoint_and_decide(
     support_level = (dec_raw.get("support_level") or "QUESTION").upper()
     decision = SupportDecision(
         support_level=support_level,
-        response_prompt_file=RESPONSE_PROMPT_FILES.get(
-            support_level, RESPONSE_PROMPT_FILES["QUESTION"]
-        ),
+        response_prompt_file=response_prompt_file_for(support_level),
         can_show_code=bool(dec_raw.get("can_show_code", False)),
         must_end_with_question=bool(dec_raw.get("must_end_with_question", True)),
         should_request_attempt=bool(dec_raw.get("should_request_attempt", False)),
@@ -412,7 +375,7 @@ async def generate_full_reply(
     # Without this, GPT-4o-mini regenerates the same structural breakdown every
     # turn because it only sees the decision label (e.g. "STRUCTURE") and not
     # the actual content it produced for that label last time.
-    previous_reply = _last_assistant_reply(llm_history)
+    previous_reply = last_assistant_reply(llm_history)
 
     current_turn_content = (
         f"CONTROL_STATE:\n{control_header}\n\n"
@@ -516,8 +479,8 @@ async def rewrite_reply(
 
     # Pass both what the draft said AND what the previous turn said.
     # The rewrite needs to know both so it doesn't clone either of them.
-    recent_control = _recent_control_state(llm_history)
-    previous_reply = _last_assistant_reply(llm_history)
+    recent_control = recent_control_state(llm_history)
+    previous_reply = last_assistant_reply(llm_history)
 
     payload = {
         "draft": draft_reply,

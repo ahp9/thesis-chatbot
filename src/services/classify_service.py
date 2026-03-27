@@ -12,7 +12,7 @@ from lib.enums import (
     SupportLevel,
     TaskStage,
 )
-from services.policy.policy_config import RESPONSE_PROMPT_FILES
+from services.policy.policy_config import response_prompt_file_for
 from services.srl_chain import checkpoint_and_decide
 
 
@@ -91,7 +91,7 @@ class ClassifyService:
 
         decision = Decision(
             support_level=support_level,
-            response_prompt_file=RESPONSE_PROMPT_FILES[support_level],
+            response_prompt_file=response_prompt_file_for(support_level),
             support_depth=_safe_enum(
                 SupportDepth,
                 getattr(decision_raw, "support_depth", "SUBSTANTIVE"),

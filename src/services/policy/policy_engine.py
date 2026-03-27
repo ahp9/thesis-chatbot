@@ -8,7 +8,6 @@ from lib.enums import (
     ContextGap,
     ExpertiseLevel,
     FrustrationLevel,
-    Phase,
     ProgressState,
     SRLFocus,
     SupportLevel,
@@ -16,9 +15,9 @@ from lib.enums import (
 from services.policy.policy_config import (
     CODE_ALLOWED_LEVELS,
     QUESTION_REQUIRED_LEVELS,
-    RESPONSE_PROMPT_FILES,
     SWITCH_THRESHOLD,
     TRANSITIONS,
+    response_prompt_file_for,
 )
 
 
@@ -211,7 +210,7 @@ class PolicyEngine:
         return replace(
             decision,
             support_level=support_level,
-            response_prompt_file=RESPONSE_PROMPT_FILES[support_level],
+            response_prompt_file=response_prompt_file_for(support_level),
             can_show_code=can_show_code,
             must_end_with_question=must_end_with_question,
             should_request_attempt=should_request_attempt,
