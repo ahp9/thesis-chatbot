@@ -66,9 +66,9 @@ BASE_PROMPT_FILES = {
     "phase_reflection": "phases/reflection_core.txt",
     "diagnose": "chains/diagnose_student.txt",
     "decide_support": "chains/choose_support_level.txt",
-    "check_reply": "chains/check_solution_leak_v2.txt",
-    "rewrite_reply": "chains/fallback_rewrite_v2.txt",
-    "checkpoint_and_decide": "chains/student_state_v3.txt",
+    "check_reply": "chains/check_solution_leak_v3.txt",
+    "rewrite_reply": "chains/fallback_rewrite_v3.txt",
+    "checkpoint_and_decide": "chains/student_state_v4.txt",
     "file_handler": "base/file.txt",
 }
 

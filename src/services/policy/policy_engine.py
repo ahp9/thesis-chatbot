@@ -43,6 +43,7 @@ class PolicyEngine:
 
         if checkpoint.frustration_level == FrustrationLevel.HIGH:
             return {
+                SupportLevel.STRUCTURE,
                 SupportLevel.EXPLAIN,
                 SupportLevel.PARTIAL,
             }
@@ -50,8 +51,10 @@ class PolicyEngine:
         if checkpoint.frustration_level == FrustrationLevel.MEDIUM:
             return {
                 SupportLevel.QUESTION,
+                SupportLevel.HINT,
                 SupportLevel.STRUCTURE,
                 SupportLevel.EXPLAIN,
+                SupportLevel.PARTIAL,
             }
 
         if checkpoint.expertise_level == ExpertiseLevel.NOVICE:

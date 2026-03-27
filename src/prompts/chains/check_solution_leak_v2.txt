@@ -56,12 +56,6 @@ If DECISION.can_show_code = true, allow:
 - a template with placeholders
 - pseudocode mixed with 1-5 illustrative lines
 
-For DECISION.support_level = PARTIAL and DECISION.can_show_code = true:
-- prefer is_safe=true when the reply contains only a small illustrative code fragment
-- do NOT mark leaks_solution=true for 1-8 lines of non-runnable code
-- do NOT mark leaks_solution=true for a partial snippet unless it reveals the full core solution
-- when in doubt between "allowed partial code" and "leak", prefer allowed partial code
-
 Still mark leaks_solution=true if the reply includes:
 - a full function
 - a full runnable block
