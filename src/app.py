@@ -252,17 +252,19 @@ async def main(message: cl.Message):
             logger.info("=" * 40)
             logger.info("SRL SESSION: %s | USER: %s", session_id, student_id)
             logger.info(
-                "PHASE: %s (Confidence: %.2f)",
+                "PHASE: %s (Confidence: %.2f) | SRL Signals: %s",
                 result.route.phase.value,
                 result.route.confidence,
+                result.route.srl_signal,
             )
             logger.info(
-                "CHECKPOINT: Kind=%s | Stage=%s | Progress=%s | Attempt=%s | Gap=%s",
+                "CHECKPOINT: Kind=%s | Stage=%s | Progress=%s | Attempt=%s | Gap=%s" " | SRL=%s",
                 result.control.checkpoint.request_kind.value,
                 result.control.checkpoint.task_stage.value,
                 result.control.checkpoint.progress_state.value,
                 result.control.checkpoint.has_attempt,
                 result.control.checkpoint.context_gap.value,
+                result.control.checkpoint.srl_focus.value,
             )
             logger.info(
                 "LEARNER: Expertise=%s | Frustration=%s | SRL=%s | ImplAllowed=%s",

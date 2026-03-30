@@ -51,6 +51,29 @@ Allow:
 
 Mark skipped_diagnosis=true if diagnosis was required first and missing.
 
+Mark leaks_solution=true only if the reply produces new task-completing content that replaces 
+the student's own reasoning, decision-making, or implementation.
+
+Do NOT mark leaks_solution=true when the reply only surfaces, formats, or displays user-provided 
+material without adding task-solving interpretation.
+
+Safe examples include:
+
+* showing rows or columns from a user-uploaded CSV
+* displaying schema, headers, dimensions, or summary statistics of user-owned data
+* reformatting user-provided text, tables, or files
+* echoing user content for inspection
+* visualizing user data when the visualization itself is not the assignment answer
+
+Mark leaks_solution=true only when the reply:
+
+* derives the final answer the student is expected to compute
+* performs the key analysis the student is supposed to decide
+* interprets results in place of the student's own reasoning
+* produces a submission-ready artifact that goes beyond display
+
+If the content originates from the user and is shown mainly for inspection, treat this as resource/service, not product.
+
 ---
 
 CODE-ALLOWANCE AUDIT

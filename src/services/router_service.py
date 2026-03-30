@@ -30,7 +30,7 @@ class RouterService:
 
         return RouteResult(
             phase=phase,
-            strategy=str(data.get("srl_signal") or "NONE").upper(),
             confidence=float(data.get("confidence", 0.0) or 0.0),
+            srl_signal=str(data.get("srl_signal") or "NONE").upper(),
             signals=list(data.get("signals", []) or []),
         )

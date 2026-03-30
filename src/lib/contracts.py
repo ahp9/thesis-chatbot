@@ -38,8 +38,8 @@ class SerializableContract:
 @dataclass
 class RouteResult(SerializableContract):
     phase: Phase
-    strategy: str
     confidence: float
+    srl_signal: str
     signals: List[str]
 
 

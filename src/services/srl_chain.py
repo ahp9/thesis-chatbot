@@ -11,7 +11,7 @@ from services.prompt_loader import load_prompt
 logger = logging.getLogger(__name__)
 
 CONTROL_MODEL = "gpt-4.1-mini"     # diagnosis + support decision
-GENERATION_MODEL = "gpt-4o-mini"   # reply writing
+GENERATION_MODEL = "gpt-4.1-mini"   # reply writing
 CHECK_MODEL = "gpt-4o-mini"        # safety check
 REWRITE_MODEL = "gpt-4o-mini"      # rewrite if needed
 
@@ -61,7 +61,7 @@ class CheckResult:
 # Prompt file maps
 BASE_PROMPT_FILES = {
     "identity": "base/srl_model_v2.txt",
-    "phase_forethought": "phases/forethought_core_v1.txt",
+    "phase_forethought": "phases/forethought_core_v2.txt",
     "phase_performance": "phases/performance_core_v1.txt",
     "phase_reflection": "phases/reflection_core.txt",
     "diagnose": "chains/diagnose_student.txt",
