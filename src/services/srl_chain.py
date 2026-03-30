@@ -514,7 +514,7 @@ async def run_srl_chain(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> Dict[str, Any]:
-    diagnosis, decision = await checkpoint_and_decide(
+    diagnosis, decision, _ = await checkpoint_and_decide(
         client, route, llm_history, user_message
     )
 

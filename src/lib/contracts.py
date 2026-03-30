@@ -17,11 +17,13 @@ from lib.enums import (
     TaskStage,
 )
 
+from services.srl_chain import CheckpointResult, SupportDecision
+
 
 def _normalize(value: Any) -> Any:
     if isinstance(value, Enum):
         return value.value
-    if is_dataclass(value):
+    if is_dataclass(value) and not isinstance(value, type):
         return {k: _normalize(v) for k, v in asdict(value).items()}
     if isinstance(value, dict):
         return {k: _normalize(v) for k, v in value.items()}
