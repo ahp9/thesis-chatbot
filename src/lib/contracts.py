@@ -17,7 +17,6 @@ from lib.enums import (
     TaskStage,
 )
 
-from services.srl_chain import CheckpointResult, SupportDecision
 
 
 def _normalize(value: Any) -> Any:
