@@ -60,7 +60,7 @@ class CheckResult:
 
 # Prompt file maps
 BASE_PROMPT_FILES = {
-    "identity": "base/srl_model_v2.txt",
+    "identity": "base/srl_model_v3.txt",
     "phase_forethought": "phases/forethought_core_v2.txt",
     "phase_performance": "phases/performance_core_v1.txt",
     "phase_reflection": "phases/reflection_core.txt",
