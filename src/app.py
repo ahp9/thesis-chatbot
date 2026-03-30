@@ -41,6 +41,11 @@ MOCK_USERS = {
     "user_3@usability_test_3.local": "usability3",
     "user_3@usability_test_4.local": "usability4",
     "user_5@usability_test_5.local": "usability5",
+    "user_1_2@usability_test_1_2.local": "usability1_2",
+    "user_2_2@usability_test_2_2.local": "usability2_2",
+    "user_3_2@usability_test_3_2.local": "usability3_2",
+    "user_4_2@usability_test_4_2.local": "usability4_2",
+    "user_5_2@usability_test_5_2.local": "usability5_2",
 }
 
 MAX_CHARS = 80_000
