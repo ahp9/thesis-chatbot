@@ -4,12 +4,14 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
+from services.history_adapter import last_assistant_reply, recent_control_state
+from services.policy.policy_config import response_prompt_file_for
 from services.prompt_loader import load_prompt
 
 logger = logging.getLogger(__name__)
 
 CONTROL_MODEL = "gpt-4.1-mini"     # diagnosis + support decision
-GENERATION_MODEL = "gpt-4o-mini"   # reply writing
+GENERATION_MODEL = "gpt-4.1-mini"   # reply writing
 CHECK_MODEL = "gpt-4o-mini"        # safety check
 REWRITE_MODEL = "gpt-4o-mini"      # rewrite if needed
 
@@ -59,27 +61,17 @@ class CheckResult:
 # Prompt file maps
 BASE_PROMPT_FILES = {
     "identity": "base/srl_model_v2.txt",
-    "phase_forethought": "phases/forethought_core_v1.txt",
+    "phase_forethought": "phases/forethought_core_v2.txt",
     "phase_performance": "phases/performance_core_v1.txt",
     "phase_reflection": "phases/reflection_core.txt",
     "diagnose": "chains/diagnose_student.txt",
     "decide_support": "chains/choose_support_level.txt",
-    "check_reply": "chains/check_solution_leak_v2.txt",
-    "rewrite_reply": "chains/fallback_rewrite_v2.txt",
-    "checkpoint_and_decide": "chains/student_state_v3.txt",
+    "check_reply": "chains/check_solution_leak_v3.txt",
+    "rewrite_reply": "chains/fallback_rewrite_v3.txt",
+    "checkpoint_and_decide": "chains/student_state_v4.txt",
     "file_handler": "base/file.txt",
 }
 
-RESPONSE_PROMPT_FILES = {
-    "CLARIFY": "responses/respond_diagnose_v1.txt",
-    "QUESTION": "responses/respond_question_v2.txt",
-    "HINT": "responses/respond_hint_v1.txt",
-    "STRUCTURE": "responses/respond_structure_v1.txt",
-    "EXPLAIN": "responses/respond_explain_v1.txt",
-    "PARTIAL": "responses/respond_partial_v2.txt",
-    "REFLECT": "responses/respond_reflect_v1.txt",
-    "EVALUATION": "responses/respond_evaluation_v1.txt",
-}
 
 
 # JSON parsing 
@@ -131,20 +123,19 @@ def _extract_json(raw: str) -> Dict[str, Any]:
 
 async def _call_json(
     client, system_prompt: str, user_prompt: str, model: str = CONTROL_MODEL
-) -> Tuple[Dict[str, Any], bool]:
-    # Use response_format to force the model into JSON mode
+) -> Tuple[str, Dict[str, Any], bool]:
     resp = await client.chat.completions.create(
         model=model,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        response_format={"type": "json_object"}, # FORCES JSON OUTPUT
+        response_format={"type": "json_object"},
         temperature=0,
     )
     raw = resp.choices[0].message.content or ""
     data = _extract_json(raw)
-    return data, bool(data)
+    return raw, data, bool(data)
 
 
 # ---------------------------------------------------------------------------
@@ -207,40 +198,13 @@ def _build_native_history(
 
     return clean
 
-def _recent_control_state(llm_history):
-    for item in reversed(llm_history):
-        if item.get("role") == "assistant":
-            diagnosis = item.get("diagnosis")
-            decision = item.get("decision")
-            if diagnosis and decision:
-                return {
-                    "previous_progress_state": diagnosis.get("progress_state"),
-                    "previous_frustration_level": diagnosis.get("frustration_level"),
-                    "previous_support_level": decision.get("support_level"),
-                    "previous_support_depth": decision.get("support_depth"),
-                }
-    return {}
-
-
-def _last_assistant_reply(llm_history: List[Dict[str, Any]]) -> str:
-    """
-    Return the most recent assistant reply, capped at 800 chars.
-    Used to give generate_full_reply and rewrite_reply awareness of what
-    was just said, so they can avoid producing the same structure again.
-    """
-    for item in reversed(llm_history):
-        if item.get("role") == "assistant":
-            return (item.get("content") or "").strip()[:800]
-    return "(none)"
-
-
 def _build_checkpoint_payload(
     route: Dict[str, Any],
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> str:
     
-    recent_control = _recent_control_state(llm_history)
+    recent_control = recent_control_state(llm_history)
     parts = [
         f"CURRENT_PHASE:\n{route.get('phase', 'UNKNOWN')}",
         f"PREVIOUS_CONTROL:\n{json.dumps(recent_control, indent=2)}",
@@ -287,7 +251,7 @@ def _fallback_checkpoint() -> CheckpointResult:
 def _fallback_decision() -> SupportDecision:
     return SupportDecision(
         support_level="QUESTION",
-        response_prompt_file=RESPONSE_PROMPT_FILES["QUESTION"],
+        response_prompt_file=response_prompt_file_for("QUESTION"),
         can_show_code=False,
         must_end_with_question=True,
         should_request_attempt=False,
@@ -307,12 +271,7 @@ async def checkpoint_and_decide(
     route: Dict[str, Any],
     llm_history: List[Dict[str, Any]],
     user_message: str,
-) -> tuple[CheckpointResult, SupportDecision]:
-    """
-    Single LLM call: diagnose student state + decide support level.
-    Logs a warning with raw response excerpt if parsing fails so you can
-    see exactly what the model returned instead of silently using defaults.
-    """
+) -> tuple[CheckpointResult, SupportDecision, dict]:
     prompt_parts = [
         load_prompt(BASE_PROMPT_FILES["identity"]),
         load_prompt(_phase_prompt_file(route.get("phase"))),
@@ -323,44 +282,26 @@ async def checkpoint_and_decide(
 
     system_prompt = "\n\n".join(prompt_parts)
     payload = _build_checkpoint_payload(route, llm_history, user_message)
-    data, parse_ok = await _call_json(client, system_prompt, payload, model=CONTROL_MODEL)
+    raw_text, data, parse_ok = await _call_json(
+        client, system_prompt, payload, model=CONTROL_MODEL
+    )
+
+    debug = {
+        "raw_text": raw_text,
+        "parsed_json": data,
+        "parse_ok": parse_ok,
+        "fallback_used": False,
+    }
 
     if not parse_ok:
         logger.warning(
-            "checkpoint_and_decide: JSON parse failed — using fallback values. "
-            "Check logs above for the raw model response."
+            "checkpoint_and_decide: JSON parse failed — using fallback values."
         )
-        return _fallback_checkpoint(), _fallback_decision()
+        debug["fallback_used"] = True
+        return _fallback_checkpoint(), _fallback_decision(), debug
 
     checkp_raw = data.get("checkpoint", {})
     dec_raw = data.get("decision", {})
-
-    # Warn if the top-level keys are missing (partial parse succeeded)
-    if not checkp_raw:
-        logger.warning(
-            "checkpoint_and_decide: 'checkpoint' key missing. Parsed data: %s",
-            json.dumps(data)[:300],
-        )
-    if not dec_raw:
-        logger.warning(
-            "checkpoint_and_decide: 'decision' key missing. Parsed data: %s",
-            json.dumps(data)[:300],
-        )
-
-    # Log any individual fields the model omitted
-    missing = [
-        f for f in [
-            "request_kind", "task_stage", "progress_state", "has_attempt",
-            "context_gap", "expertise_level", "frustration_level", "srl_focus",
-        ]
-        if checkp_raw.get(f) is None
-    ]
-    if missing:
-        logger.warning(
-            "checkpoint_and_decide: model omitted checkpoint fields %s — "
-            "fallback used for those fields only.",
-            missing,
-        )
 
     diagnosis = CheckpointResult(
         request_kind=(checkp_raw.get("request_kind") or "PRODUCT").upper(),
@@ -368,20 +309,25 @@ async def checkpoint_and_decide(
         progress_state=(checkp_raw.get("progress_state") or "MOVING").upper(),
         has_attempt=bool(checkp_raw.get("has_attempt", False)),
         context_gap=(checkp_raw.get("context_gap") or "NONE").upper(),
-        expertise_level=(checkp_raw.get("expertise_level") or ("UNKNOWN" if not llm_history else "INTERMEDIATE")).upper(),
+        expertise_level=(
+            checkp_raw.get("expertise_level")
+            or ("UNKNOWN" if not llm_history else "INTERMEDIATE")
+        ).upper(),
         frustration_level=(checkp_raw.get("frustration_level") or "LOW").upper(),
-        srl_focus=(checkp_raw.get("srl_focus") or ("STRATEGY" if checkp_raw.get("request_kind") == "PRODUCT" else "NONE")).upper(),
+        srl_focus=(
+            checkp_raw.get("srl_focus")
+            or ("STRATEGY" if checkp_raw.get("request_kind") == "PRODUCT" else "NONE")
+        ).upper(),
         implementation_allowed=bool(checkp_raw.get("implementation_allowed", False)),
         confidence=float(checkp_raw.get("confidence") or 0.0),
         rationale=checkp_raw.get("rationale") or [],
-    )   
+        parse_ok=True,
+    )
 
     support_level = (dec_raw.get("support_level") or "QUESTION").upper()
     decision = SupportDecision(
         support_level=support_level,
-        response_prompt_file=RESPONSE_PROMPT_FILES.get(
-            support_level, RESPONSE_PROMPT_FILES["QUESTION"]
-        ),
+        response_prompt_file=response_prompt_file_for(support_level),
         can_show_code=bool(dec_raw.get("can_show_code", False)),
         must_end_with_question=bool(dec_raw.get("must_end_with_question", True)),
         should_request_attempt=bool(dec_raw.get("should_request_attempt", False)),
@@ -391,8 +337,7 @@ async def checkpoint_and_decide(
         parse_ok=bool(dec_raw),
     )
 
-    return diagnosis, decision
-
+    return diagnosis, decision, debug
 
 async def generate_full_reply(
     client,
@@ -430,7 +375,7 @@ async def generate_full_reply(
     # Without this, GPT-4o-mini regenerates the same structural breakdown every
     # turn because it only sees the decision label (e.g. "STRUCTURE") and not
     # the actual content it produced for that label last time.
-    previous_reply = _last_assistant_reply(llm_history)
+    previous_reply = last_assistant_reply(llm_history)
 
     current_turn_content = (
         f"CONTROL_STATE:\n{control_header}\n\n"
@@ -486,11 +431,20 @@ async def check_reply(
         "recent_history": _compact_history(llm_history, limit=4),
         "route": route,
     }
-    data, parse_ok = await _call_json(client, system_prompt, json.dumps(payload), model=CHECK_MODEL)
+    raw_text, data, parse_ok = await _call_json(
+        client,
+        system_prompt,
+        json.dumps(payload),
+        model=CHECK_MODEL,
+    )
+
+
 
     if not parse_ok:
         # Fail safe: if we can't read the check result, assume the reply needs rewriting
         logger.warning("check_reply: JSON parse failed — defaulting to safe=False")
+
+        logger.warning("check_reply: JSON parse failed. raw_text=%s", raw_text)
         return CheckResult(
             is_safe=False,
             leaks_solution=True,
@@ -525,8 +479,8 @@ async def rewrite_reply(
 
     # Pass both what the draft said AND what the previous turn said.
     # The rewrite needs to know both so it doesn't clone either of them.
-    recent_control = _recent_control_state(llm_history)
-    previous_reply = _last_assistant_reply(llm_history)
+    recent_control = recent_control_state(llm_history)
+    previous_reply = last_assistant_reply(llm_history)
 
     payload = {
         "draft": draft_reply,
@@ -560,7 +514,7 @@ async def run_srl_chain(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> Dict[str, Any]:
-    diagnosis, decision = await checkpoint_and_decide(
+    diagnosis, decision, _ = await checkpoint_and_decide(
         client, route, llm_history, user_message
     )
 
