@@ -71,6 +71,7 @@ def load_conversation(user_id, session_id):
 
 def maybe_save(session_id: str, student_id: str, tutor_type: str, llm_history):
     if student_id != "working_mode" and llm_history:
+        logger.info("Saving transcript...")
         save_conversation(
             session_id=session_id,
             user_id=student_id,
