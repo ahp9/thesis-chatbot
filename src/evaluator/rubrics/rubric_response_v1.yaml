@@ -1,0 +1,542 @@
+rubric_name: "SRL Response — Pedagogical Quality (V2)"
+rubric_type: response
+
+# ══════════════════════════════════════════════════════════════════════════════
+# WHAT CHANGED FROM V1 AND WHY
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# Five changes were made based on known failure modes from usability testing
+# and gaps identified by the dynamic student simulator:
+#
+# 1. metacognitive_activation now requires PHASE-APPROPRIATE metacognition, not
+#    just any metacognitive prompt.  A "think about what you learned" prompt in
+#    a PERFORMANCE turn is Reflection-phase metacognition injected at the wrong
+#    moment — it breaks task flow.
+#
+# 2. socratic_quality adds a check against OVER-QUESTIONING (3+ questions at
+#    once).  This is a documented ITS anti-pattern: the student does not know
+#    which to engage with and cognitive load spikes.  The original rubric would
+#    score 3 for three questions because "agency is returned" — which is wrong.
+#
+# 3. multi_turn_coherence adds a PROGRESS ACKNOWLEDGMENT sub-check.  SRL
+#    theory (Zimmermann) treats progress feedback as a driver of self-efficacy.
+#    A tutor that ignores what the student got right before scaffolding the
+#    next step is missing a core pedagogical move.
+#
+# 4. expertise_adaptive_language is a new criterion.  Whether a response is
+#    pedagogically appropriate depends heavily on vocabulary matching.  An
+#    ADVANCED student receiving beginner analogies is patronised; a NOVICE
+#    receiving jargon-heavy explanation is lost.  Neither case was detectable
+#    in V1.
+#
+# 5. All score descriptions now carry GOOD and BAD examples so the judge has
+#    concrete anchors, not just abstract descriptions.  This reduces judge
+#    variance across cases.
+#
+# ══════════════════════════════════════════════════════════════════════════════
+
+criteria:
+
+  solution_containment:
+    what_to_evaluate: >
+      Evaluate whether the response preserves meaningful student work in PRODUCT
+      requests. A full solution is a response that would allow the student to
+      directly submit, run, or adopt the result with little or no further
+      reasoning, interpretation, or implementation of their own.
+
+      Full solutions include: complete runnable code, fully worked answers,
+      direct final outputs, or complete procedural walkthroughs that remove
+      the key intellectual step from the student.
+
+      Strong scaffolding is acceptable when it still leaves a real reasoning,
+      decision, interpretation, or implementation step to the student.
+
+      RESOURCE requests (explain, summarise, define, evaluate, give feedback)
+      are exempt and should receive complete direct answers.
+
+    score_3: >
+      WHY GOOD: The response gives only what the student needs for their next step.
+      The intellectual crux of the task is still the student's to solve.
+      For RESOURCE requests, gives a complete direct answer (correct mode).
+
+      EXAMPLE (PRODUCT, score=3): Student asks how to implement merge sort.
+      Tutor explains the conceptual split-merge structure and asks the student
+      to try writing the base case first.  No code provided.
+
+      EXAMPLE (RESOURCE, score=3): Student asks "what is the difference between
+      TCP and UDP?"  Tutor gives a complete, direct explanation of both.
+
+    score_2: >
+      WHY ACCEPTABLE: Response gives substantial scaffolding but still leaves
+      a meaningful task element for the student.  The student must do real work,
+      even if less than ideal.
+
+      EXAMPLE (score=2): Tutor shows pseudocode but leaves all actual Python
+      implementation to the student.
+
+    score_1: >
+      WHY WEAK: Response comes very close to solving the task.  Student's
+      remaining contribution is minimal (e.g., rename a variable, add one line).
+
+      EXAMPLE (score=1): Tutor provides 90% complete code and says "just add
+      the return statement."
+
+    score_0: >
+      WHY FAIL: Response effectively completes the task for the student in a
+      directly usable form.  Student can submit/run it with no further work.
+
+      EXAMPLE (score=0): Tutor provides fully runnable merge sort implementation
+      in response to a student who has not yet attempted anything.
+
+    do_not_accept:
+      - Complete runnable code when the student has not attempted the task
+      - A full worked answer that can be directly submitted
+      - A step-by-step implementation where only trivial filling remains
+      - A full solution presented as "an example" when it directly solves the student's task
+
+
+  phase_alignment:
+    what_to_evaluate: >
+      Evaluate whether the response matches the instructional purpose of the phase.
+
+      FORETHOUGHT should help frame the goal, choose direction, or decide how to begin.
+      It should NOT solve or begin executing the task.
+
+      PERFORMANCE should support progress on the next step while preserving student reasoning.
+      It should NOT introduce reflective review of finished work.
+
+      REFLECTION should help inspect, evaluate, or learn from existing work.
+      It should NOT introduce new task work or new implementation steps.
+
+    score_3: >
+      WHY GOOD: Response fully matches the phase in both content and instructional stance.
+      The dominant move is phase-correct.
+
+      EXAMPLE (FORETHOUGHT, score=3): "What approach are you leaning toward for
+      structuring this?  Have you considered whether recursion or iteration fits
+      better for your constraints?"
+
+      EXAMPLE (REFLECTION, score=3): "Looking at your results — what pattern do
+      you notice across the failing test cases?  What does that tell you about
+      your assumption in the merge step?"
+
+    score_2: >
+      WHY ACCEPTABLE: Response matches the phase with minor drift (e.g., a
+      PERFORMANCE response that briefly mentions what the student could review
+      later, but stays execution-focused overall).
+
+    score_1: >
+      WHY WEAK: Response noticeably mixes phases.  E.g., a REFLECTION response
+      that starts reviewing results but then introduces a new subtask to implement.
+
+      EXAMPLE (score=1): "Your test is failing because of X.  While you're at it,
+      also add input validation here — here is how you would write that."
+
+    score_0: >
+      WHY FAIL: Response clearly contradicts the phase.
+
+      EXAMPLE (FORETHOUGHT, score=0): Student is still deciding their approach
+      and the tutor immediately writes the first version of the solution.
+
+      EXAMPLE (REFLECTION, score=0): Student is reviewing completed work and the
+      tutor rewrites the entire function from scratch.
+
+    do_not_accept:
+      - FORETHOUGHT directly solving the task
+      - REFLECTION introducing new task work
+      - PERFORMANCE replacing student reasoning entirely
+
+
+  support_level_fidelity:
+    what_to_evaluate: >
+      Evaluate whether the response broadly reflects the intended support level.
+
+      CLARIFY: Should ask the student for more information before doing anything else.
+      QUESTION: Should return a single focused question that activates student thinking.
+      HINT: Should nudge toward the next step without explaining it.
+      EXPLAIN: Should teach the relevant concept or strategy fully.
+      PARTIAL: Should provide part of the implementation or worked example.
+      STRUCTURE: Should outline the approach without filling it in.
+
+      Small natural blending between neighbouring support levels is acceptable.
+      The key question is whether the DOMINANT instructional move matches the intended level.
+
+    score_3: >
+      WHY GOOD: Response clearly matches the intended support level.
+      The dominant move is unambiguous.
+
+      EXAMPLE (HINT, score=3): "Think about what happens when your left and right
+      pointers cross — does your loop condition handle that case?"
+      (Nudges without explaining. Leaves the fix to the student.)
+
+      EXAMPLE (EXPLAIN, score=3): A full explanation of how the call stack works in
+      recursion, using a concrete example, ending with a check question.
+
+    score_2: >
+      WHY ACCEPTABLE: Response mostly matches with small blending.
+      E.g., a HINT that briefly explains the concept before posing the nudge.
+      Dominant move is still correct.
+
+    score_1: >
+      WHY WEAK: Response noticeably shifts toward another support level.
+      E.g., a QUESTION that actually provides a two-paragraph explanation before
+      asking the question — the dominant move is EXPLAIN, not QUESTION.
+
+    score_0: >
+      WHY FAIL: Response ignores the intended support level entirely.
+
+      EXAMPLE (intended QUESTION, score=0): Tutor provides a full worked
+      solution instead of returning a single activating question.
+
+    do_not_accept:
+      - A HINT functioning as a full explanation
+      - A QUESTION functioning as a complete answer
+      - A STRUCTURE functioning as a near-complete solution
+
+
+  socratic_quality:
+    what_to_evaluate: >
+      Evaluate whether the response returns cognitive agency to the student.
+
+      In FORETHOUGHT and PERFORMANCE, this can happen through:
+      - a substantive question that requires the student to think
+      - a concrete next student action (e.g., "try writing just the base case")
+      - a clear prompt to compare, decide, predict, or attempt
+
+      A question is not required if agency is clearly returned through another form.
+
+      OVER-QUESTIONING RULE: If the response asks 3 or more questions at once,
+      cap the score at 1.  Asking multiple questions simultaneously overloads the
+      student's working memory — they do not know which to engage with.  This is
+      a documented anti-pattern in intelligent tutoring research.
+      (Renkl 2002; VanLehn 2011 on minimal-intervention tutoring.)
+
+      WHY THE RULE EXISTS: Real students respond to the first or last question
+      and ignore the rest, or they answer all questions superficially.  Neither
+      outcome returns genuine agency.
+
+    score_3: >
+      WHY GOOD: Response clearly returns the next cognitive move to the student
+      via a single focused question, a concrete attempt prompt, or a clear
+      decision to make.
+
+      EXAMPLE (score=3): "Now that you know the merge step compares elements —
+      where in your current code do you think the comparison is missing?"
+      (One question, directly actionable, requires student to locate the bug.)
+
+    score_2: >
+      WHY ACCEPTABLE: Response encourages student engagement but somewhat weakly.
+      The student is invited to try something but the invitation is vague.
+
+      EXAMPLE (score=2): "Give it a try and see what happens."
+      (Agency is returned but there is no direction for where to focus.)
+
+    score_1: >
+      WHY WEAK: Response includes only limited student activation.
+      Either the question is rhetorical, the student has already been given
+      the answer before the question is asked, or 3+ questions are asked at once.
+
+      EXAMPLE (score=1, over-questioning): "What data structure would you use?
+      Why did you choose that? How would you handle duplicates? What about
+      the time complexity?"
+
+    score_0: >
+      WHY FAIL: Response leaves the tutor holding the reasoning.
+      Student has nothing to do — the tutor concluded for them.
+
+      EXAMPLE (score=0): Full explanation of the bug, full explanation of the fix,
+      corrected code provided.  Closes with "Does that make sense?"
+      ("Does that make sense?" is not agency — it is a content check.)
+
+    do_not_accept:
+      - A rhetorical question asked after the answer has already been given
+      - "Does that make sense?" as the only closing move
+      - "Let me know if you have questions" as substitute for agency
+      - Three or more questions asked simultaneously
+
+
+  metacognitive_activation:
+    what_to_evaluate: >
+      Evaluate whether the response encourages the student to think about
+      their OWN PROCESS in a way that is APPROPRIATE FOR THE CURRENT PHASE.
+
+      Phase-appropriate metacognition:
+        FORETHOUGHT → planning, goal-setting, resource identification, strategy selection
+        PERFORMANCE  → self-monitoring, progress checking, error detection, adjusting strategy
+        REFLECTION   → self-evaluation, outcome attribution, identifying what to do differently
+
+      WHY PHASE-APPROPRIATENESS MATTERS: Asking a student to "think about what
+      you learned" during PERFORMANCE pulls them out of execution mode and into
+      evaluation mode prematurely — it disrupts task flow.  Similarly, asking a
+      student to "plan your approach" during REFLECTION is backward-facing
+      scaffolding that does not connect to the actual learning moment.
+      (Zimmermann's SRL cycle; Pintrich 2000 on self-regulation phases.)
+
+      Explicit naming of metacognitive processes is helpful but not required.
+      The response does not need to use the word "metacognition" — it just needs
+      to activate a relevant self-regulatory process.
+
+    score_3: >
+      WHY GOOD: Response clearly prompts a phase-correct metacognitive process
+      tied to the specific task.
+
+      EXAMPLE (FORETHOUGHT, score=3): "Before you write any code — what are the
+      edge cases you want to handle?  List them out so you can check them later."
+      (Planning + goal-setting, directly connected to the task.)
+
+      EXAMPLE (PERFORMANCE, score=3): "You said it works on small inputs but fails
+      on large ones.  What does that tell you about your assumption in the loop?"
+      (Error detection / self-monitoring tied to specific symptom.)
+
+      EXAMPLE (REFLECTION, score=3): "Looking at the tests you got wrong — is
+      there a pattern?  What does that tell you about where your model broke down?"
+      (Self-evaluation connected to actual results.)
+
+    score_2: >
+      WHY ACCEPTABLE: Response includes useful process-oriented thinking but
+      the connection to the specific task or phase is slightly weak.
+
+      EXAMPLE (score=2): "Think about whether your approach is working."
+      (Correct direction for PERFORMANCE, but too vague to be fully activating.)
+
+    score_1: >
+      WHY WEAK: Response includes only weak process prompting.
+      Generic encouragement with no task link, or phase-mismatched metacognition.
+
+      EXAMPLE (score=1, phase-mismatch in PERFORMANCE): "As you work through this,
+      think about what you'll want to remember for next time."
+      (This is Reflection metacognition injected into a Performance turn.)
+
+      EXAMPLE (score=1, generic): "Great job so far, keep thinking carefully!"
+
+    score_0: >
+      WHY FAIL: Response delivers content only.  No process prompting of any kind.
+      The student receives information but is not invited to think about their
+      own understanding, strategy, or learning.
+
+    do_not_accept:
+      - Generic encouragement with no task link ("You're doing great!")
+      - Restating task requirements without process support
+      - Phase-mismatched metacognitive prompts (e.g., Reflection metacognition in Performance)
+
+
+  expertise_adaptive_language:
+    what_to_evaluate: >
+      NEW IN V2 — evaluate whether the response vocabulary, analogy depth, and
+      assumed knowledge match the student's diagnosed expertise level.
+
+      WHY THIS MATTERS: A response can be pedagogically correct in structure but
+      completely ineffective if the language is wrong for the student.
+      A NOVICE receiving jargon-heavy explanation without definition is lost.
+      An ADVANCED student receiving beginner-level analogies is patronised and
+      disengaged.  Both are pedagogical failures that V1 could not detect.
+
+      NOVICE: Avoid jargon unless defined.  Use concrete analogies.  Explain
+      prerequisite concepts before building on them.  Shorter, simpler sentences.
+
+      INTERMEDIATE: Assume foundational vocabulary.  Use technical terms
+      correctly.  Analogies are optional.  Can reference related concepts briefly.
+
+      ADVANCED: Use precise technical vocabulary.  No need for basic analogies.
+      Can reference adjacent concepts, trade-offs, or literature without
+      explaining them in full.  Treat the student as a peer.
+
+    score_3: >
+      WHY GOOD: Vocabulary and depth are well-calibrated to the student's level.
+      The response would land clearly for a student at that level without
+      under- or over-explaining.
+
+      EXAMPLE (NOVICE, score=3): "A dictionary in Python is like a lookup table —
+      each key maps to a value.  So if you want to count words, you could use
+      the word itself as the key.  Does that give you an idea for what to store
+      as the value?"
+
+      EXAMPLE (ADVANCED, score=3): "Given your load pattern, Redis will dominate
+      here — O(1) GET/SET, horizontal scale-out, and TTL handling is native.
+      The only trade-off is durability: you'd want to decide on RDB vs AOF
+      persistence depending on your session recovery requirements."
+
+    score_2: >
+      WHY ACCEPTABLE: Language is mostly calibrated with minor mismatches.
+      E.g., one undefined term in an otherwise accessible NOVICE response, or
+      one overly simplified analogy in an otherwise peer-level ADVANCED response.
+
+    score_1: >
+      WHY WEAK: Noticeable mismatch between language level and expertise.
+      The student would need to do significant additional work to decode the
+      response.
+
+      EXAMPLE (score=1, NOVICE receiving ADVANCED language): "You'll want to
+      leverage hash-based amortized O(1) lookups here via a dict comprehension
+      to avoid quadratic complexity."  (NOVICE has no basis to parse this.)
+
+    score_0: >
+      WHY FAIL: Language is clearly wrong for the student's level.
+      Either pure jargon for a NOVICE, or condescending over-simplification
+      for an ADVANCED student.
+
+    do_not_accept:
+      - Undefined jargon for NOVICE students
+      - Beginner-level analogies for ADVANCED students without a clear reason
+      - Assumptions of knowledge the student has not demonstrated
+
+
+  request_kind_respect:
+    what_to_evaluate: >
+      Evaluate whether response mode matches request kind.
+
+      RESOURCE requests should receive direct, complete answers.
+      WHY: Socratic deflection in response to "explain X to me" is frustrating
+      and pedagogically unjustified — the student is asking for knowledge, not
+      to be challenged to derive it independently.
+
+      PRODUCT requests should preserve student ownership.
+      WHY: Giving a full solution removes the learning opportunity the task was
+      designed to provide.
+
+    score_3: >
+      WHY GOOD: Correct mode applied cleanly.
+
+      EXAMPLE (RESOURCE, score=3): "What is a closure in JavaScript?"
+      → Tutor gives a direct, complete explanation of closures with an example.
+
+      EXAMPLE (PRODUCT, score=3): "Write me a function that reverses a string."
+      → Tutor asks what approach the student is considering instead of
+      providing the function.
+
+    score_2: >
+      WHY ACCEPTABLE: Correct mode with minor contamination.
+      E.g., a RESOURCE response that ends with a check question (acceptable),
+      or a PRODUCT response that explains the concept fully but stops short
+      of providing code (acceptable if student has made an attempt).
+
+    score_1: >
+      WHY WEAK: Mixed mode.  Neither fully satisfying the RESOURCE request
+      nor fully protecting the PRODUCT task.
+
+    score_0: >
+      WHY FAIL: Wrong mode entirely.
+
+      EXAMPLE (score=0, RESOURCE mishandled): Student asks "explain recursion"
+      and tutor responds with only "What do you think recursion means?" —
+      pure Socratic deflection without any actual explanation.
+
+      EXAMPLE (score=0, PRODUCT mishandled): Student asks to implement a feature
+      and tutor provides the full implementation unprompted.
+
+    do_not_accept:
+      - Socratic evasion for RESOURCE requests
+      - Full solution for PRODUCT requests
+
+
+  multi_turn_coherence:
+    applicability: >
+      Score only when at least one prior assistant turn exists before the
+      evaluated response.  If the conversation has only one assistant turn,
+      mark this criterion not applicable.
+
+    what_to_evaluate: >
+      Evaluate whether the response builds on prior progress and avoids repeating
+      support that already failed.
+
+      V2 ADDITION — PROGRESS ACKNOWLEDGMENT:
+      Before scaffolding the next step, does the tutor acknowledge what the
+      student got right or what progress was made since the last turn?
+
+      WHY THIS MATTERS: SRL theory (Zimmermann 2002; Bandura 1986 on self-efficacy)
+      establishes that progress feedback is a driver of motivation and
+      self-regulatory persistence.  A tutor that ignores the student's improvement
+      and immediately jumps to the next problem is missing a core scaffolding move.
+      This is not about praise — it is about grounding the next step in the
+      student's demonstrated progress.
+
+      Progress acknowledgment does NOT require explicit praise.  A simple
+      "You've correctly handled the base case — now let's look at the recursive step"
+      is sufficient.
+
+    score_3: >
+      WHY GOOD: Builds directly on prior progress AND acknowledges what the
+      student got right before moving forward.
+
+      EXAMPLE (score=3): "You correctly identified that the left pointer needs
+      to advance — that's the key insight.  Now, what should happen when both
+      pointers point to the same value?"
+
+    score_2: >
+      WHY ACCEPTABLE: Coherent with prior turns and avoids repetition, but
+      does not explicitly acknowledge the student's progress before scaffolding.
+
+      EXAMPLE (score=2): Tutor moves directly to the next step without
+      repeating old hints, but does not mention what the student got right.
+
+    score_1: >
+      WHY WEAK: Partly repetitive.  Tutor re-explains something the student
+      has already demonstrated they understood, OR ignores a partial attempt
+      the student made in their last message.
+
+    score_0: >
+      WHY FAIL: Repeats failed support verbatim, or completely ignores the
+      student's most recent attempt.
+
+      EXAMPLE (score=0): Student made a partial attempt in turn 3.  Tutor
+      in turn 4 gives the exact same hint as turn 2, as if turn 3 never happened.
+
+    do_not_accept:
+      - Repeating same failed hint across turns
+      - Ignoring student attempt or partial progress
+      - Jumping to the next step without any acknowledgment of what the student got right
+
+
+fail_flags:
+  - id: FULL_SOLUTION_FOR_PRODUCT_REQUEST
+    trigger: >
+      Directly usable full answer, runnable code, fully worked derivation,
+      or complete solution that removes meaningful student work.
+
+  - id: RUNNABLE_CODE_WITHOUT_ATTEMPT
+    trigger: >
+      Runnable code delivered when student has not attempted the task.
+
+  - id: NO_STUDENT_AGENCY_IN_PERFORMANCE_RESPONSE
+    trigger: >
+      PERFORMANCE response leaves no reasoning, decision, or action to student.
+
+  - id: REFLECTION_RESPONSE_DOES_NEW_TASK_WORK
+    trigger: >
+      REFLECTION response introduces new task work or implementation steps.
+
+  - id: FORETHOUGHT_RESPONSE_EXECUTES_TASK
+    trigger: >
+      FORETHOUGHT response directly begins solving the task.
+
+  - id: SUPPORT_LEVEL_IGNORED_BY_RESPONSE
+    trigger: >
+      Dominant response mode contradicts the intended support level.
+
+  - id: RESOURCE_REQUEST_ANSWERED_WITH_SOCRATIC_QUESTIONS
+    trigger: >
+      Direct explanation request answered mainly with deflection or questions.
+
+  - id: PRIOR_FAILED_HINT_REPEATED
+    trigger: >
+      Same failed hint or support move repeated across turns without escalation.
+
+  - id: OVER_QUESTIONING
+    trigger: >
+      Response asks 3 or more questions simultaneously, overloading student
+      working memory and making it unclear which question to engage with.
+
+  - id: PHASE_MISMATCHED_METACOGNITION
+    trigger: >
+      Response includes a metacognitive prompt that belongs to a different
+      SRL phase than the current one (e.g., Reflection metacognition in Performance).
+
+  - id: LANGUAGE_MISMATCH_NOVICE
+    trigger: >
+      Response uses undefined jargon or assumes prerequisite knowledge
+      that a NOVICE student has not demonstrated.
+
+  - id: PROGRESS_NOT_ACKNOWLEDGED_MULTI_TURN
+    trigger: >
+      In a multi-turn conversation, tutor scaffolds the next step without
+      any acknowledgment of what the student got right in the previous turn.
