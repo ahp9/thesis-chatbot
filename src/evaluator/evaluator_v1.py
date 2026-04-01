@@ -7,9 +7,9 @@ from typing import Any, Dict, List, Optional
 import yaml
 
 from evaluator.judge_v1 import JUDGE_SYSTEM, build_judge_user_prompt
+from lib.enums import Phase
 from services.llm_client import get_client
-from services.router import route_message
-from services.srl_chain import run_srl_chain
+from services.orchestrator import Orchestrator
 
 ROOT = Path(__file__).resolve().parents[1]
 RUBRICS_DIR = ROOT / "evaluator" / "rubrics"
@@ -21,19 +21,16 @@ JUDGE_MODEL = "gpt-4o-mini"
 JUDGE_TEMP = 0.0
 
 # --- Version tracking ---
-VERSION_BASE_SRL    = "v5"   # srl_model_v{N}.txt 
-VERSION_ROUTER      = "v5"   # router_system_prompt_v{N}.txt 
+VERSION_BASE_SRL    = "v7"   # srl_model_v{N}.txt 
+VERSION_ROUTER      = "v7"   # router_system_prompt_v{N}.txt 
 VERSION_CHAIN       = "v2"   # srl_chain.py / chain prompt files 
 VERSION_RESPOND     = "v2"   # response_generation_prompt_v{N}.txt 
-VERSION_FORETHOUGHT = "v4"   # forethought_core.txt 
-VERSION_PERFORMANCE = "v6"   # performance_core.txt 
+VERSION_FORETHOUGHT = "v5"   # forethought_core.txt 
+VERSION_PERFORMANCE = "v7"   # performance_core.txt 
 VERSION_REFLECTION  = "v2"   # reflection_core.txt
 
-PHASE_ORDER = ["FORETHOUGHT", "PERFORMANCE", "REFLECTION"]
-
 # Timeouts (seconds)
-ROUTE_TIMEOUT_S = 45
-CHAIN_TIMEOUT_S = 120
+ORCHESTRATOR_TIMEOUT_S = 180
 JUDGE_TIMEOUT_S = 90
 
 
@@ -79,28 +76,6 @@ async def _with_timeout(coro, seconds: int, label: str):
     except asyncio.TimeoutError as e:
         raise TimeoutError(f"{label} timed out after {seconds} seconds") from e
 
-
-def _update_phase(
-    current_phase: str, predicted_phase: str, confidence: float
-) -> str:
-    current_phase = (current_phase or "FORETHOUGHT").upper()
-    predicted_phase = (predicted_phase or current_phase).upper()
-    confidence = float(confidence or 0.0)
-
-    if current_phase not in PHASE_ORDER:
-        current_phase = "FORETHOUGHT"
-    if predicted_phase not in PHASE_ORDER:
-        predicted_phase = current_phase
-
-    if confidence < 0.60:
-        return current_phase
-
-    if PHASE_ORDER.index(predicted_phase) >= PHASE_ORDER.index(current_phase):
-        return predicted_phase
-
-    return current_phase
-
-
 def _build_version_tag() -> str:
     return (
         f"base-{VERSION_BASE_SRL}"
@@ -142,10 +117,11 @@ async def run_suite(
         print(f"[EVAL] Tutor  : {tutor_type}")
         print(f"[EVAL] Versions: {_build_version_tag()}")
         print(
-            f"[EVAL] Timeouts: route={ROUTE_TIMEOUT_S}s "
-            f"chain={CHAIN_TIMEOUT_S}s judge={JUDGE_TIMEOUT_S}s"
+            f"[EVAL] Timeouts: orchestrator={ORCHESTRATOR_TIMEOUT_S}s "
+            f"judge={JUDGE_TIMEOUT_S}s"
         )
 
+    orchestrator = Orchestrator(client)
     results: List[Dict[str, Any]] = []
 
     for idx, case in enumerate(suite, start=1):
@@ -155,12 +131,12 @@ async def run_suite(
         assistant_outputs: List[str] = []
         turn_chain_snapshots: List[Dict[str, Any]] = []
 
-        current_phase = case.get("start_phase", "FORETHOUGHT").upper()
+        current_phase = Phase((case.get("start_phase") or "FORETHOUGHT").upper())
 
         if verbose:
             print(
                 f"\n[EVAL] Case {idx}/{len(suite)}: {case_id} "
-                f"(start_phase={current_phase}, turns={len(turns)})"
+                f"(start_phase={current_phase.value}, turns={len(turns)})"
             )
 
         for t_i, turn in enumerate(turns, start=1):
@@ -169,55 +145,33 @@ async def run_suite(
 
             user_msg = turn["content"]
             llm_history.append({"role": "user", "content": user_msg})
-
-            route: Dict[str, Any] = {
-                "phase": current_phase,
-                "strategy": "NONE",
-                "confidence": 0.0,
-                "signals": [],
-            }
-
-            if tutor_type == "SRL Tutor":
-                if verbose:
-                    print(f"[EVAL]   Turn {t_i}: routing...")
-
-                route = await _with_timeout(
-                    route_message(client, user_msg, llm_history, current_phase),
-                    seconds=ROUTE_TIMEOUT_S,
-                    label=f"routing (case={case_id}, turn={t_i})",
-                )
-
-                predicted_phase = route.get("phase", current_phase)
-                conf = float(route.get("confidence", 0.0))
-                current_phase = _update_phase(current_phase, predicted_phase, conf)
-                route["phase"] = current_phase
-
-                if verbose:
-                    print(
-                        f"[EVAL]   Turn {t_i}: "
-                        f"route.phase={route['phase']} "
-                        f"conf={conf:.2f} "
-                        f"strategy={route.get('strategy', 'NONE')}"
-                    )
-
             if verbose:
-                print(f"[EVAL]   Turn {t_i}: running chain...")
+                print(f"[EVAL]   Turn {t_i}: running orchestrator...")
 
-            chain_result = await _with_timeout(
-                run_srl_chain(client, route, llm_history, user_msg),
-                CHAIN_TIMEOUT_S,
-                label=f"chain (case={case_id}, turn={t_i})",
+            result = await _with_timeout(
+                orchestrator.handle_turn(
+                    user_message=user_msg,
+                    llm_history=llm_history,
+                    current_phase=current_phase,
+                ),
+                ORCHESTRATOR_TIMEOUT_S,
+                label=f"orchestrator (case={case_id}, turn={t_i})",
             )
 
-            final_reply: str = chain_result["reply"]
-            draft_reply: str = chain_result.get("draft_reply", final_reply)
-            was_rewritten: bool = bool(chain_result.get("was_rewritten", final_reply != draft_reply))
+            current_phase = result.route.phase
+            route = result.route.to_dict()
+            checkpoint = result.control.checkpoint.to_dict()
+            decision = result.control.decision.to_dict()
+            safety = result.safety.to_dict()
+            final_reply: str = result.reply
+            draft_reply: str = result.draft_reply or final_reply
+            was_rewritten: bool = bool(result.was_rewritten)
 
             chain_internals: Dict[str, Any] = {
                 "route": route,
-                "diagnosis": chain_result.get("diagnosis", {}),
-                "decision": chain_result.get("decision", {}),
-                "check": chain_result.get("check", {}),
+                "diagnosis": checkpoint,
+                "decision": decision,
+                "check": safety,
                 "draft_reply": draft_reply,
                 "final_reply": final_reply,
                 "was_rewritten": was_rewritten,
@@ -236,7 +190,17 @@ async def run_suite(
                 )
 
             assistant_outputs.append(final_reply)
-            llm_history.append({"role": "assistant", "content": final_reply})
+            llm_history.append(
+                {
+                    "role": "assistant",
+                    "content": final_reply,
+                    "route": route,
+                    "diagnosis": checkpoint,
+                    "decision": decision,
+                    "check": safety,
+                    "draft_reply": draft_reply,
+                }
+            )
 
         transcript = format_transcript(turns, assistant_outputs)
 
@@ -282,7 +246,7 @@ async def run_suite(
                 "expected_support_level": case.get("expected_support_level"),
                 "expected_request_kind": case.get("expected_request_kind"),
                 "notes": case.get("notes"),
-                "final_phase": current_phase,
+                "final_phase": current_phase.value,
                 "transcript": transcript,
                 "chain_snapshots": turn_chain_snapshots,
                 "judge": judge_json,
@@ -307,7 +271,7 @@ async def run_suite(
         if not report_path.exists():
             break
         run_index += 1
-
+        
     report_data: Dict[str, Any] = {
         "metadata": {
             "suite_file": suite_file,
@@ -338,10 +302,6 @@ async def run_suite(
 
     return str(report_path)
 
-
-# ---------------------------------------------------------------------------
-# CLI entry point
-# ---------------------------------------------------------------------------
 
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
@@ -391,3 +351,4 @@ if __name__ == "__main__":
             verbose=not args.quiet,
         )
     )
+    
