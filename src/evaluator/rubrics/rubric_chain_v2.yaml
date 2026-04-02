@@ -1,31 +1,5 @@
-rubric_name: "SRL Chain — Diagnosis and Support-Level Decision (V3)"
+rubric_name: "SRL Chain — Diagnosis and Support-Level Decision"
 rubric_type: chain
-
-# ══════════════════════════════════════════════════════════════════════════════
-# WHAT CHANGED FROM V1 AND WHY
-# ══════════════════════════════════════════════════════════════════════════════
-#
-# Three changes from V1:
-#
-# 1. support_alignment_and_depth is extended to check that the support DEPTH
-#    maps to the correct METACOGNITIVE STRATEGY TYPE for the current phase,
-#    not just the correct depth level.  A NOVICE in PERFORMANCE should receive
-#    Surface/Substantive support that scaffolds MONITORING (self-checking),
-#    not planning scaffolding (which belongs to FORETHOUGHT).  V1 only checked
-#    the depth floor — it could not detect a depth-correct but
-#    metacognitive-type-wrong decision.
-#
-# 2. affective_signal_sensitivity is a new criterion.  Your chain's diagnosis
-#    includes a frustration/emotional field.  V1 never evaluated whether
-#    the chain correctly detected and responded to emotional signals.
-#    High frustration + STALLED should change the support_level decision
-#    (e.g., justify PARTIAL where HINT would otherwise apply).  This is
-#    grounded in SRL's motivational component (Zimmermann; Pintrich 2000).
-#
-# 3. All score descriptions include GOOD and BAD examples for judge anchor
-#    consistency, matching the V2 response rubric style.
-#
-# ══════════════════════════════════════════════════════════════════════════════
 
 criteria:
 
@@ -40,195 +14,80 @@ criteria:
       Check that the rationale cites specific evidence from the user message
       for each of these fields.
 
-    score_3: >
-      WHY GOOD: All fields accurately match the student's message.
-      Rationale cites specific evidence (e.g., a quoted phrase) for expertise
-      and progress state.
-
-      EXAMPLE (score=3): Student message "I've been trying to fix this for an
-      hour and I keep getting None" → diagnosis correctly identifies
-      progress_state=STALLED, task_stage=WORKING, and the rationale quotes
-      "keep getting None" as the stall evidence.
-
-    score_2: >
-      WHY ACCEPTABLE: Fields are mostly correct but rationale is thin or missing
-      evidence for one field.  E.g., expertise_level is correctly set to
-      INTERMEDIATE but the rationale does not explain how this was inferred.
-
-    score_1: >
-      WHY WEAK: One major field (request_kind or expertise_level) is wrong,
-      or rationale is entirely missing.
-
-      EXAMPLE (score=1): Student writes "explain why merge sort is O(n log n)"
-      and chain diagnoses request_kind=PRODUCT instead of RESOURCE.
-
-    score_0: >
-      WHY FAIL: Two or more major fields are wrong.  Diagnosis does not reflect
-      the student's actual state at all.
-
-      EXAMPLE (score=0): Student is clearly ADVANCED and STALLED, but chain
-      diagnoses NOVICE and MOVING — completely contradicts the message.
+    score_3: "All fields accurately match the student's message. Rationale cites specific evidence for expertise and progress state."
+    score_2: "Fields are mostly correct but rationale is thin or missing evidence for one field."
+    score_1: "One major field (request_kind or expertise_level) is wrong, or rationale is entirely missing."
+    score_0: "Two or more major fields are wrong. Diagnosis does not reflect the student's actual state."
 
   support_alignment_and_depth:
     what_to_evaluate: >
-      Evaluate if the support_level and support_depth match the expertise_level floors:
+      Evaluate whether the support_level and support_depth match the expertise_level floors:
         - NOVICE:       Surface or Substantive (floor = Surface)
         - INTERMEDIATE: Substantive floor
         - ADVANCED:     Deep floor
 
-      Also check if CLARIFY was used when context_gap is CRITICAL,
-      or if QUESTION was used for NOVICE/STARTING.
+      Also check whether CLARIFY was used when context_gap is CRITICAL,
+      and whether QUESTION was used for NOVICE/STARTING combinations.
 
-      V2 ADDITION — METACOGNITIVE TYPE ALIGNMENT:
-      The support depth must map to the correct metacognitive strategy type
+      The support depth must also map to the correct metacognitive strategy type
       for the current SRL phase:
-
         FORETHOUGHT:  depth should scaffold PLANNING or GOAL-SETTING
         PERFORMANCE:  depth should scaffold MONITORING or ERROR-DETECTION
         REFLECTION:   depth should scaffold SELF-EVALUATION or ATTRIBUTION
 
-      WHY THIS MATTERS: A chain can correctly set support_depth=SUBSTANTIVE
-      for an INTERMEDIATE student, but if the substantive scaffolding activates
-      a planning strategy (FORETHOUGHT type) while the student is in PERFORMANCE,
-      the response will feel out of place and disrupt the student's task flow.
-      Depth correctness and phase-type correctness are orthogonal checks.
-
-    score_3: >
-      WHY GOOD: Support level is pedagogically appropriate for the stage.
-      Depth strictly meets or exceeds the expertise floor.
-      The metacognitive strategy type matches the current phase.
-
-      EXAMPLE (score=3): INTERMEDIATE student in PERFORMANCE with broken code.
-      Chain selects support_level=PARTIAL, support_depth=SUBSTANTIVE.
-      The substantive scaffolding is monitoring-oriented: "check what your
-      loop condition returns when left=right."  Correct on all three axes.
-
-    score_2: >
-      WHY ACCEPTABLE: Support level is appropriate but depth is one level off
-      (e.g., Surface for an Intermediate), OR depth is correct but the
-      metacognitive type is slightly misaligned (e.g., mixes planning and
-      monitoring scaffolding in PERFORMANCE).
-
-    score_1: >
-      WHY WEAK: Support level is inappropriate (e.g., HINT when the student is
-      clearly STALLED and context_gap=CRITICAL, where CLARIFY is required).
-
-    score_0: >
-      WHY FAIL: Support level violates core SRL rules.
-
-      EXAMPLE (score=0): Providing PARTIAL or EXPLAIN support to a NOVICE who
-      has made no attempt on a PRODUCT request (should be QUESTION or CLARIFY).
+    score_3: "Support level is appropriate for the stage. Depth meets or exceeds the expertise floor. Metacognitive strategy type matches the current phase."
+    score_2: "Support level is appropriate but depth is one level off, or depth is correct but metacognitive type is slightly misaligned."
+    score_1: "Support level is inappropriate for the student's state (e.g., HINT when STALLED with a CRITICAL context gap)."
+    score_0: "Support level violates core SRL rules (e.g., PARTIAL or EXPLAIN to a NOVICE with no attempt on a PRODUCT request)."
 
   implementation_gate:
     what_to_evaluate: >
       Evaluate whether implementation_allowed and can_show_code are set correctly.
 
-      Implementation/Code should be FALSE when:
-      - It is a PRODUCT request with no student attempt.
+      Should be FALSE when:
+      - PRODUCT request with no student attempt.
       - Support level is QUESTION, CLARIFY, or HINT.
 
-      Implementation/Code can be TRUE when:
-      - Support is PARTIAL or EXPLAIN AND (STALLED OR high frustration OR NOVICE
-        who has made at least one attempt).
+      May be TRUE when:
+      - Support is PARTIAL or EXPLAIN AND the student is STALLED, highly frustrated,
+        or is a NOVICE who has made at least one attempt.
 
-    score_3: >
-      WHY GOOD: Gate is correctly closed or open.
-      Rationale explicitly references the 'Can Show Code' rules and cites
-      the evidence (attempt present? frustration level? support level?).
-
-      EXAMPLE (gate closed, score=3): "implementation_allowed=false because
-      support_level=HINT and student has not provided an attempt."
-
-      EXAMPLE (gate open, score=3): "can_show_code=true because support=PARTIAL,
-      student is STALLED after 3 failed attempts, and has provided an attempt."
-
-    score_2: >
-      WHY ACCEPTABLE: Gate is technically correct but rationale does not explain
-      which specific rule triggered the decision.
-
-    score_1: >
-      WHY WEAK: Gate is open (True) in a borderline case where questioning would
-      have been safer.  E.g., student says "I don't know where to start" and gate
-      is open despite no attempt evidence.
-
-    score_0: >
-      WHY FAIL: Gate is open (True) for a PRODUCT request with no student attempt.
-      This is a MAJOR VIOLATION — it directly enables giving the student a solution.
+    score_3: "Gate is correctly closed or open. Rationale references the relevant rule and cites supporting evidence."
+    score_2: "Gate is technically correct but rationale does not explain which rule triggered the decision."
+    score_1: "Gate is open in a borderline case where a more cautious decision would have been safer."
+    score_0: "Gate is open for a PRODUCT request with no student attempt."
 
   check_rewrite_consistency:
     what_to_evaluate: >
-      Evaluate the internal 'check' field.  If the check flagged 'leaks_solution',
-      was_rewritten must be true.  If was_rewritten is true, verify the final
+      Evaluate the internal check field. If the check flagged leaks_solution,
+      was_rewritten must be true. If was_rewritten is true, verify the final
       response no longer contains the leak.
 
-    score_3: >
-      WHY GOOD: Check passed cleanly (no leak), OR check flagged a leak and
-      the rewrite resolved it successfully.  Final response is clean.
-
-      EXAMPLE (score=3): Draft contained runnable code → check flagged it →
-      was_rewritten=true → final response contains only pseudocode and a question.
-
-    score_2: >
-      WHY ACCEPTABLE: Rewrite triggered and resolved the leak, but the final
-      response became overly brief or unhelpful as a result of the rewrite.
-
-    score_1: >
-      WHY WEAK: Rewrite was triggered but a partial leak remains in the final output.
-      E.g., the full implementation was removed but a near-complete code snippet
-      with only a missing variable name remains.
-
-    score_0: >
-      WHY FAIL: Check flagged a leak but was_rewritten=false.
-      The leak is live in the final response sent to the student.
+    score_3: "Check passed cleanly, or a flagged leak was fully resolved by the rewrite."
+    score_2: "Rewrite triggered and resolved the leak, but the final response became too brief or unhelpful as a result."
+    score_1: "Rewrite triggered but a partial leak remains in the final output."
+    score_0: "Check flagged a leak but was_rewritten is false. Leak is present in the final response."
 
   affective_signal_sensitivity:
     what_to_evaluate: >
-      NEW IN V2 — evaluate whether the chain correctly detected and responded
-      to the student's emotional/motivational signals.
-
-      WHY THIS MATTERS: SRL theory (Zimmermann 2002; Pintrich & De Groot 1990)
-      treats motivational beliefs and emotional state as integral to the
-      self-regulation cycle.  A student who is highly frustrated and STALLED
-      has different support needs than a calm student who is STALLED.
-      High frustration justifies moving to more direct support (e.g., PARTIAL
-      instead of HINT) to prevent disengagement.
+      Evaluate whether the chain correctly detected and responded to the student's
+      emotional or motivational signals.
 
       Signals to detect:
-      - Explicit frustration language ("I've been stuck for an hour",
-        "this makes no sense", "I give up")
-      - Passive helplessness ("just tell me the answer", "I don't know")
-      - Confidence language ("I think I understand but", "I'm not sure if")
-      - Emotional punctuation (multiple question marks, "???", capitalization)
+      - Explicit frustration language ("I've been stuck for an hour", "I give up")
+      - Passive helplessness ("just tell me", "I don't know")
+      - Confidence language ("I think I understand but...", "I'm not sure if...")
+      - Emotional punctuation (repeated question marks, capitalisation)
 
-      The chain should have a frustration or emotional_state field in diagnosis.
       Evaluate whether:
-      1. The field correctly reflects the student's emotional signal.
-      2. The support_level decision accounts for the emotional state.
-         (High frustration + STALLED → support can be escalated)
+      1. The frustration or emotional_state field correctly reflects the signal.
+      2. The support_level decision accounts for it —
+         high frustration + STALLED should escalate support beyond HINT.
 
-    score_3: >
-      WHY GOOD: Chain correctly detected the emotional signal and the
-      support_level decision reflects it appropriately.
-
-      EXAMPLE (score=3): Student: "I've been trying this for TWO HOURS and nothing
-      works, just please help me" → chain correctly sets frustration=HIGH,
-      progress_state=STALLED, and escalates to support_level=PARTIAL instead of HINT.
-
-    score_2: >
-      WHY ACCEPTABLE: Chain correctly detected the emotional signal but the
-      support_level decision does not fully account for it (e.g., frustration=HIGH
-      is correctly diagnosed but support_level stays at HINT instead of escalating).
-
-    score_1: >
-      WHY WEAK: Chain partially detected the signal (e.g., notes "some frustration"
-      but sets frustration=LOW when explicit frustration language was present).
-
-    score_0: >
-      WHY FAIL: Chain completely missed a clear emotional signal.
-
-      EXAMPLE (score=0): Student uses explicit helplessness language and the
-      chain sets emotional_state=NEUTRAL / frustration=LOW, leading to a
-      pedagogically inappropriate low-support decision.
+    score_3: "Chain correctly detected the emotional signal and the support_level decision reflects it appropriately."
+    score_2: "Chain correctly detected the signal but the support_level decision does not fully account for it."
+    score_1: "Chain partially detected the signal (e.g., notes some frustration but sets frustration=LOW)."
+    score_0: "Chain completely missed a clear emotional signal, leading to an inappropriate support decision."
 
 fail_flags:
   - id: DEPTH_BELOW_FLOOR
@@ -247,11 +106,7 @@ fail_flags:
     trigger: "check.leaks_solution=true but was_rewritten=false"
 
   - id: METACOGNITIVE_TYPE_MISMATCH
-    trigger: >
-      Support depth scaffolds a metacognitive process belonging to a different
-      SRL phase than the current one (e.g., planning scaffolding in PERFORMANCE).
+    trigger: "Support depth scaffolds a metacognitive process belonging to a different SRL phase than the current one."
 
   - id: FRUSTRATION_IGNORED_IN_SUPPORT_DECISION
-    trigger: >
-      frustration=HIGH or emotional_state indicates distress, but support_level
-      was not escalated beyond HINT despite progress_state=STALLED.
+    trigger: "frustration=HIGH or emotional_state indicates distress, but support_level was not escalated beyond HINT despite progress_state=STALLED."

@@ -49,7 +49,7 @@ class Orchestrator:
 
         route.phase = resolved_phase
 
-        control, classify_debug = await self.classify.classify(
+        control, _ = await self.classify.classify(
             route.to_dict(),
             llm_history,
             user_message,

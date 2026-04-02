@@ -7,10 +7,10 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
-from src.evaluator.judge_v1 import JUDGE_SYSTEM, build_judge_user_prompt
+from evaluator.judge_v1 import JUDGE_SYSTEM, build_judge_user_prompt
 from lib.enums import Phase
-from src.services.llm_client import get_client
-from src.services.orchestrator import Orchestrator
+from services.llm_client import get_client
+from services.orchestrator import Orchestrator
 
 ROOT = Path(__file__).resolve().parents[1]
 RUBRICS_DIR   = ROOT / "evaluator" / "rubrics"
@@ -24,10 +24,10 @@ DEFAULT_PERSONAS_FILE = "personas.json"
 # Version constants
 VERSION_BASE_SRL    = "v7"
 VERSION_ROUTER      = "v7"
-VERSION_CHAIN       = "v2"
+VERSION_CHAIN       = "v5"
 VERSION_RESPOND     = "v2"
-VERSION_FORETHOUGHT = "v5"
-VERSION_PERFORMANCE = "v7"
+VERSION_FORETHOUGHT = "v6"
+VERSION_PERFORMANCE = "v6"
 VERSION_REFLECTION  = "v2"
 
 # Model config
@@ -609,7 +609,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--max-turns",
         type=int,
-        default=6,
+        default=4,
         metavar="N",
         help="Maximum turns per conversation (default: 6).",
     )
