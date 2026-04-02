@@ -1,0 +1,398 @@
+rubric_name: "SRL Chain — Diagnostic Classification Accuracy + Depth Taxonomy Pressure"
+rubric_type: chain
+
+# PURPOSE
+# -------
+# This rubric evaluates whether the chain's INTERNAL DIAGNOSTIC FIELDS
+# accurately reflect the student's actual state as observable in the transcript.
+#
+# It ALSO includes a focused diagnostic on support_depth, not to judge whether
+# the final pedagogical response was ideal overall, but to test whether the
+# chosen depth bucket matches the student's demonstrated needs.
+#
+# This allows you to answer two different questions:
+#   1. "Did the chain read the student correctly?"
+#   2. "Is support_depth, especially SUBSTANTIVE, acting as an overly broad
+#       middle bucket that compresses meaningfully different cases?"
+#
+# PRIMARY TARGET:
+#   - diagnosis object (frustration, expertise, progress, context gap, etc.)
+#   - decision.support_depth as a taxonomy-fit diagnostic
+#
+# SECONDARY CONTEXT:
+#   - transcript
+#   - final reply only as supporting evidence for whether the selected depth
+#     appears to reflect the intended support granularity
+
+
+criteria:
+
+  frustration_level_accuracy:
+    what_to_evaluate: >
+      Evaluate whether the frustration or emotional_state field correctly reflects
+      the student's affective signals as observable in the transcript.
+
+      Evidence to check:
+        HIGH frustration indicators:
+          - Explicit statements ("I've been stuck for hours", "I give up", "this is impossible")
+          - Passive helplessness language ("just tell me", "I don't even know where to start")
+          - Multiple failed attempts described in the same message
+          - Emotional punctuation (!!!, ???, ALL CAPS)
+
+        MEDIUM frustration indicators:
+          - Expressed uncertainty paired with effort ("I tried X but it keeps failing")
+          - Mild hedging ("I think I understand but I'm not sure")
+          - Implicit stress without strong language
+
+        LOW frustration indicators:
+          - Neutral or positive tone
+          - Curious or exploratory phrasing
+          - No distress signals
+
+      Check both the label assigned AND whether the rationale field cites
+      a specific observable signal from the transcript.
+
+    score_3: "Frustration label precisely matches the observable signal. Rationale cites a specific quote or behaviour from the transcript."
+    score_2: "Frustration label is directionally correct (e.g., MEDIUM vs HIGH) but one level off, or label is correct but rationale is generic."
+    score_1: "Frustration label is wrong by one level AND rationale is thin or missing."
+    score_0: "Frustration level is clearly wrong (e.g., LOW assigned when the student used explicit distress language). No supporting rationale."
+
+    do_not_accept:
+      - LOW assigned when student said they are stuck, giving up, or frustrated
+      - HIGH assigned for a calm, exploratory message
+      - A correct label with no rationale (score capped at 2)
+
+
+  expertise_level_accuracy:
+    what_to_evaluate: >
+      Evaluate whether the expertise_level field correctly reflects the student's
+      demonstrated knowledge as observable in the transcript.
+
+      Evidence to check:
+        NOVICE indicators:
+          - Misconceptions about foundational concepts
+          - Inability to name relevant terms or tools
+          - Asks what something is rather than how to use it
+          - Uses vague language for technical concepts ("the thing that loops")
+
+        INTERMEDIATE indicators:
+          - Uses correct vocabulary but makes implementation or design errors
+          - Understands the task structure but misapplies it
+          - Can describe the problem but not yet debug or extend it
+
+        ADVANCED indicators:
+          - Demonstrates correct use of technical vocabulary
+          - Identifies trade-offs, design tensions, or edge cases
+          - Makes errors at the architectural or optimisation level, not the syntax level
+          - Asks questions that assume prior mastery
+
+      Expertise is based on DEMONSTRATED behaviour in the message,
+      not on topic difficulty or course level.
+
+    score_3: "Expertise label matches demonstrated behaviour. Rationale cites specific vocabulary, code quality, or reasoning visible in the transcript."
+    score_2: "Expertise label is plausible but rationale does not cite specific evidence, or label is one level off in a borderline case."
+    score_1: "Expertise label is off by one level with weak evidence, OR a clearly misassigned label with some rationalisation."
+    score_0: "Expertise level is clearly wrong (e.g., NOVICE assigned to a student discussing architectural trade-offs, or ADVANCED assigned to a student who does not know the relevant vocabulary)."
+
+    do_not_accept:
+      - Inferring ADVANCED from topic difficulty alone
+      - Inferring NOVICE from topic difficulty alone
+      - Expertise label not supported by observable student behaviour
+
+
+  progress_state_accuracy:
+    what_to_evaluate: >
+      Evaluate whether the progress_state or equivalent field (MOVING / STALLED / DONEISH)
+      correctly reflects the student's actual situation in the transcript.
+
+      Evidence to check:
+        MOVING indicators:
+          - Student is actively attempting something and making incremental progress
+          - Student has a clear next step in mind, even if imperfect
+          - Student reports partial success
+
+        STALLED indicators:
+          - Student describes repeated failure with no forward movement
+          - Student explicitly says they are stuck
+          - Student has no clear next step
+          - Student is asking for directions rather than feedback
+
+        DONEISH indicators:
+          - Student has a working or complete artifact and is seeking review
+          - Student treats the task as finished or near-finished
+          - Student is asking whether their result is correct
+
+    score_3: "Progress state label correctly reflects observable trajectory. Rationale cites the specific attempt or absence thereof."
+    score_2: "Label is correct but rationale is vague, or label is borderline between two states with reasonable support for both."
+    score_1: "Label is off by one state with weak evidence. Student's actual trajectory is different from what was classified."
+    score_0: "Label is clearly wrong — e.g., MOVING assigned to a student who says they are stuck with no progress, or DONEISH assigned to a student who has not started."
+
+    do_not_accept:
+      - MOVING assigned when student has tried the same thing multiple times with no result
+      - STALLED assigned to a student making visible incremental progress
+      - DONEISH assigned when the student has not produced an artifact
+
+
+  context_gap_accuracy:
+    what_to_evaluate: >
+      Evaluate whether the context_gap field (NONE / SMALL / CRITICAL) correctly
+      reflects whether the chain has sufficient information to help the student.
+
+      Evidence to check:
+        NONE:
+          - Student message contains task, attempt, and enough context to proceed
+          - No ambiguity about what the student is trying to do
+
+        SMALL:
+          - Enough context to help partially, but one detail is unclear
+          - Support could begin with a reasonable assumption
+
+        CRITICAL:
+          - Cannot determine what the student is working on without more information
+          - Task is too vague to give targeted support
+          - Student has described a symptom but provided no code, input, or task description
+
+      Note: CRITICAL context gaps should almost always trigger support_level = CLARIFY.
+      If context_gap = CRITICAL but CLARIFY was not selected, the gap label may be
+      inconsistent with the support decision. Flag the inconsistency but score
+      this criterion based only on whether the gap label is correct.
+
+    score_3: "Context gap label is accurate. Rationale explains what information is missing or present."
+    score_2: "Label is one step off in a genuinely ambiguous case, or label is correct but no rationale is given."
+    score_1: "Label is off and rationale does not reflect the actual information available in the message."
+    score_0: "Label is clearly wrong — e.g., NONE assigned when the student provided no task description, or CRITICAL assigned to a message with full task and attempt context."
+
+    do_not_accept:
+      - NONE assigned when the task is not sufficiently defined for targeted support
+      - CRITICAL assigned to a message with full task and attempt information
+
+
+  request_kind_accuracy:
+    what_to_evaluate: >
+      Evaluate whether request_kind (PRODUCT / RESOURCE) correctly identifies
+      the type of help the student is asking for.
+
+      PRODUCT:
+        The student wants to produce, build, write, or implement something.
+        They need output or implementation help, not primarily an explanation.
+        Examples: "write a function that...", "fix my code", "help me implement X"
+
+      RESOURCE:
+        The student wants to understand, clarify, or learn something.
+        They want knowledge, not an artifact.
+        Examples: "what is X?", "how does Y work?", "explain the difference between..."
+
+      Edge cases:
+        - "Help me write a function that does X — I don't understand how to approach it"
+          is PRODUCT (primary intent is to produce).
+        - "Can you explain how to write a function that does X?"
+          is RESOURCE (primary intent is to understand).
+        - When both intents are present, label should match the dominant intent.
+
+    score_3: "Request kind correctly matches the primary intent. Rationale cites the specific wording that indicates production vs. understanding."
+    score_2: "Label is correct for a borderline case, or correct with no supporting rationale."
+    score_1: "Label misses the primary intent in a moderately clear case."
+    score_0: "Label is clearly wrong — e.g., RESOURCE for 'fix my code' or PRODUCT for 'what does this function do?'"
+
+    do_not_accept:
+      - Labelling a clear production request as RESOURCE because the student expresses confusion
+      - Labelling a clear explanation request as PRODUCT because code is present
+
+
+  task_stage_accuracy:
+    what_to_evaluate: >
+      Evaluate whether task_stage (STARTING / WORKING / REVIEWING) correctly
+      reflects where the student is in their task lifecycle.
+
+      STARTING:
+        Student has not yet attempted the task. They are orienting, planning,
+        or about to begin. No artifact or attempt exists.
+
+      WORKING:
+        Student has started and is in active progress. An attempt exists,
+        even if incomplete or incorrect.
+
+      REVIEWING:
+        Student has produced something and is in evaluation or review mode.
+        The primary intent is to assess or improve existing work.
+
+      Note: task_stage and SRL phase are correlated but not identical.
+      STARTING maps closely to FORETHOUGHT; REVIEWING maps closely to REFLECTION.
+      Score this criterion independently of the router's phase decision.
+
+    score_3: "Task stage correctly reflects where the student is. Rationale cites the presence or absence of an attempt."
+    score_2: "Stage is correct but rationale is thin, or stage is borderline between WORKING and REVIEWING with a plausible call."
+    score_1: "Stage is off by one step with thin evidence."
+    score_0: "Stage is clearly wrong — e.g., WORKING assigned when no attempt has been made, or STARTING assigned when a complete artifact is present."
+
+    do_not_accept:
+      - WORKING assigned when the student has not attempted anything
+      - REVIEWING assigned when the student is actively building
+
+
+  support_depth_fit:
+    what_to_evaluate: >
+      Evaluate whether decision.support_depth (SURFACE / SUBSTANTIVE / DEEP)
+      matches the student's demonstrated need for explanatory granularity.
+
+      This criterion is NOT asking whether the final response was perfect overall.
+      It asks whether the selected depth bucket is the right one given the student state.
+
+      Use transcript + diagnosis + decision as evidence.
+
+      SURFACE is appropriate when:
+        - the student needs brief orienting support
+        - the issue is narrow and local
+        - the student would benefit from one concept, one pointer, or one next step
+        - deeper explanation would be premature, redundant, or cognitively noisy
+
+      SUBSTANTIVE is appropriate when:
+        - the student needs meaningful engagement with their actual obstacle
+        - the response should name relevant trade-offs, failure modes, or decision points
+        - the student has enough grounding for targeted explanation but does not require
+          highly strategic or edge-case-heavy treatment
+
+      DEEP is appropriate when:
+        - the student demonstrates strong fluency
+        - the real need is architectural, strategic, or non-obvious
+        - the assistant should skip setup and engage constraints, edge cases, or design tensions
+
+      Score the selected depth against the best-fit depth visible in the case,
+      not against the assistant's wording style alone.
+
+    score_3: "Selected depth is the best fit for the student's need. The bucket clearly matches the granularity required."
+    score_2: "Selected depth is defensible but borderline with a neighbouring bucket."
+    score_1: "Selected depth is one level off and likely under- or over-scopes the student's need."
+    score_0: "Selected depth clearly misfits the case and would materially distort the kind of support needed."
+
+    do_not_accept:
+      - SURFACE for a student clearly asking about trade-offs, design tension, or deeper failure analysis
+      - DEEP for a student who is still missing the core concept or task framing
+      - SUBSTANTIVE used with no evidence that the case needs more than a brief pointer
+
+
+  substantive_bucket_pressure:
+    what_to_evaluate: >
+      Apply this criterion ONLY when decision.support_depth = SUBSTANTIVE.
+      If the selected depth is not SUBSTANTIVE, mark this criterion not applicable.
+
+      This criterion tests whether SUBSTANTIVE is being used as a genuinely correct
+      middle bucket or as an overly broad placeholder.
+
+      Ask:
+        - Is this case truly centered in the middle?
+        - Or is it actually better described as a lighter-than-substantive case?
+        - Or is it actually a deeper-than-substantive case?
+
+      Signals that SUBSTANTIVE may be too broad in this case:
+        Lighter-than-SUBSTANTIVE:
+          - student mainly needs orientation, a single corrective pointer, or one next step
+          - the difficulty is local, not conceptual or strategic
+          - the assistant does not need to engage multiple trade-offs or failure modes
+
+        Deeper-than-SUBSTANTIVE:
+          - student is reasoning at architectural, optimisation, or design-tension level
+          - strong technical fluency is visible
+          - the best support would raise edge cases, constraints, or non-obvious implications
+
+      Important:
+        - This criterion is about taxonomy pressure, not response quality alone.
+        - A case can receive a low score here even if SUBSTANTIVE is a tolerable choice,
+          when a finer-grained taxonomy would obviously fit better.
+
+    score_3: "SUBSTANTIVE is genuinely the right middle bucket. The case does not obviously call for a finer split."
+    score_2: "SUBSTANTIVE is acceptable but the case shows mild pressure toward a lighter or deeper subtype."
+    score_1: "SUBSTANTIVE is functioning as a broad catch-all here; a lighter or deeper subtype would describe the need better."
+    score_0: "SUBSTANTIVE clearly masks a distinct support need; this case is strong evidence that the middle bucket is too broad."
+
+    do_not_accept:
+      - Treating every non-SURFACE and non-DEEP case as automatically SUBSTANTIVE
+      - Awarding score 3 when the rationale itself says the case is 'kind of between'
+      - Ignoring clear evidence that the student either needed only a brief nudge or needed strategic/architectural depth
+
+
+  field_consistency:
+    what_to_evaluate: >
+      Evaluate whether the diagnostic fields are internally consistent with each other.
+      A diagnosis is internally consistent if the field values make sense together.
+
+      Common inconsistencies to check:
+        - expertise_level = ADVANCED but frustration is HIGH due to NOVICE-level confusion
+          (suggests mislabelled expertise)
+        - progress_state = DONEISH but task_stage = STARTING
+          (contradictory — no artifact and also done)
+        - context_gap = NONE but request_kind = PRODUCT with no attempt described
+          (missing information gap)
+        - expertise_level = NOVICE but emotional_state = calm confident
+          (possible, but rationale should explain why)
+        - support_depth = DEEP while expertise/signals indicate the student still needs basic orientation
+        - support_depth = SURFACE while the diagnosis implies a more strategic or case-specific need
+
+      This criterion evaluates the DIAGNOSIS + DEPTH CHOICE AS A WHOLE.
+      Only flag inconsistencies that are meaningful — mild tension between fields
+      in edge cases should be noted but not penalised heavily.
+
+    score_3: "All relevant fields are mutually consistent. No meaningful internal contradictions."
+    score_2: "One minor tension between fields that can be explained by an edge case."
+    score_1: "One clear inconsistency that would affect the support decision if corrected."
+    score_0: "Multiple inconsistencies, or one inconsistency that directly contradicts the observable student state."
+
+    do_not_accept:
+      - DONEISH + STARTING combination without explicit explanation
+      - HIGH frustration + ADVANCED expertise + MOVING progress with no rationale
+        (unusual combination requiring explicit justification)
+      - DEEP paired with novice-level signals without strong justification
+      - SURFACE paired with advanced architectural questioning without strong justification
+
+
+fail_flags:
+
+  - id: FRUSTRATION_CLEARLY_MISLABELLED
+    trigger: >
+      frustration = LOW when the student used explicit distress language
+      ("I give up", "I've been stuck for hours", "just tell me"), OR
+      frustration = HIGH for a calm exploratory message with no distress signals.
+
+  - id: EXPERTISE_INFERRED_FROM_TOPIC_NOT_BEHAVIOUR
+    trigger: >
+      Expertise label matches the course level or topic difficulty rather than
+      the student's demonstrated vocabulary, reasoning, or error pattern.
+
+  - id: PROGRESS_MISLABELLED_AS_MOVING
+    trigger: >
+      progress_state = MOVING when the student has described repeated identical
+      failures with no change in approach and no visible progress.
+
+  - id: CONTEXT_GAP_NONE_WITH_MISSING_TASK
+    trigger: >
+      context_gap = NONE when the student has not provided a task description,
+      objective, or code sufficient for targeted support.
+
+  - id: REQUEST_KIND_INVERTED
+    trigger: >
+      request_kind = RESOURCE for a clear production or implementation request, OR
+      request_kind = PRODUCT for a clear explanation or understanding request.
+
+  - id: TASK_STAGE_WORKING_WITHOUT_ATTEMPT
+    trigger: >
+      task_stage = WORKING when no attempt, draft, or partial artifact is
+      described or visible in the transcript.
+
+  - id: SUPPORT_DEPTH_CLEARLY_MISFIT
+    trigger: >
+      support_depth is clearly wrong for the demonstrated student need:
+      SURFACE for a case needing trade-off or failure-mode engagement,
+      DEEP for a case still missing core framing,
+      or SUBSTANTIVE when only a brief orienting nudge is warranted.
+
+  - id: SUBSTANTIVE_USED_AS_CATCH_ALL
+    trigger: >
+      decision.support_depth = SUBSTANTIVE, but the evidence indicates the case
+      is better described as either lighter-than-substantive or deeper-than-substantive,
+      suggesting the middle bucket is absorbing distinct support needs.
+
+  - id: DIAGNOSIS_INTERNALLY_INCONSISTENT
+    trigger: >
+      Two or more diagnostic fields contradict each other in a way that cannot
+      be explained by an edge case, suggesting the diagnosis did not reason
+      through the student's state as a coherent whole.

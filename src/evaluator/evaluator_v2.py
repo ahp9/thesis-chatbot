@@ -318,9 +318,11 @@ async def _run_persona(
     # 4. Judge the full conversation 
     transcript = _format_dynamic_transcript(simulated_turns)
 
+    # AFTER — only structured multi-turn data, no last-turn bias
     aggregate_chain_internals: Dict[str, Any] = {
         "turn_snapshots": turn_chain_snapshots,
-        **(turn_chain_snapshots[-1] if turn_chain_snapshots else {}),
+        "total_turns":    len(turn_chain_snapshots),
+        "final_phase":    current_phase.value,
     }
 
     if verbose:
@@ -471,19 +473,19 @@ def _compare_reports(
 # ---------------------------------------------------------------------------
 
 async def run_dynamic(
-    rubric_file:         str,
-    personas_file:       str  = DEFAULT_PERSONAS_FILE,
-    tutor_type:          str  = "SRL Tutor",
-    max_cases:           Optional[int] = None,
-    max_turns_per_case:  int  = 6,
-    verbose:             bool = True,
-    compare_report:      Optional[str] = None,
+    rubric_file: str,
+    personas_file: str = DEFAULT_PERSONAS_FILE,
+    tutor_type: str = "SRL Tutor",
+    max_cases: Optional[int] = None,
+    max_turns_per_case: int = 6,
+    verbose: bool = True,
+    compare_report: Optional[str] = None,
 ) -> str:
     client = get_client()
 
     rubric_path   = RUBRICS_DIR / rubric_file
     personas_path = PERSONAS_DIR / personas_file
-    require_file(rubric_path,   "Rubric")
+    require_file(rubric_path, "Rubric")
     require_file(personas_path, "Personas file")
 
     rubric   = load_yaml(rubric_path)
@@ -501,26 +503,8 @@ async def run_dynamic(
 
     orchestrator = Orchestrator(client)
     results: List[Dict[str, Any]] = []
+    failed_cases: List[Dict[str, Any]] = []
 
-    for idx, persona in enumerate(personas, start=1):
-        result = await _run_persona(
-            client=client,
-            orchestrator=orchestrator,
-            rubric=rubric,
-            persona=persona,
-            persona_idx=idx,
-            total=len(personas),
-            max_turns=max_turns_per_case,
-            verbose=verbose,
-        )
-        results.append(result)
-
-    # ── Comparison (optional) ────────────────────────────────────────────────
-    # comparison: Dict[str, Any] = {}
-    # if compare_report:
-    #     comparison = _compare_reports(results, compare_report, verbose)
-
-    # ── Write report ─────────────────────────────────────────────────────────
     version_tag = _build_version_tag()
     base_name = (
         f"report"
@@ -536,39 +520,71 @@ async def run_dynamic(
             break
         run_index += 1
 
-    report_data: Dict[str, Any] = {
-        "metadata": {
-            "eval_mode":     "dynamic",          # ← distinguishes from static reports
-            "personas_file": personas_file,
-            "rubric_file":   rubric_file,
-            "rubric_type":   rubric.get("rubric_type", "response"),
-            "tutor_type":    tutor_type,
-            "student_model": STUDENT_MODEL,
-            "judge_model":   JUDGE_MODEL,
-            "max_turns_per_case": max_turns_per_case,
-            "versions": {
-                "base_srl":    VERSION_BASE_SRL,
-                "router":      VERSION_ROUTER,
-                "chain":       VERSION_CHAIN,
-                "respond":     VERSION_RESPOND,
-                "forethought": VERSION_FORETHOUGHT,
-                "performance": VERSION_PERFORMANCE,
-                "reflection":  VERSION_REFLECTION,
+    def _write_checkpoint_report():
+        report_data: Dict[str, Any] = {
+            "metadata": {
+                "eval_mode": "dynamic",
+                "personas_file": personas_file,
+                "rubric_file": rubric_file,
+                "rubric_type": rubric.get("rubric_type", "response"),
+                "tutor_type": tutor_type,
+                "student_model": STUDENT_MODEL,
+                "judge_model": JUDGE_MODEL,
+                "max_turns_per_case": max_turns_per_case,
+                "versions": {
+                    "base_srl": VERSION_BASE_SRL,
+                    "router": VERSION_ROUTER,
+                    "chain": VERSION_CHAIN,
+                    "respond": VERSION_RESPOND,
+                    "forethought": VERSION_FORETHOUGHT,
+                    "performance": VERSION_PERFORMANCE,
+                    "reflection": VERSION_REFLECTION,
+                },
+                "completed_cases": len(results),
+                "failed_cases": len(failed_cases),
+                "total_cases_requested": len(personas),
             },
-        }, 
-        "results":    results,
-    }
+            "results": results,
+            "failures": failed_cases,
+        }
 
-    report_path.write_text(
-        json.dumps(report_data, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+        report_path.write_text(
+            json.dumps(report_data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    for idx, persona in enumerate(personas, start=1):
+        try:
+            result = await _run_persona(
+                client=client,
+                orchestrator=orchestrator,
+                rubric=rubric,
+                persona=persona,
+                persona_idx=idx,
+                total=len(personas),
+                max_turns=max_turns_per_case,
+                verbose=verbose,
+            )
+            results.append(result)
+
+        except Exception as e:
+            failed_cases.append({
+                "case_id": persona.get("id", f"persona_{idx}"),
+                "persona_index": idx,
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "persona": persona,
+            })
+            if verbose:
+                print(f"[DYN] ERROR in case {idx}/{len(personas)}: {persona.get('id')} -> {type(e).__name__}: {e}")
+
+        finally:
+            _write_checkpoint_report()
 
     if verbose:
         print(f"\n[DYN] Wrote report: {report_path}")
 
     return str(report_path)
-
 
 # ---------------------------------------------------------------------------
 # CLI
@@ -609,7 +625,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--max-turns",
         type=int,
-        default=4,
+        default=3,
         metavar="N",
         help="Maximum turns per conversation (default: 6).",
     )

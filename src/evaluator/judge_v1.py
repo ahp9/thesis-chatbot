@@ -38,17 +38,17 @@ RUBRIC_TYPE_DESCRIPTIONS = {
 
 RUBRIC_INPUT_GUIDANCE = {
     "router": (
-        "Prioritize: route object.\n"
+        "Prioritize: route object (all turns if snapshots are provided).\n"
         "Secondary context: transcript.\n"
         "Ignore response style unless the rubric explicitly requires it."
     ),
     "chain": (
-        "Prioritize: diagnosis, decision, check, and rewrite status.\n"
+        "Prioritize: diagnosis, decision, check, and rewrite status (all turns if snapshots are provided).\n"
         "Secondary context: transcript.\n"
         "Do not over-penalize final phrasing unless chain fidelity is part of the rubric."
     ),
     "response": (
-        "Prioritize: transcript and final reply.\n"
+        "Prioritize: transcript and final reply (all turns if snapshots are provided).\n"
         "Secondary context: route/diagnosis/decision/check/draft reply for fidelity checking."
     ),
 }
@@ -61,7 +61,10 @@ OUTPUT_SCHEMA = {
             "applicable": "boolean",
             "score": "number | null",
             "rationale": "string",
-            "evidence_quotes": ["string"]
+            "evidence_quotes": ["string"],
+            "turn_evidence": {
+                "<turn_number>": "string | null"
+            }
         }
     },
     "overall_score": "number",
@@ -78,28 +81,83 @@ def _select_chain_view(
     rubric_type: str,
     chain_internals: Dict[str, Any],
 ) -> Dict[str, Any]:
-    if rubric_type == "router":
-        return {
-            "route": chain_internals.get("route")
-        }
+    """
+    Build the chain view passed to the judge.
 
-    if rubric_type == "chain":
+    Dynamic path (chain_internals contains 'turn_snapshots'):
+        Returns a trimmed per-turn sequence for all turns.
+        rubric_type controls which fields within each snapshot are included.
+        The judge receives the full trajectory, not just the last turn.
+
+    Legacy / static path (no 'turn_snapshots'):
+        Falls back to flat single-turn fields for backward compatibility
+        with evaluator_v1.py static test cases.
+    """
+    snapshots = chain_internals.get("turn_snapshots")
+
+    # ── Legacy / static path ─────────────────────────────────────────────────
+    if not snapshots:
+        if rubric_type == "router":
+            return {"route": chain_internals.get("route")}
+
+        if rubric_type == "chain":
+            return {
+                "route":         chain_internals.get("route"),
+                "diagnosis":     chain_internals.get("diagnosis"),
+                "decision":      chain_internals.get("decision"),
+                "check":         chain_internals.get("check"),
+                "was_rewritten": chain_internals.get("was_rewritten", False),
+            }
+
         return {
-            "route": chain_internals.get("route"),
-            "diagnosis": chain_internals.get("diagnosis"),
-            "decision": chain_internals.get("decision"),
-            "check": chain_internals.get("check"),
+            "route":         chain_internals.get("route"),
+            "diagnosis":     chain_internals.get("diagnosis"),
+            "decision":      chain_internals.get("decision"),
+            "check":         chain_internals.get("check"),
+            "draft_reply":   chain_internals.get("draft_reply"),
+            "final_reply":   chain_internals.get("final_reply"),
             "was_rewritten": chain_internals.get("was_rewritten", False),
         }
 
+    # ── Dynamic path: full turn-by-turn sequence ─────────────────────────────
+    def _trim_snapshot(s: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Trim a single turn snapshot to only the fields relevant for
+        the given rubric_type, keeping turn index and user message for context.
+        """
+        base = {
+            "turn":         s.get("turn"),
+            "user_message": s.get("user_message"),
+        }
+        if rubric_type == "router":
+            return {**base, "route": s.get("route")}
+
+        if rubric_type == "chain":
+            return {
+                **base,
+                "route":         s.get("route"),
+                "diagnosis":     s.get("diagnosis"),
+                "decision":      s.get("decision"),
+                "check":         s.get("check"),
+                "was_rewritten": s.get("was_rewritten", False),
+            }
+
+        # response
+        return {
+            **base,
+            "route":         s.get("route"),
+            "diagnosis":     s.get("diagnosis"),
+            "decision":      s.get("decision"),
+            "check":         s.get("check"),
+            "draft_reply":   s.get("draft_reply"),
+            "final_reply":   s.get("final_reply"),
+            "was_rewritten": s.get("was_rewritten", False),
+        }
+
     return {
-        "route": chain_internals.get("route"),
-        "diagnosis": chain_internals.get("diagnosis"),
-        "decision": chain_internals.get("decision"),
-        "check": chain_internals.get("check"),
-        "draft_reply": chain_internals.get("draft_reply"),
-        "final_reply": chain_internals.get("final_reply"),
-        "was_rewritten": chain_internals.get("was_rewritten", False),
+        "total_turns":    chain_internals.get("total_turns", len(snapshots)),
+        "final_phase":    chain_internals.get("final_phase"),
+        "turn_snapshots": [_trim_snapshot(s) for s in snapshots],
     }
 
 
@@ -131,6 +189,50 @@ def _build_scoring_rules() -> str:
                 - Exclude any criterion with score = null from the mean.
                 - Keep summary to at most 5 bullets.
             """
+
+
+def _build_trajectory_rules(has_snapshots: bool) -> Optional[str]:
+    """
+    Returned only when the judge is given multi-turn chain snapshots.
+    Instructs the judge to evaluate the full classification sequence, not
+    just the final turn, and to reason explicitly about trajectory.
+    """
+    if not has_snapshots:
+        return None
+
+    return """TRAJECTORY EVALUATION RULES:
+        The chain internals you received contain a 'turn_snapshots' list.
+        Each entry represents one turn of the conversation with its own
+        route, diagnosis, decision, check, and reply fields.
+
+        YOU MUST:
+        - Evaluate EACH turn's classification individually before aggregating.
+        - Consider whether classifications IMPROVE, STAY CONSISTENT, or REGRESS
+          across turns when assessing criteria related to adaptation or progression.
+        - Surface errors from EARLY turns — a correct final-turn classification
+          does NOT redeem a wrong classification on turn 1 or 2.
+        - When a criterion asks about support_level or phase routing, cite
+          the specific turn numbers and values, not a single summary judgment.
+        - For criteria that require cross-turn reasoning (e.g. adaptation,
+          consistency, phase progression), explicitly describe the turn-by-turn
+          trajectory in the rationale field.
+        - Use the 'turn_evidence' field in score_per_criterion to record
+          what happened at each turn for trajectory-relevant criteria.
+
+        YOU MUST NOT:
+        - Collapse the trajectory to only the last turn's classifications.
+        - Award full marks if the system recovered only at the final turn.
+        - Ignore classification errors that were "corrected later."
+        - Treat a late correction as equivalent to correct behavior throughout.
+
+        Evidence format for trajectory criteria (use in rationale):
+        "Turn 1: support_level=HINT (appropriate). Turn 2: support_level=SUBSTANTIVE
+        (escalation not warranted — student had not yet attempted the hint). Turn 3: ..."
+
+        If support_depth appears too broad too early (e.g. SUBSTANTIVE given before
+        the student has attempted any scaffolded step), flag this as an error even
+        if later turns are correct.
+    """
 
 
 def _build_output_contract() -> str:
@@ -184,6 +286,12 @@ def build_judge_user_prompt(
             "Use only the fields below when they are relevant to the rubric:\n"
             f"{_pretty_json(relevant_chain)}"
         )
+
+        # Add trajectory rules only when the judge has multi-turn snapshots to work with
+        has_snapshots = bool(chain_internals.get("turn_snapshots"))
+        traj_rules = _build_trajectory_rules(has_snapshots)
+        if traj_rules:
+            sections.append(traj_rules)
 
     sections.append(
         "SECTION: CONVERSATION METADATA\n"
