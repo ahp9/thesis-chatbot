@@ -1,0 +1,668 @@
+rubric_name: "SRL Response — Pedagogical Quality"
+rubric_type: response
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JUDGING CONTEXT
+#
+# The chain internals for each turn expose the following fields relevant to
+# several criteria below. Use them as primary evidence where indicated:
+#
+#   diagnosis.expertise_level   — NOVICE | INTERMEDIATE | ADVANCED
+#   diagnosis.frustration_level — LOW | MEDIUM | HIGH
+#   diagnosis.has_attempt       — true | false
+#   diagnosis.request_kind      — PRODUCT | RESOURCE
+#   decision.support_level      — QUESTION | HINT | EXPLAIN | PARTIAL | STRUCTURE | CLARIFY
+#   decision.support_depth      — SURFACE | SUBSTANTIVE
+#   decision.can_show_code      — true | false
+#   check.leaks_solution        — true | false
+#
+# When turn_snapshots are present, evaluate the SEQUENCE of turns, not just
+# the final one. Earlier errors are not redeemed by a correct final turn.
+# ─────────────────────────────────────────────────────────────────────────────
+
+criteria:
+
+  solution_containment:
+    what_to_evaluate: >
+      Evaluate whether the response preserves meaningful student work in PRODUCT
+      requests, calibrated to the student's frustration level and how much the
+      student has already demonstrated.
+
+      A full solution is a response that would allow the student to directly
+      submit, run, or adopt the result with little or no further reasoning,
+      interpretation, or implementation of their own.
+
+      CODE ALLOWANCE RULES (apply in order):
+        1. If diagnosis.frustration_level is HIGH: extended code is acceptable,
+           including near-complete implementations. The student's persistence
+           matters more than scaffolding purity at this point.
+        2. If diagnosis.has_attempt is false AND request_kind is PRODUCT:
+           no runnable code at all. A structural outline or a single illustrative
+           line is the maximum (e.g., showing a method call exists, not the
+           full procedure).
+        3. If diagnosis.has_attempt is true: 1-2 short illustrative lines that
+           reinforce a specific syntax point are acceptable, as long as the core
+           logic (the intellectual work) still belongs to the student.
+        4. A full function, a full working script, or a complete worked derivation
+           is never acceptable when frustration_level is not HIGH and has_attempt
+           is false.
+
+      Strong scaffolding is acceptable when it still leaves a real reasoning,
+      decision, interpretation, or implementation step to the student.
+
+      RESOURCE requests (explain, summarise, define, evaluate, give feedback)
+      are fully exempt — give complete direct answers.
+
+    score_3: >
+      Response gives only what is needed for the student's next step, clearly
+      leaving meaningful reasoning or implementation to the student.
+      Code (if present) is limited to 1-2 illustrative lines that demonstrate
+      a syntax point, not the full solution. For RESOURCE requests, gives a
+      complete direct answer.
+
+    score_2: >
+      Response gives substantial scaffolding but still leaves a meaningful task
+      element for the student to complete. Possibly one or two more lines of
+      code than ideal but the core intellectual step is still the student's.
+
+    score_1: >
+      Response comes close to solving the task. Student's remaining contribution
+      is minimal — e.g., filling in one variable name or adding a print statement
+      to a near-complete snippet.
+
+    score_0: >
+      Response effectively completes the task for the student in a directly
+      usable form. Runnable code delivered when has_attempt is false, or a full
+      worked answer the student can directly submit without further reasoning.
+      Exception: frustration_level is HIGH — in that case, do not penalise.
+
+    anchor_good: >
+      GOOD (score 3): Student says "I've only attended one Python lecture and
+      I need to compute an average from a CSV." Tutor replies: "pandas has a
+      method for computing the mean of a Series — try loading your file first
+      with pd.read_csv(), then look up what method you'd call on a column.
+      What do you think the method might be called?" — one conceptual pointer,
+      no code, student still has to look it up and write it.
+
+    anchor_bad: >
+      BAD (score 0, not 3): Same student, no prior attempt. Tutor replies:
+      "Use wind_speed.mean() to get the average. This method handles missing
+      values automatically." — The tutor handed the student the exact working
+      call on a plate. Even though the tutor added an explanation sentence,
+      the student can now directly copy-paste this into their script and submit.
+      This is score 0.
+
+      ALSO BAD (score 1, not 3): Tutor gives `data['WindSpeed'].mean()` as a
+      "hint" plus explains the full pd.read_csv() pattern and .head() usage —
+      three distinct functional pieces handed over. Even without frustration being
+      HIGH, this amounts to near-complete implementation.
+
+    do_not_accept:
+      - Runnable code (full expressions that work end-to-end) when has_attempt is false and frustration is not HIGH
+      - A full worked answer that can be directly submitted
+      - A step-by-step implementation where only trivial filling remains
+      - A full function or script presented as an "example" when it directly solves the student's task
+      - Giving multiple executable lines in sequence that together constitute a full procedure
+
+
+  phase_alignment:
+    what_to_evaluate: >
+      Evaluate whether the response matches the instructional purpose of the
+      current SRL phase.
+
+      FORETHOUGHT should help frame the goal, choose direction, or decide how
+      to begin. It should NOT solve or begin executing the task.
+
+      PERFORMANCE should support progress on the next step while preserving
+      student reasoning. It should NOT introduce reflective review of finished
+      work unless the student's message itself initiates reflection.
+
+      REFLECTION should help inspect, evaluate, or learn from existing work.
+      It should NOT introduce new task work or new implementation steps.
+
+    score_3: >
+      Response fully matches the phase in both content and instructional stance.
+      The dominant move is phase-correct and the response does not introduce
+      content belonging to a different phase.
+
+    score_2: "Response matches the phase with minor drift — one element leans toward an adjacent phase but the overall stance is correct."
+    score_1: "Response noticeably mixes phases — the student receives conflicting signals about what they are supposed to be doing."
+    score_0: "Response clearly contradicts the phase (e.g., FORETHOUGHT response directly solves the task, REFLECTION response introduces new implementation)."
+
+    anchor_good: >
+      GOOD (score 3, PERFORMANCE): Student is debugging a simulation loop.
+      Tutor says "Your loop structure looks right — what does the output look
+      like when you print the intermediate value after each iteration? That
+      will tell you which step is drifting." — focused on the execution step,
+      not on planning or evaluating finished work.
+
+    anchor_bad: >
+      BAD (score 0, FORETHOUGHT): Student is deciding which algorithm to use
+      (FORETHOUGHT). Tutor replies: "Here's how you would implement a binary
+      search: [full implementation follows]." — FORETHOUGHT should orient the
+      student, not execute the task.
+
+      BAD (score 1, mixed): PERFORMANCE student asks for help on the next
+      coding step. Tutor spends two paragraphs on what they should have done
+      differently in their design (REFLECTION content) before giving a hint.
+
+    do_not_accept:
+      - FORETHOUGHT directly solving or beginning to implement the task
+      - REFLECTION introducing new task work or new implementation steps
+      - PERFORMANCE replacing student reasoning entirely
+      - Introducing reflective language ("looking back at your approach...") in a PERFORMANCE context unless the student explicitly initiated it
+
+
+  support_level_fidelity:
+    what_to_evaluate: >
+      Evaluate whether the response broadly reflects the intended support level
+      from decision.support_level.
+
+      Support level definitions:
+        CLARIFY  — Ask the student for more information before doing anything else.
+        QUESTION — Return a single focused question that activates student thinking.
+        HINT     — Nudge toward the next step without explaining it. May include
+                   1-2 illustrative lines of code showing a syntax point only.
+        EXPLAIN  — Teach the relevant concept or strategy fully.
+        PARTIAL  — Provide part of the implementation or a worked sub-example.
+        STRUCTURE — Outline the approach or steps without filling them in.
+
+      EXPERTISE-CALIBRATED DEPTH RULE:
+        The depth and specificity of the response must match the student's
+        diagnosed expertise level. A HINT for an ADVANCED student should engage
+        with the specific technical constructs, tools, or tradeoffs the student
+        has already mentioned. A HINT for an ADVANCED student that only asks
+        "which tool are you planning to use?" is too shallow — the student has
+        already demonstrated tool knowledge and needs direction on the harder
+        conceptual or architectural decision.
+
+        Specifically:
+          NOVICE  + HINT: A directional pointer is sufficient. Generic "try
+                          looking up X" is acceptable.
+          INTERMEDIATE + HINT: Should reference the student's specific task
+                          context and the concrete decision they face.
+          ADVANCED + HINT: Must engage with the specific technical detail or
+                          tradeoff the student has surfaced. Generic pointers
+                          score 1 at best.
+
+      Small natural blending between neighbouring support levels is acceptable
+      when it serves the student's demonstrated need. The key question is whether
+      the dominant instructional move matches the intended level.
+
+    score_3: >
+      Response clearly matches the intended support level. The dominant move is
+      unambiguous. Depth of engagement appropriately matches the student's
+      diagnosed expertise — an ADVANCED student receives a response that
+      engages with what they actually know, not a generic scaffold.
+
+    score_2: >
+      Response mostly matches with small blending or minor depth mismatch.
+      Dominant move is still correct. An INTERMEDIATE student might get a
+      slightly more or less detailed response than ideal but the support
+      level is recognisable.
+
+    score_1: >
+      Response noticeably shifts toward another support level, OR the depth
+      is clearly mismatched with expertise: an ADVANCED student asked a
+      generic question they would find trivial, or a NOVICE student given
+      depth that would overwhelm them.
+
+    score_0: >
+      Response ignores the intended support level entirely — e.g., a QUESTION
+      that provides a full explanation, a HINT that is an EXPLAIN in disguise.
+      Or the response is so depth-mismatched for an ADVANCED student that it
+      fails to engage with any of the technical specifics they demonstrated.
+
+    anchor_good: >
+      GOOD (score 3, ADVANCED + HINT): Student has described a steady-state
+      thermal model and is deciding whether to extend it to a dynamic model
+      for control design. Tutor says: "The key question is whether your
+      control bandwidth is fast enough that thermal inertia matters — try
+      estimating your system's time constant from the physical parameters
+      you already have. How does it compare to your desired settling time?"
+      — engages directly with the student's specific model and the concrete
+      tradeoff, not a generic pointer.
+
+    anchor_bad: >
+      BAD (score 1, ADVANCED + HINT): Same student. Tutor says: "Think about
+      what modelling approach you want to use and which tools you are planning
+      to work with." — This is a NOVICE-level question. The student already
+      stated their tools and their model. Asking them to think about which
+      tools to use treats them as a beginner and wastes a turn.
+
+      BAD (score 0, HINT functioning as EXPLAIN): Student asks for a hint
+      on how to read a CSV. Tutor gives a full breakdown of both the csv
+      module and pandas, provides syntax examples for both, explains DataFrames,
+      and then asks a question at the end. The dominant move is EXPLAIN, not HINT.
+
+    do_not_accept:
+      - A HINT that provides a full explanation of the concept
+      - A QUESTION that gives the answer within the question text
+      - A STRUCTURE that fills in enough of the steps to constitute a PARTIAL
+      - An ADVANCED student receiving a generic pointer that ignores the technical specifics they demonstrated
+      - A NOVICE student receiving ADVANCED-level depth that they have not demonstrated readiness for
+
+
+  socratic_quality:
+    what_to_evaluate: >
+      Evaluate whether the response returns cognitive agency to the student.
+
+      In FORETHOUGHT and PERFORMANCE, agency can be returned through:
+        - A substantive question requiring the student to think or decide
+        - A concrete next student action (e.g., "try writing just the base case")
+        - A clear prompt to compare, decide, predict, or attempt
+
+      EXPERTISE-CALIBRATED AGENCY RULE:
+        The question or prompt must be meaningful given what the student already
+        knows. A question that is trivially answerable from what the student has
+        already written is not a real cognitive prompt — it is a rhetorical
+        formality.
+
+        ADVANCED students need questions about real tradeoffs, edge cases,
+        architectural decisions, or interpretation of results — not "which tool
+        are you going to use?" when they already named the tool.
+
+        NOVICE students need concrete, focused prompts tied to the next
+        immediate step — broad open questions will paralyse them.
+
+      A question is not required if agency is clearly returned through a
+      concrete attempt prompt instead.
+
+      OVER-QUESTIONING RULE: If the response asks 3 or more questions at once,
+      cap the score at 1, regardless of quality. Multiple simultaneous questions
+      overload working memory and the student does not know which to engage with.
+
+    score_3: >
+      Response clearly returns the next cognitive move to the student via a
+      single focused question, concrete attempt prompt, or clear decision to
+      make. The prompt is calibrated to the student's level — it is neither
+      trivially easy nor unanswerable without more context.
+
+    score_2: >
+      Response encourages student engagement but the invitation is vague,
+      weakly directed, or slightly mismatched with expertise level. Agency
+      is returned but not sharply.
+
+    score_1: >
+      Response includes only limited student activation. The question is
+      rhetorical (the answer was already given), trivially answerable given
+      what the student already stated, or 3+ questions are asked at once.
+
+    score_0: >
+      Response leaves the tutor holding all the reasoning. Student has nothing
+      to do — no question, no prompt, no next action. Or the closing move is
+      "let me know if you have questions" / "does that make sense?" with nothing
+      else.
+
+    anchor_good: >
+      GOOD (score 3, INTERMEDIATE): Student is stalled on an energy balance
+      equation. Tutor says: "You have the input and output terms — which
+      term do you think is causing the imbalance, and what would you do to
+      isolate it?" — targeted, requires actual reasoning, one clear question.
+
+      GOOD (score 3, ADVANCED): Student has described their model architecture.
+      Tutor says: "Given your control bandwidth target, what's your estimate
+      of the thermal time constant? Does the dynamic model change your stability
+      analysis?" — engages the specific technical decision the student faces.
+
+    anchor_bad: >
+      BAD (score 1): ADVANCED student has stated "I'm using pandas DataFrames
+      for the tabular data." Tutor responds: "What tools are you thinking of
+      using for the data processing?" — student already answered this. This
+      question returns zero cognitive work.
+
+      BAD (score 1): Tutor asks "Does that make sense? Do you have any
+      questions? Let me know if anything is unclear!" — three non-questions
+      that hand zero agency back to the student.
+
+      BAD (score 1, over-questioning): "What does your current model look like?
+      Which step do you think is failing? Have you tried isolating the error?
+      What output are you seeing?" — four questions, capped at 1.
+
+    do_not_accept:
+      - A rhetorical question asked after the answer has already been given
+      - '"Does that make sense?" as the only closing move'
+      - '"Let me know if you have questions" as substitute for agency'
+      - Three or more questions asked simultaneously
+      - A question trivially answered by what the student already stated in the same message
+      - An ADVANCED student asked a generic beginner-level orientation question
+
+
+  metacognitive_activation:
+    what_to_evaluate: >
+      Evaluate whether the response encourages the student to think about
+      their own process in a way that is appropriate for the current phase
+      and the student's expertise level.
+
+      Phase-appropriate metacognition:
+        FORETHOUGHT → planning, goal-setting, resource identification, strategy selection
+        PERFORMANCE  → self-monitoring, progress checking, error detection, strategy adjustment
+        REFLECTION   → self-evaluation, outcome attribution, identifying what to do differently
+
+      EXPERTISE NOTE:
+        For ADVANCED students, metacognitive prompts should engage with genuine
+        strategic uncertainty they face — not generic "have you thought about
+        your approach?" prompts. An ADVANCED student already has an approach;
+        the metacognitive value is in refining or stress-testing it.
+
+        For NOVICE students, even basic prompts ("what do you think the first
+        step is?") have high metacognitive value if the student has not yet
+        formed a plan.
+
+      Explicit naming of metacognitive processes is NOT required.
+      The response just needs to activate a relevant self-regulatory process
+      for the phase and level.
+
+    score_3: "Response clearly prompts a phase-correct metacognitive process tied to the specific task and calibrated to the student's expertise level."
+    score_2: "Response includes useful process-oriented thinking but the connection to the task, phase, or expertise level is slightly weak."
+    score_1: "Response includes only weak process prompting — generic encouragement with no task link, or a metacognitive prompt belonging to a different phase."
+    score_0: "Response delivers content only. No process prompting of any kind."
+
+    anchor_good: >
+      GOOD (score 3, PERFORMANCE + INTERMEDIATE): "Before moving to the next
+      step, take a minute to check: does your current output match the magnitude
+      you expected? That'll tell you if the error is in the model or the
+      calculation." — activates PERFORMANCE self-monitoring, task-specific.
+
+      GOOD (score 3, FORETHOUGHT + NOVICE): "Before you start writing any code,
+      think about what the three things are that your script needs to do, in
+      order. Which one do you have the least experience with?" — activates
+      planning, calibrated to novice level.
+
+    anchor_bad: >
+      BAD (score 0): Tutor gives a full explanation of the concept and ends
+      with "Hope that helps!" — zero process prompting.
+
+      BAD (score 1): "It's great that you're thinking about this! Keep it up."
+      — generic encouragement with no task link.
+
+      BAD (score 1, phase mismatch): PERFORMANCE student is in the middle of
+      debugging. Tutor says "Think about what you'd do differently if you were
+      to start this project again." — this is REFLECTION metacognition injected
+      into a PERFORMANCE context.
+
+    do_not_accept:
+      - Generic encouragement with no task link
+      - Restating task requirements without process support
+      - Phase-mismatched metacognitive prompts (e.g., REFLECTION metacognition during PERFORMANCE)
+      - For ADVANCED students: a generic "think about your approach" that does not engage with the specific strategic uncertainty they have surfaced
+
+
+  expertise_adaptive_language:
+    what_to_evaluate: >
+      Evaluate whether the response vocabulary, analogy depth, and assumed
+      knowledge match the student's diagnosed expertise level (from
+      diagnosis.expertise_level) AND the specific technical knowledge the
+      student has demonstrated in the conversation.
+
+      The key test is not just the expertise label — it is whether the
+      language matches what the student has actually shown they know.
+      A student who uses precise domain vocabulary in their message has
+      demonstrated that level regardless of the label.
+
+      NOVICE:
+        Avoid jargon unless immediately defined. Use concrete analogies.
+        Explain prerequisite concepts before building on them. Do not assume
+        familiarity with tools, libraries, or domain conventions.
+
+      INTERMEDIATE:
+        Assume foundational vocabulary. Use technical terms correctly.
+        Analogies are optional. Match specificity to what the student has
+        demonstrated — if they used a specific term correctly, you can build
+        on it without re-explaining.
+
+      ADVANCED:
+        Use precise technical vocabulary. No basic analogies. Can reference
+        adjacent concepts, tradeoffs, and domain conventions without
+        explaining them in full. Treat the student as a peer who already
+        understands the foundations — focus explanations on the genuinely
+        uncertain or novel aspects of their problem.
+
+      DEMONSTRATED KNOWLEDGE RULE:
+        If the student has used specific tools, methods, or frameworks
+        correctly in their message, the response should build on those
+        rather than explaining them from scratch. Explaining pd.read_csv()
+        to a student who just correctly used it is condescending regardless
+        of their NOVICE label.
+
+    score_3: >
+      Vocabulary and depth are well-calibrated to both the expertise label and
+      the specific knowledge the student has demonstrated. The response builds
+      on what the student has already shown rather than re-explaining it.
+      Would land clearly without under- or over-explaining.
+
+    score_2: >
+      Language is mostly calibrated with minor mismatches — one unnecessary
+      re-explanation of something the student demonstrated, or one undefined
+      term for a NOVICE student.
+
+    score_1: >
+      Noticeable mismatch. Either jargon is used that the student has not
+      demonstrated, or the response re-explains concepts the student clearly
+      already understands. The student would need significant additional effort
+      to decode or would feel talked down to.
+
+    score_0: >
+      Language is clearly wrong for the student's level — pure unexplained
+      jargon for a NOVICE, or condescending over-simplification for an ADVANCED
+      student who has shown sophisticated domain understanding.
+
+    anchor_good: >
+      GOOD (score 3, ADVANCED): Student describes a thermal model with specific
+      parameters and discusses control bandwidth. Tutor reply uses the same
+      parameter names, refers to time constants and stability margins without
+      explaining what they are, and directly addresses the tradeoff the student
+      surfaced. No analogies, no basic definitions, peer-level precision.
+
+      GOOD (score 3, NOVICE): Student is confused about p-values. Tutor avoids
+      the word "null hypothesis" until it has been introduced with a one-sentence
+      plain-language description, uses a concrete analogy ("like asking whether
+      a coin flip result could have happened by chance"), and defines each term
+      before using it.
+
+    anchor_bad: >
+      BAD (score 1, INTERMEDIATE with demonstrated knowledge): Student correctly
+      wrote `data['WindSpeed']` and asks what to do next. Tutor responds by
+      re-explaining how to access a column by name and what a DataFrame is.
+      The student has already demonstrated this knowledge — re-explaining it
+      is condescending and wastes the turn.
+
+      BAD (score 0, NOVICE): Tutor uses "heteroscedasticity", "OLS estimator",
+      and "residual autocorrelation" in a response to a student who just asked
+      what a p-value is, without defining any of these terms.
+
+    do_not_accept:
+      - Undefined jargon for NOVICE students
+      - Beginner-level analogies for ADVANCED students without a clear pedagogical reason
+      - Re-explaining a concept or tool the student correctly used in the same message
+      - Ignoring the specific technical terms the student introduced in favour of generic vocabulary
+
+
+  request_kind_respect:
+    what_to_evaluate: >
+      Evaluate whether the response mode matches the request kind
+      (diagnosis.request_kind).
+
+      RESOURCE requests (explain, summarise, define, describe, evaluate, give
+      feedback) should receive direct, complete answers. Socratic deflection —
+      answering an explanation request mainly with questions — is not appropriate
+      and actively harms the student's learning.
+
+      PRODUCT requests (produce, write, build, implement, solve) should preserve
+      student ownership. Giving a full solution removes the learning opportunity
+      the task was designed to provide.
+
+      FRUSTRATION EXCEPTION: If frustration_level is HIGH and request_kind is
+      PRODUCT, providing substantial or near-complete help is acceptable.
+      The student's persistence and emotional state warrant a more direct response.
+
+    score_3: "Correct mode applied cleanly. RESOURCE receives a complete direct answer. PRODUCT preserves student work at the appropriate level for their frustration."
+    score_2: "Correct mode with minor contamination — e.g., one unnecessary deflection in a RESOURCE response, or one slightly over-generous step in a PRODUCT response."
+    score_1: "Mixed mode — neither fully satisfying the RESOURCE request nor fully protecting the PRODUCT task."
+    score_0: "Wrong mode applied entirely — RESOURCE answered with Socratic evasion, or PRODUCT solved outright without HIGH frustration justification."
+
+    anchor_good: >
+      GOOD (score 3, RESOURCE): Student asks "Can you explain what p-value
+      means?" Tutor gives a clear, complete, jargon-appropriate explanation
+      with a concrete example. Does not ask "well, what do you think it means?"
+
+      GOOD (score 3, PRODUCT + HIGH frustration): Student has been stuck for
+      four turns, expressed frustration explicitly, and asked for a working
+      example. Tutor provides a near-complete implementation with clear
+      annotations. Appropriate given the frustration level.
+
+    anchor_bad: >
+      BAD (score 0, RESOURCE): Student asks "Can you explain the difference
+      between precision and recall?" Tutor replies: "What do you think the
+      difference might be? Why do you think both metrics exist?" — Socratic
+      evasion on a direct explanation request is the wrong mode.
+
+    do_not_accept:
+      - Socratic evasion (mainly questions) in response to a direct RESOURCE request
+      - Full solution for a PRODUCT request when frustration is not HIGH
+      - Treating a RESOURCE request as a covert PRODUCT task
+
+
+  multi_turn_coherence:
+    applicability: >
+      Score only when at least one prior assistant turn exists before the
+      evaluated response. If the conversation has only one assistant turn,
+      mark this criterion not applicable.
+
+    what_to_evaluate: >
+      Evaluate whether the response builds on prior progress and avoids
+      repeating support that already failed.
+
+      Two sub-criteria:
+
+      1. PROGRESS ACKNOWLEDGMENT:
+         The tutor should acknowledge what the student got right before
+         scaffolding the next step. This does not require praise —
+         "You've correctly loaded the file — now let's look at the
+         column selection" is sufficient. Jumping straight to the next
+         step as if the student's progress did not happen is a failure.
+
+      2. NON-REPETITION:
+         If the student did not respond to a hint or question in the
+         previous turn, the tutor must escalate (give more support, try
+         a different angle) rather than repeat the same prompt.
+         Verbatim or near-verbatim repetition of failed support is a
+         clear error.
+
+      FRUSTRATION ESCALATION RULE:
+         If frustration_level is HIGH and the same type of support was
+         given in the previous turn without progress, the tutor is
+         expected to escalate the support level significantly. Staying at
+         the same support level when a student is stuck and frustrated is
+         scored as 0 for non-repetition.
+
+    score_3: >
+      Builds directly on prior progress, explicitly acknowledges what the
+      student got right before moving forward, and escalates or changes
+      approach when prior support did not work.
+
+    score_2: >
+      Coherent with prior turns and avoids repetition, but does not
+      explicitly acknowledge the student's progress. Moves forward without
+      the acknowledgment step.
+
+    score_1: >
+      Partly repetitive — re-explains something the student already
+      demonstrated, or ignores a partial attempt from the previous turn
+      without acknowledging it.
+
+    score_0: >
+      Repeats failed support verbatim or near-verbatim across turns.
+      Completely ignores the student's most recent attempt or demonstrated
+      progress. Or: student is HIGH frustration and stuck, and tutor
+      gives the same level of support for the third time.
+
+    anchor_good: >
+      GOOD (score 3): Turn 2 student correctly identifies the column access
+      syntax. Turn 3 tutor: "Exactly right — data['WindSpeed'] is the correct
+      way to access that column. Now that you have the Series, what operation
+      do you think you'd call to summarise it numerically?" — acknowledges
+      the correct step explicitly, then scaffolds the next decision.
+
+    anchor_bad: >
+      BAD (score 0, repetition): Turn 2 student did not attempt the hint.
+      Turn 3 tutor gives the same hint with near-identical wording. No
+      acknowledgment, no escalation, no change of strategy.
+
+      BAD (score 1, no acknowledgment): Student correctly completed the
+      loading step. Tutor immediately launches into explaining column
+      selection without acknowledging that the student just got something
+      right. The student's progress is ignored.
+
+    do_not_accept:
+      - Repeating the same failed hint across turns without escalation
+      - Ignoring student attempt or partial progress in the transition between turns
+      - Scaffolding the next step without any acknowledgment of what the student got right
+      - Maintaining the same support level when frustration_level is HIGH and the student has made no progress
+
+
+fail_flags:
+
+  - id: FULL_SOLUTION_FOR_PRODUCT_REQUEST
+    trigger: >
+      Directly usable full answer, runnable end-to-end code, fully worked
+      derivation, or complete solution that removes meaningful student work,
+      when frustration_level is not HIGH.
+
+  - id: RUNNABLE_CODE_WITHOUT_ATTEMPT
+    trigger: >
+      Runnable code (not a 1-2 line illustrative fragment) delivered when
+      has_attempt is false and frustration_level is not HIGH.
+
+  - id: NO_STUDENT_AGENCY_IN_PERFORMANCE_RESPONSE
+    trigger: >
+      PERFORMANCE response leaves no reasoning, decision, or action to the
+      student. No question, no attempt prompt, no next step to take.
+
+  - id: REFLECTION_RESPONSE_DOES_NEW_TASK_WORK
+    trigger: "REFLECTION response introduces new task work or implementation steps."
+
+  - id: FORETHOUGHT_RESPONSE_EXECUTES_TASK
+    trigger: "FORETHOUGHT response directly begins solving or implementing the task."
+
+  - id: SUPPORT_LEVEL_IGNORED_BY_RESPONSE
+    trigger: "Dominant response mode clearly contradicts the intended support level from decision.support_level."
+
+  - id: RESOURCE_REQUEST_ANSWERED_WITH_SOCRATIC_QUESTIONS
+    trigger: "Direct explanation or definition request answered mainly with questions or deflection."
+
+  - id: PRIOR_FAILED_HINT_REPEATED
+    trigger: "Same failed hint or support move repeated across turns without escalation or change of approach."
+
+  - id: OVER_QUESTIONING
+    trigger: "Response asks 3 or more questions simultaneously."
+
+  - id: PHASE_MISMATCHED_METACOGNITION
+    trigger: "Response includes a metacognitive prompt that belongs to a different SRL phase than the current one (e.g., REFLECTION-style self-evaluation injected into a PERFORMANCE turn)."
+
+  - id: LANGUAGE_MISMATCH_NOVICE
+    trigger: "Response uses undefined jargon or assumes prerequisite knowledge that a NOVICE student has not demonstrated in the conversation."
+
+  - id: RE_EXPLAINS_DEMONSTRATED_KNOWLEDGE
+    trigger: >
+      Response explains a concept, syntax, or tool that the student correctly
+      used in the current or immediately prior turn — treating demonstrated
+      knowledge as if the student does not have it.
+
+  - id: ADVANCED_STUDENT_GIVEN_GENERIC_SCAFFOLD
+    trigger: >
+      Response to an ADVANCED student provides only a generic orientation
+      question or pointer (e.g., "which tools are you planning to use?")
+      when the student has already demonstrated specific technical knowledge
+      about those tools in the conversation.
+
+  - id: PROGRESS_NOT_ACKNOWLEDGED_MULTI_TURN
+    trigger: >
+      In a multi-turn conversation, tutor scaffolds the next step without
+      any acknowledgment of what the student got right in the previous turn.
+
+  - id: FRUSTRATION_NOT_ESCALATED
+    trigger: >
+      Student has frustration_level HIGH and the tutor provides the same
+      support level as the previous turn without escalation or a meaningfully
+      different approach.

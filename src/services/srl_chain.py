@@ -19,6 +19,81 @@ REWRITE_MODEL = "gpt-4o-mini"      # rewrite if needed
 SAFETY_CHECK_LEVELS = {"PARTIAL", "EXPLAIN", "STRUCTURE", "EVALUATION"}
 
 
+# ---------------------------------------------------------------------------
+# Depth instruction table
+#
+# These instructions are injected directly into the generation prompt so the
+# model sees an explicit behavioural contract, not just a label.
+# The key insight: support_depth was previously computed and then ignored at
+# generation time. This table closes that gap.
+# ---------------------------------------------------------------------------
+
+_DEPTH_INSTRUCTIONS: Dict[str, str] = {
+    "SURFACE": (
+        "DEPTH INSTRUCTION: Keep this response brief and orienting. "
+        "One concept, one pointer. Do not go beyond what the student needs "
+        "to take their very next step."
+    ),
+    "SURFACE_PLUS": (
+        "DEPTH INSTRUCTION: Give a brief multi-part orientation. "
+        "Name the relevant concept and provide one small grounding step or example. "
+        "Do not expand into trade-offs or design considerations yet — the student "
+        "needs to establish the basics before moving further."
+    ),
+    "SUBSTANTIVE": (
+        "DEPTH INSTRUCTION: Engage with the student's actual decision or problem at a "
+        "domain-appropriate level. Name specific options, trade-offs, or failure modes "
+        "relevant to their specific case. Do not define terms they already used correctly. "
+        "Do not ask what method or tool they plan to use if they already named one. "
+        "The response must help them choose, evaluate, or act — not restate what they know."
+    ),
+    "SUBSTANTIVE_PLUS": (
+        "DEPTH INSTRUCTION: Go beyond naming options — engage with the specific "
+        "trade-offs, constraints, or design considerations the student is navigating. "
+        "This student is past standard orientation. They need a response that "
+        "addresses multiple considerations at once, compares alternatives in their "
+        "specific context, or explains why the standard approach may or may not fit. "
+        "Do not ask setup questions. Do not define terms they used correctly."
+    ),
+    "DEEP": (
+        "DEPTH INSTRUCTION: Respond at a strategic or technical level. Assume full fluency. "
+        "Skip procedural steps and basic orientation entirely. "
+        "Raise a non-obvious consideration, edge case, design tension, or failure mode "
+        "the student has not yet surfaced. Give one targeted insight that assumes "
+        "the student already understands and has applied the standard approach. "
+        "Go to where the standard approach breaks, becomes ambiguous, or requires "
+        "architectural judgment."
+    ),
+}
+
+# ---------------------------------------------------------------------------
+# Affective state instruction table
+#
+# Injected alongside depth so the generator adjusts both content depth AND
+# tone to the student's emotional state. Frustration detection lives entirely
+# in the chain (checkpoint_and_decide), not in the router — this is the
+# correct place because the chain has full structured context.
+# ---------------------------------------------------------------------------
+
+_AFFECTIVE_INSTRUCTIONS: Dict[str, str] = {
+    "LOW": (
+        "AFFECTIVE INSTRUCTION: The student appears calm and engaged. "
+        "Maintain a direct, focused tone. Prioritise intellectual challenge over reassurance."
+    ),
+    "MEDIUM": (
+        "AFFECTIVE INSTRUCTION: The student shows signs of uncertainty or mild frustration. "
+        "Acknowledge the difficulty briefly before moving forward. "
+        "Keep the next step clear and achievable. Avoid adding more questions than necessary."
+    ),
+    "HIGH": (
+        "AFFECTIVE INSTRUCTION: The student is clearly frustrated or stuck. "
+        "Do not add clarifying questions. Do not ask them to try again without guidance. "
+        "Provide enough concrete direction that they can take one clear action immediately. "
+        "A short acknowledgement of the difficulty is appropriate, but move quickly to the help."
+    ),
+}
+
+
 # Dataclasses
 @dataclass
 class CheckpointResult:
@@ -68,7 +143,7 @@ BASE_PROMPT_FILES = {
     "decide_support": "chains/choose_support_level.txt",
     "check_reply": "chains/check_solution_leak_v3.txt",
     "rewrite_reply": "chains/fallback_rewrite_v3.txt",
-    "checkpoint_and_decide": "chains/student_state_v4.txt",
+    "checkpoint_and_decide": "chains/student_state_v5.txt",
     "file_handler": "base/file.txt",
 }
 
@@ -226,6 +301,28 @@ def _should_run_safety_check(decision: SupportDecision) -> bool:
     return False
 
 
+def _build_depth_and_affective_header(
+    checkpoint: CheckpointResult,
+    decision: SupportDecision,
+) -> str:
+    """
+    Build the depth + affective instruction block that is prepended to the
+    generation system prompt.
+
+    This is the single place where support_depth and frustration_level are
+    translated from labels into explicit behavioural instructions the model
+    can act on. Without this, those values are computed correctly but then
+    ignored at generation time.
+    """
+    depth_key = (decision.support_depth or "SUBSTANTIVE").upper()
+    affective_key = (checkpoint.frustration_level or "LOW").upper()
+
+    depth_instr = _DEPTH_INSTRUCTIONS.get(depth_key, _DEPTH_INSTRUCTIONS["SUBSTANTIVE"])
+    affective_instr = _AFFECTIVE_INSTRUCTIONS.get(affective_key, _AFFECTIVE_INSTRUCTIONS["LOW"])
+
+    return f"{depth_instr}\n\n{affective_instr}"
+
+
 # ---------------------------------------------------------------------------
 # Fallback values — used ONLY when parsing genuinely fails.
 # All rationale fields say PARSE_FAILED so they are visible in logs.
@@ -349,13 +446,26 @@ async def generate_full_reply(
 ) -> str:
     """
     Generate the tutor reply using native multi-turn history.
+
+    The system prompt is built in layers:
+      1. SRL identity
+      2. Phase prompt (forethought / performance / reflection)
+      3. Support-level response prompt
+      4. Depth + affective instruction block  ← new: translates support_depth
+         and frustration_level into explicit behavioural contracts the model
+         can act on at generation time
+      5. File handler (conditional)
+
     History is passed as real alternating user/assistant turns rather than
     a serialised string, which reduces token use and improves coherence.
     """
+    depth_and_affective = _build_depth_and_affective_header(checkpoint, decision)
+
     prompt_parts = [
         load_prompt(BASE_PROMPT_FILES["identity"]),
         load_prompt(_phase_prompt_file(route.get("phase"))),
         load_prompt(decision.response_prompt_file),
+        depth_and_affective,
     ]
     if _has_file_content(user_message):
         prompt_parts.append(load_prompt(BASE_PROMPT_FILES["file_handler"]))

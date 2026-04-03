@@ -1,7 +1,6 @@
 import argparse
 import asyncio
 import json
-import statistics
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -13,12 +12,12 @@ from services.llm_client import get_client
 from services.orchestrator import Orchestrator
 
 ROOT = Path(__file__).resolve().parents[1]
-RUBRICS_DIR   = ROOT / "evaluator" / "rubrics"
-PERSONAS_DIR  = ROOT / "evaluator" / "prompts"
-REPORTS_DIR   = ROOT / "evaluator" / "reports"
+RUBRICS_DIR  = ROOT / "evaluator" / "rubrics"
+PERSONAS_DIR = ROOT / "evaluator" / "prompts"
+REPORTS_DIR  = ROOT / "evaluator" / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Default personas file 
+# Default personas file
 DEFAULT_PERSONAS_FILE = "personas.json"
 
 # Version constants
@@ -30,16 +29,22 @@ VERSION_FORETHOUGHT = "v6"
 VERSION_PERFORMANCE = "v6"
 VERSION_REFLECTION  = "v2"
 
-# Model config
-STUDENT_MODEL  = "gpt-4o-mini"   # Simulates the student
-JUDGE_MODEL    = "gpt-4o-mini"   # Same as evaluator_v1.py
-STUDENT_TEMP   = 0.8             # Higher temp → more naturalistic student variance
-JUDGE_TEMP     = 0.0
+# Model config 
+STUDENT_MODEL = "gpt-4o-mini"    # Simulates the student — short outputs, cheap
+JUDGE_MODEL   = "gpt-4.1-mini"   
+STUDENT_TEMP  = 0.8              # Higher temp → more naturalistic student variance
+JUDGE_TEMP    = 0.0
+
+# How many persona cases run simultaneously.
+CONCURRENCY = 2
 
 # Timeouts (seconds)
 ORCHESTRATOR_TIMEOUT_S = 180
 STUDENT_TIMEOUT_S      = 60
-JUDGE_TIMEOUT_S        = 90
+JUDGE_TIMEOUT_S        = 120   
+
+# Judge retry config 
+JUDGE_MAX_RETRIES = 2   # Total attempts (1 original + 1 retry)
 
 
 # ---------------------------------------------------------------------------
@@ -97,7 +102,7 @@ Your expertise is {expertise_level}.  Keep it to 1–4 sentences.
 """
 
 
-# Helpers 
+# Helpers
 def load_yaml(path: Path) -> Dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
@@ -132,12 +137,8 @@ async def _with_timeout(coro, seconds: int, label: str):
         raise TimeoutError(f"{label} timed out after {seconds}s") from e
 
 
-def _format_dynamic_transcript(
-    simulated_turns: List[Dict[str, str]]
-) -> str:
-    """
-    Build a transcript string from the recorded turn pairs.
-    """
+def _format_dynamic_transcript(simulated_turns: List[Dict[str, str]]) -> str:
+    """Build a transcript string from the recorded turn pairs."""
     lines = []
     for entry in simulated_turns:
         lines.append(f"USER: {entry['student']}")
@@ -155,7 +156,6 @@ async def _generate_student_turn(
 ) -> str:
     """
     Call the student-simulator LLM to produce the next student message.
-
     turn_index == 1  → opening message (no prior tutor reply)
     turn_index  > 1  → reactive reply to tutor_reply
     """
@@ -169,9 +169,7 @@ async def _generate_student_turn(
     )
 
     if turn_index == 1:
-        user_content = (
-            "Start the tutoring session.  Write your opening message to the tutor."
-        )
+        user_content = "Start the tutoring session.  Write your opening message to the tutor."
     else:
         user_content = STUDENT_CONTINUE_TEMPLATE.format(
             tutor_reply=tutor_reply,
@@ -195,10 +193,58 @@ async def _generate_student_turn(
     return resp.choices[0].message.content.strip()
 
 
-# ---------------------------------------------------------------------------
-# Core dynamic evaluation loop
-# ---------------------------------------------------------------------------
+# Judge call with retry
+async def _call_judge(
+    client,
+    judge_user: str,
+    persona_id: str,
+    verbose: bool,
+) -> Dict[str, Any]:
+    """
+    Call the judge model and parse JSON.
+    Retries once on JSON parse failure before giving up.
+    Returns the parsed judge dict, or an error dict if all attempts fail.
+    """
+    last_raw = ""
+    for attempt in range(JUDGE_MAX_RETRIES):
+        try:
+            resp = await _with_timeout(
+                client.chat.completions.create(
+                    model=JUDGE_MODEL,
+                    messages=[
+                        {"role": "system", "content": JUDGE_SYSTEM},
+                        {"role": "user",   "content": judge_user},
+                    ],
+                    temperature=JUDGE_TEMP,
+                    response_format={"type": "json_object"},
+                ),
+                JUDGE_TIMEOUT_S,
+                label=f"judge attempt {attempt + 1} (persona={persona_id})",
+            )
+            content = resp.choices[0].message.content or "{}"
+            last_raw = content
+            return json.loads(content)
 
+        except json.JSONDecodeError:
+            if verbose:
+                print(
+                    f"[DYN]   Judge JSON parse failed "
+                    f"(attempt {attempt + 1}/{JUDGE_MAX_RETRIES}) — "
+                    f"{'retrying...' if attempt + 1 < JUDGE_MAX_RETRIES else 'giving up.'}"
+                )
+        except Exception as e:
+            # Timeout or API error — don't retry, propagate
+            raise e
+
+    # All retries exhausted
+    return {
+        "error":      "judge_json_parse_failed",
+        "attempts":   JUDGE_MAX_RETRIES,
+        "raw":        last_raw[:500],
+    }
+
+
+# Single persona run
 async def _run_persona(
     client,
     orchestrator: Orchestrator,
@@ -211,9 +257,9 @@ async def _run_persona(
 ) -> Dict[str, Any]:
     """
     Run one persona through the full student-simulator → tutor → judge pipeline.
-    Returns a result dict compatible with evaluator_v1.py's results list.
+    Returns a result dict.
     """
-    persona_id = persona.get("id", f"persona_{persona_idx}")
+    persona_id      = persona.get("id", f"persona_{persona_idx}")
     start_phase_str = (persona.get("start_phase") or "FORETHOUGHT").upper()
     current_phase   = Phase(start_phase_str)
 
@@ -225,16 +271,14 @@ async def _run_persona(
             f"  turns={max_turns}"
         )
 
-    llm_history:        List[Dict[str, str]] = []
-    simulated_turns:    List[Dict[str, str]] = []   # [{student, tutor}, ...]
+    llm_history:          List[Dict[str, str]] = []
+    simulated_turns:      List[Dict[str, str]] = []
     turn_chain_snapshots: List[Dict[str, Any]] = []
-    chain_internals:    Dict[str, Any] = {}
-
-    tutor_reply: Optional[str] = None
+    tutor_reply:          Optional[str]        = None
 
     for turn_i in range(1, max_turns + 1):
 
-        # 1. Student generates their message 
+        # 1. Student generates their message
         if verbose:
             print(f"[DYN]   Turn {turn_i}/{max_turns}: generating student message...")
 
@@ -243,7 +287,7 @@ async def _run_persona(
         )
 
         if verbose:
-            print(f"[DYN]   Student: {student_msg[:120]}{'...' if len(student_msg)>120 else ''}")
+            print(f"[DYN]   Student: {student_msg[:120]}{'...' if len(student_msg) > 120 else ''}")
 
         simulated_turns.append({"student": student_msg})
         llm_history.append({"role": "user", "content": student_msg})
@@ -262,18 +306,18 @@ async def _run_persona(
             label=f"orchestrator (persona={persona_id}, turn={turn_i})",
         )
 
-        current_phase  = result.route.phase
-        tutor_reply    = result.reply
-        draft_reply    = result.draft_reply or tutor_reply
-        was_rewritten  = bool(result.was_rewritten)
+        current_phase = result.route.phase
+        tutor_reply   = result.reply
+        draft_reply   = result.draft_reply or tutor_reply
+        was_rewritten = bool(result.was_rewritten)
 
         chain_internals = {
-            "route":        result.route.to_dict(),
-            "diagnosis":    result.control.checkpoint.to_dict(),
-            "decision":     result.control.decision.to_dict(),
-            "check":        result.safety.to_dict(),
-            "draft_reply":  draft_reply,
-            "final_reply":  tutor_reply,
+            "route":         result.route.to_dict(),
+            "diagnosis":     result.control.checkpoint.to_dict(),
+            "decision":      result.control.decision.to_dict(),
+            "check":         result.safety.to_dict(),
+            "draft_reply":   draft_reply,
+            "final_reply":   tutor_reply,
             "was_rewritten": was_rewritten,
         }
 
@@ -292,33 +336,27 @@ async def _run_persona(
                 f"[DYN]   Tutor:   support={support}  "
                 f"rewritten={was_rewritten}  leaks={leaks}"
             )
-            print(f"[DYN]   Reply:   {tutor_reply[:120]}{'...' if len(tutor_reply)>120 else ''}")
+            print(f"[DYN]   Reply:   {tutor_reply[:120]}{'...' if len(tutor_reply) > 120 else ''}")
 
         llm_history.append({
-            "role":      "assistant",
-            "content":   tutor_reply,
-            "route":     chain_internals["route"],
-            "diagnosis": chain_internals["diagnosis"],
-            "decision":  chain_internals["decision"],
-            "check":     chain_internals["check"],
+            "role":        "assistant",
+            "content":     tutor_reply,
+            "route":       chain_internals["route"],
+            "diagnosis":   chain_internals["diagnosis"],
+            "decision":    chain_internals["decision"],
+            "check":       chain_internals["check"],
             "draft_reply": draft_reply,
         })
 
-        # ── 3. Optional early stop: task is done ─────────────────────────────
-        # If the student explicitly says they have everything they need and
-        # the phase is REFLECTION, no point running more turns.
-        if (
-            current_phase == Phase.REFLECTION
-            and turn_i >= 3
-        ):
+        # 3. Optional early stop: task is done
+        if current_phase == Phase.REFLECTION and turn_i >= 3:
             if verbose:
                 print(f"[DYN]   Phase reached REFLECTION at turn {turn_i} — ending early.")
             break
 
-    # 4. Judge the full conversation 
+    # 4. Judge the full conversation
     transcript = _format_dynamic_transcript(simulated_turns)
 
-    # AFTER — only structured multi-turn data, no last-turn bias
     aggregate_chain_internals: Dict[str, Any] = {
         "turn_snapshots": turn_chain_snapshots,
         "total_turns":    len(turn_chain_snapshots),
@@ -332,160 +370,63 @@ async def _run_persona(
         rubric, transcript, chain_internals=aggregate_chain_internals
     )
 
-    judge_resp = await _with_timeout(
-        client.chat.completions.create(
-            model=JUDGE_MODEL,
-            messages=[
-                {"role": "system", "content": JUDGE_SYSTEM},
-                {"role": "user",   "content": judge_user},
-            ],
-            temperature=JUDGE_TEMP,
-            response_format={"type": "json_object"},
-        ),
-        JUDGE_TIMEOUT_S,
-        label=f"judge (persona={persona_id})",
-    )
-
-    judge_content = judge_resp.choices[0].message.content or "{}"
-    try:
-        judge_json = json.loads(judge_content)
-    except json.JSONDecodeError:
-        judge_json = {"error": "judge_json_parse_failed", "raw": judge_content}
+    judge_json = await _call_judge(client, judge_user, persona_id, verbose)
 
     if verbose:
         overall = judge_json.get("overall_score")
         flags   = judge_json.get("fail_flags", [])
-        print(f"[DYN]   Done.  overall_score={overall}  fail_flags={flags}")
+        err     = judge_json.get("error")
+        if err:
+            print(f"[DYN]   Done.  JUDGE ERROR: {err}")
+        else:
+            print(f"[DYN]   Done.  overall_score={overall}  fail_flags={flags}")
 
     return {
-        "case_id":                 persona_id,
-        "phase_target":            persona.get("phase_target"),
-        "expected_support_level":  persona.get("expected_support_level"),
-        "expected_request_kind":   persona.get("expected_request_kind"),
-        "notes":                   persona.get("notes"),
-        "final_phase":             current_phase.value,
-        "transcript":              transcript,
-        "chain_snapshots":         turn_chain_snapshots,
-        "judge":                   judge_json,
-        # Dynamic-eval extras
-        "persona":                 persona,
-        "simulated_turns":         simulated_turns,
-        "turns_completed":         len(simulated_turns),
+        "case_id":                persona_id,
+        "phase_target":           persona.get("phase_target"),
+        "expected_support_level": persona.get("expected_support_level"),
+        "expected_request_kind":  persona.get("expected_request_kind"),
+        "notes":                  persona.get("notes"),
+        "final_phase":            current_phase.value,
+        "transcript":             transcript,
+        "chain_snapshots":        turn_chain_snapshots,
+        "judge":                  judge_json,
+        "persona":                persona,
+        "simulated_turns":        simulated_turns,
+        "turns_completed":        len(simulated_turns),
     }
 
-
-
-# Comparison helper
-def _compare_reports(
-    dynamic_results:  List[Dict[str, Any]],
-    static_report_path: str,
-    verbose: bool,
-) -> Dict[str, Any]:
-    """
-    Load a static evaluator_v1.py report and produce a side-by-side summary.
-    Returns a dict with aggregate score stats for both modes.
-    """
-    static_path = Path(static_report_path)
-    if not static_path.exists():
-        if verbose:
-            print(f"[CMP] Static report not found: {static_path}  — skipping comparison.")
-        return {}
-
-    static_data    = json.loads(static_path.read_text(encoding="utf-8"))
-    static_results = static_data.get("results", [])
-
-    def _scores(results: List[Dict[str, Any]]) -> List[float]:
-        out = []
-        for r in results:
-            s = r.get("judge", {}).get("overall_score")
-            if s is not None:
-                try:
-                    out.append(float(s))
-                except (TypeError, ValueError):
-                    pass
-        return out
-
-    def _flag_rate(results: List[Dict[str, Any]]) -> float:
-        flagged = sum(
-            1 for r in results
-            if r.get("judge", {}).get("fail_flags")
-        )
-        return round(flagged / len(results), 3) if results else 0.0
-
-    dyn_scores    = _scores(dynamic_results)
-    static_scores = _scores(static_results)
-
-    def _stats(scores: List[float]) -> Dict[str, Any]:
-        if not scores:
-            return {"n": 0, "mean": None, "median": None, "stdev": None}
-        return {
-            "n":      len(scores),
-            "mean":   round(statistics.mean(scores),   2),
-            "median": round(statistics.median(scores), 2),
-            "stdev":  round(statistics.stdev(scores),  2) if len(scores) > 1 else 0.0,
-        }
-
-    comparison = {
-        "dynamic": {
-            **_stats(dyn_scores),
-            "flag_rate": _flag_rate(dynamic_results),
-        },
-        "static": {
-            **_stats(static_scores),
-            "flag_rate":   _flag_rate(static_results),
-            "source_file": str(static_path.name),
-        },
-        "delta_mean": (
-            round(_stats(dyn_scores)["mean"] - _stats(static_scores)["mean"], 2)
-            if dyn_scores and static_scores
-            else None
-        ),
-        "interpretation": (
-            "Dynamic scores are LOWER — the simulator found harder cases the static suite missed."
-            if (dyn_scores and static_scores and statistics.mean(dyn_scores) < statistics.mean(static_scores))
-            else (
-                "Dynamic scores are SIMILAR or HIGHER — the simulator did not reveal systematic gaps vs. the static suite."
-                if dyn_scores and static_scores
-                else "Insufficient data for comparison."
-            )
-        ),
-    }
-
-    if verbose:
-        print("\n[CMP] ── Score Comparison ──────────────────────────────────")
-        print(f"[CMP]  Dynamic  : mean={comparison['dynamic']['mean']}  "
-              f"median={comparison['dynamic']['median']}  "
-              f"stdev={comparison['dynamic']['stdev']}  "
-              f"flag_rate={comparison['dynamic']['flag_rate']}")
-        print(f"[CMP]  Static   : mean={comparison['static']['mean']}  "
-              f"median={comparison['static']['median']}  "
-              f"stdev={comparison['static']['stdev']}  "
-              f"flag_rate={comparison['static']['flag_rate']}")
-        print(f"[CMP]  Δ mean   : {comparison['delta_mean']}")
-        print(f"[CMP]  {comparison['interpretation']}")
-        print("[CMP] ────────────────────────────────────────────────────────")
-
-    return comparison
-
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
-
+# AI judge full run
 async def run_dynamic(
-    rubric_file: str,
-    personas_file: str = DEFAULT_PERSONAS_FILE,
-    tutor_type: str = "SRL Tutor",
-    max_cases: Optional[int] = None,
-    max_turns_per_case: int = 6,
-    verbose: bool = True,
-    compare_report: Optional[str] = None,
+    rubric_file:         str,
+    personas_file:       str          = DEFAULT_PERSONAS_FILE,
+    tutor_type:          str          = "SRL Tutor",
+    max_cases:           Optional[int] = None,
+    max_turns_per_case:  int          = 6,
+    concurrency:         int          = CONCURRENCY,
+    verbose:             bool         = True,
+    resume_from:         Optional[str] = None,
 ) -> str:
+    """
+    Run the full dynamic evaluation pipeline.
+
+    Parameters
+    ----------
+    rubric_file         : YAML filename inside evaluator/rubrics/
+    personas_file       : JSON filename inside evaluator/prompts/
+    tutor_type          : String passed to the orchestrator
+    max_cases           : Cap personas evaluated (None = all)
+    max_turns_per_case  : Max turns per simulated conversation
+    concurrency         : How many cases run simultaneously (default: CONCURRENCY)
+    verbose             : Print per-turn progress
+    compare_report      : Path to a static report for side-by-side comparison
+    resume_from         : Path to a prior checkpoint report — skip already-completed cases
+    """
     client = get_client()
 
     rubric_path   = RUBRICS_DIR / rubric_file
     personas_path = PERSONAS_DIR / personas_file
-    require_file(rubric_path, "Rubric")
+    require_file(rubric_path,   "Rubric")
     require_file(personas_path, "Personas file")
 
     rubric   = load_yaml(rubric_path)
@@ -494,17 +435,43 @@ async def run_dynamic(
     if max_cases is not None:
         personas = personas[:max_cases]
 
+    # Resume: skip cases already in a prior checkpoint
+    completed_ids: set = set()
+    if resume_from:
+        resume_path = Path(resume_from)
+        if resume_path.exists():
+            prior = json.loads(resume_path.read_text(encoding="utf-8"))
+            completed_ids = {r["case_id"] for r in prior.get("results", [])}
+            if verbose and completed_ids:
+                print(f"[DYN] Resuming — skipping {len(completed_ids)} already-completed cases.")
+        else:
+            if verbose:
+                print(f"[DYN] Resume path not found ({resume_from}) — starting fresh.")
+
+    personas_to_run = [p for p in personas if p.get("id") not in completed_ids]
+
     if verbose:
-        print(f"[DYN] Personas : {personas_path} ({len(personas)} cases)")
+        print(f"[DYN] Personas : {personas_path} ({len(personas)} total, {len(personas_to_run)} to run)")
         print(f"[DYN] Rubric   : {rubric_path}  type={rubric.get('rubric_type', 'response')}")
         print(f"[DYN] Tutor    : {tutor_type}")
         print(f"[DYN] Max turns: {max_turns_per_case}")
+        print(f"[DYN] Concurrency: {concurrency}")
+        print(f"[DYN] Judge model: {JUDGE_MODEL}")
         print(f"[DYN] Versions : {_build_version_tag()}")
 
     orchestrator = Orchestrator(client)
-    results: List[Dict[str, Any]] = []
+
+    # Pre-populate results with any resumed cases
+    results:      List[Dict[str, Any]] = []
     failed_cases: List[Dict[str, Any]] = []
 
+    if resume_from and completed_ids:
+        resume_path = Path(resume_from)
+        if resume_path.exists():
+            prior = json.loads(resume_path.read_text(encoding="utf-8"))
+            results = prior.get("results", [])
+
+    # Report path 
     version_tag = _build_version_tag()
     base_name = (
         f"report"
@@ -520,76 +487,103 @@ async def run_dynamic(
             break
         run_index += 1
 
-    def _write_checkpoint_report():
+    # Thread-safe shared state
+    results_lock = asyncio.Lock()
+
+    def _write_checkpoint():
+        """Write current results to disk. Called inside the lock."""
         report_data: Dict[str, Any] = {
             "metadata": {
-                "eval_mode": "dynamic",
-                "personas_file": personas_file,
-                "rubric_file": rubric_file,
-                "rubric_type": rubric.get("rubric_type", "response"),
-                "tutor_type": tutor_type,
-                "student_model": STUDENT_MODEL,
-                "judge_model": JUDGE_MODEL,
-                "max_turns_per_case": max_turns_per_case,
+                "eval_mode":           "dynamic",
+                "personas_file":       personas_file,
+                "rubric_file":         rubric_file,
+                "rubric_type":         rubric.get("rubric_type", "response"),
+                "tutor_type":          tutor_type,
+                "student_model":       STUDENT_MODEL,
+                "judge_model":         JUDGE_MODEL,
+                "max_turns_per_case":  max_turns_per_case,
+                "concurrency":         concurrency,
                 "versions": {
-                    "base_srl": VERSION_BASE_SRL,
-                    "router": VERSION_ROUTER,
-                    "chain": VERSION_CHAIN,
-                    "respond": VERSION_RESPOND,
+                    "base_srl":    VERSION_BASE_SRL,
+                    "router":      VERSION_ROUTER,
+                    "chain":       VERSION_CHAIN,
+                    "respond":     VERSION_RESPOND,
                     "forethought": VERSION_FORETHOUGHT,
                     "performance": VERSION_PERFORMANCE,
-                    "reflection": VERSION_REFLECTION,
+                    "reflection":  VERSION_REFLECTION,
                 },
-                "completed_cases": len(results),
-                "failed_cases": len(failed_cases),
+                "completed_cases":       len(results),
+                "failed_cases":          len(failed_cases),
                 "total_cases_requested": len(personas),
             },
-            "results": results,
+            "results":  results,
             "failures": failed_cases,
         }
-
         report_path.write_text(
             json.dumps(report_data, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
 
-    for idx, persona in enumerate(personas, start=1):
-        try:
-            result = await _run_persona(
-                client=client,
-                orchestrator=orchestrator,
-                rubric=rubric,
-                persona=persona,
-                persona_idx=idx,
-                total=len(personas),
-                max_turns=max_turns_per_case,
-                verbose=verbose,
-            )
-            results.append(result)
+    sem = asyncio.Semaphore(concurrency)
 
-        except Exception as e:
-            failed_cases.append({
-                "case_id": persona.get("id", f"persona_{idx}"),
-                "persona_index": idx,
-                "error_type": type(e).__name__,
-                "error": str(e),
-                "persona": persona,
-            })
-            if verbose:
-                print(f"[DYN] ERROR in case {idx}/{len(personas)}: {persona.get('id')} -> {type(e).__name__}: {e}")
+    async def _run_one(idx: int, persona: Dict[str, Any]) -> None:
+        """Run one persona, collect result or failure, write checkpoint."""
+        async with sem:
+            try:
+                result = await _run_persona(
+                    client=client,
+                    orchestrator=orchestrator,
+                    rubric=rubric,
+                    persona=persona,
+                    persona_idx=idx,
+                    total=len(personas),
+                    max_turns=max_turns_per_case,
+                    verbose=verbose,
+                )
+                async with results_lock:
+                    results.append(result)
+                    _write_checkpoint()
 
-        finally:
-            _write_checkpoint_report()
+            except Exception as e:
+                case_id = persona.get("id", f"persona_{idx}")
+                if verbose:
+                    print(
+                        f"[DYN] ERROR case {idx}/{len(personas)}: "
+                        f"{case_id} -> {type(e).__name__}: {e}"
+                    )
+                async with results_lock:
+                    failed_cases.append({
+                        "case_id":       case_id,
+                        "persona_index": idx,
+                        "error_type":    type(e).__name__,
+                        "error":         str(e),
+                        "persona":       persona,
+                    })
+                    _write_checkpoint()
+
+    # Run all cases concurrently 
+    # Offset index by the number of already-completed cases so persona_idx
+    # numbers remain meaningful relative to the full original list.
+    start_idx = len(completed_ids) + 1
+    await asyncio.gather(*[
+        _run_one(start_idx + i, persona)
+        for i, persona in enumerate(personas_to_run)
+    ])
 
     if verbose:
-        print(f"\n[DYN] Wrote report: {report_path}")
-
+        async with results_lock:
+            n_ok   = len(results)
+            n_fail = len(failed_cases)
+        print(
+            f"\n[DYN] Finished.  "
+            f"completed={n_ok}  failed={n_fail}  "
+            f"total={len(personas)}"
+        )
+        print(f"[DYN] Report: {report_path}")
     return str(report_path)
 
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
 
+# CLI
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         description=(
@@ -601,7 +595,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--rubric",
         required=True,
         metavar="FILE",
-        help="Rubric YAML filename inside evaluator/rubrics/  e.g. rubric_response.yaml",
+        help="Rubric YAML filename inside evaluator/rubrics/",
     )
     p.add_argument(
         "--personas",
@@ -627,15 +621,22 @@ def _build_parser() -> argparse.ArgumentParser:
         type=int,
         default=3,
         metavar="N",
-        help="Maximum turns per conversation (default: 6).",
+        help="Maximum turns per conversation (default: 3).",
     )
     p.add_argument(
-        "--compare-report",
+        "--concurrency",
+        type=int,
+        default=CONCURRENCY,
+        metavar="N",
+        help=f"Number of cases to run simultaneously (default: {CONCURRENCY}).",
+    )
+    p.add_argument(
+        "--resume-from",
         default=None,
         metavar="PATH",
         help=(
-            "Path to an existing evaluator_v1.py JSON report.  "
-            "When provided, prints a side-by-side score comparison."
+            "Path to a prior checkpoint report.  "
+            "Already-completed cases will be skipped."
         ),
     )
     p.add_argument(
@@ -655,7 +656,8 @@ if __name__ == "__main__":
             tutor_type=args.tutor,
             max_cases=args.max_cases,
             max_turns_per_case=args.max_turns,
+            concurrency=args.concurrency,
             verbose=not args.quiet,
-            compare_report=args.compare_report,
+            resume_from=args.resume_from,
         )
     )

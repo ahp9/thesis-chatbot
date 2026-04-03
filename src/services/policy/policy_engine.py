@@ -10,6 +10,7 @@ from lib.enums import (
     FrustrationLevel,
     ProgressState,
     SRLFocus,
+    SupportDepth,
     SupportLevel,
 )
 from services.policy.policy_config import (
@@ -20,16 +21,45 @@ from services.policy.policy_config import (
     response_prompt_file_for,
 )
 
+# Hard depth floors per expertise level.
+# ADVANCED gets SUBSTANTIVE_PLUS as the minimum — DEEP is the target for
+# primary questions but SUBSTANTIVE_PLUS is acceptable for contained sub-questions.
+_DEPTH_FLOOR: dict[ExpertiseLevel, SupportDepth] = {
+    ExpertiseLevel.NOVICE:        SupportDepth.SURFACE,
+    ExpertiseLevel.INTERMEDIATE:  SupportDepth.SUBSTANTIVE,
+    ExpertiseLevel.ADVANCED:      SupportDepth.SUBSTANTIVE_PLUS,
+}
+
+_DEPTH_ORDER = {
+    SupportDepth.SURFACE: 1,
+    SupportDepth.SURFACE_PLUS: 2,
+    SupportDepth.SUBSTANTIVE: 3,
+    SupportDepth.SUBSTANTIVE_PLUS: 4,
+    SupportDepth.DEEP: 5,
+}
 
 class PolicyEngine:
-    def resolve_phase(self, current_phase, predicted_phase, confidence):
+    def resolve_phase(
+        self,
+        current_phase,
+        predicted_phase,
+        confidence,
+        previous_frustration: str | None = None,
+    ):
         if predicted_phase == current_phase:
             return current_phase
 
         if predicted_phase not in TRANSITIONS[current_phase]:
             return current_phase
 
-        if confidence < SWITCH_THRESHOLD:
+        # If the student was highly frustrated last turn, require a stronger
+        # confidence signal before switching phase. A frustrated student saying
+        # "I give up" reads like re-orientation but is usually still PERFORMANCE.
+        threshold = SWITCH_THRESHOLD
+        if previous_frustration == "HIGH":
+            threshold = 0.85
+
+        if confidence < threshold:
             return current_phase
 
         return predicted_phase
@@ -144,6 +174,14 @@ class PolicyEngine:
 
         return current
 
+    def _enforce_depth_floor(
+        self,
+        depth: SupportDepth,
+        expertise_level: ExpertiseLevel,
+    ) -> SupportDepth:
+        floor = _DEPTH_FLOOR.get(expertise_level, SupportDepth.SUBSTANTIVE)
+        return depth if _DEPTH_ORDER[depth] >= _DEPTH_ORDER[floor] else floor
+
     def enforce_decision(
         self,
         checkpoint: Checkpoint,
@@ -208,9 +246,20 @@ class PolicyEngine:
         }:
             should_request_attempt = True
 
+        # --- Depth floor enforcement ---
+        # The LLM sets support_depth, but we hard-override it here if it falls
+        # below the minimum for the student's expertise level.  This is the
+        # single place where depth calibration is guaranteed — downstream
+        # generation reads this enforced value from the decision payload.
+        enforced_depth = self._enforce_depth_floor(
+            depth=decision.support_depth,
+            expertise_level=checkpoint.expertise_level,
+        )
+
         return replace(
             decision,
             support_level=support_level,
+            support_depth=enforced_depth,
             response_prompt_file=response_prompt_file_for(support_level),
             can_show_code=can_show_code,
             must_end_with_question=must_end_with_question,

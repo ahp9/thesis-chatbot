@@ -232,7 +232,7 @@ criteria:
 
   support_depth_fit:
     what_to_evaluate: >
-      Evaluate whether decision.support_depth (SURFACE / SUBSTANTIVE / DEEP)
+      Evaluate whether decision.support_depth (SURFACE / SURFACE_PLUS / SUBSTANTIVE / SUBSTANTIVE_PLUS / DEEP)
       matches the student's demonstrated need for explanatory granularity.
 
       This criterion is NOT asking whether the final response was perfect overall.
@@ -246,11 +246,21 @@ criteria:
         - the student would benefit from one concept, one pointer, or one next step
         - deeper explanation would be premature, redundant, or cognitively noisy
 
+      SURFACE_PLUS is appropriate when:
+        - the student needs slightly more detailed orienting support
+        - the issue is moderately complex
+        - the student would benefit from a bit more context or clarification
+
       SUBSTANTIVE is appropriate when:
         - the student needs meaningful engagement with their actual obstacle
         - the response should name relevant trade-offs, failure modes, or decision points
         - the student has enough grounding for targeted explanation but does not require
           highly strategic or edge-case-heavy treatment
+
+      SUBSTANTIVE_PLUS is appropriate when:
+        - the student needs a deeper dive into the core issue, with multiple layers of explanation
+        - the issue is complex and multi-faceted but still within the student's zone of proximal development
+        - the response should unpack multiple relevant concepts, trade-offs, or failure modes
 
       DEEP is appropriate when:
         - the student demonstrates strong fluency
@@ -267,7 +277,9 @@ criteria:
 
     do_not_accept:
       - SURFACE for a student clearly asking about trade-offs, design tension, or deeper failure analysis
+      - SURFACE_PLUS for a student who is still missing the core concept or task framing
       - DEEP for a student who is still missing the core concept or task framing
+      - SUBSTANTIVE_PLUS for a student who is still missing the core concept or task framing
       - SUBSTANTIVE used with no evidence that the case needs more than a brief pointer
 
 

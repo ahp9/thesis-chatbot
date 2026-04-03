@@ -26,6 +26,32 @@
     "notes": "Mechanical engineering design decision, pre-simulation. Tutor should scaffold the decision-making process, not recommend a geometry. Tests FORETHOUGHT on a non-CS, non-coding task."
   },
   {
+    "id": "ft_advanced_controls_architecture",
+    "topic": "deciding whether to implement a centralised or distributed control architecture for a multi-zone HVAC system",
+    "state_description": "Is designing the control layer for a district energy system thesis project. Has already implemented a PID-based centralised controller that works at steady state but shows oscillation when zone loads change simultaneously. Is questioning whether the architecture itself is the bottleneck or whether the tuning is insufficient. Understands control theory, transfer functions, and has read about MPC but has not implemented it.",
+    "expertise_level": "ADVANCED",
+    "request_kind": "RESOURCE",
+    "emotional_state": "Analytically frustrated — suspects the architecture is wrong but does not want to rebuild if tuning can fix it",
+    "start_phase": "FORETHOUGHT",
+    "phase_target": "FORETHOUGHT",
+    "expected_support_level": "EXPLAIN",
+    "expected_request_kind": "RESOURCE",
+    "notes": "Advanced control systems architecture decision. Student has already implemented the standard approach and is questioning its limits — genuine ADVANCED signal. Tutor should engage at trade-off level: when centralised control breaks for multi-zone systems, and what architectural constraints actually drive the oscillation. Tests expertise_adaptive_language and depth for ADVANCED in FORETHOUGHT."
+  },
+  {
+    "id": "perf_absolute_beginner_code",
+    "topic": "writing a for loop in Python to sum a list of numbers",
+    "state_description": "Is a civil engineering student who has never programmed before. Has been given a data processing assignment that requires Python. Does not know what a variable is, has never opened a code editor, and is not sure what running a script means. Just opened Python IDLE for the first time and typed a number — nothing happened and they do not know why.",
+    "expertise_level": "NOVICE",
+    "request_kind": "PRODUCT",
+    "emotional_state": "Completely lost — does not know what they do not know, slightly panicked",
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "STRUCTURE",
+    "expected_request_kind": "PRODUCT",
+    "notes": "True absolute beginner — no prior programming experience at all. Does not understand the REPL vs script distinction. Tutor must not assume any vocabulary. Tests the floor of NOVICE handling: no jargon, concrete analogies, single steps only. Checks that the system does not hand over runnable code to someone who cannot yet read it."
+  },
+  {
     "id": "perf_novice_stats_confused",
     "topic": "interpreting a p-value in a hypothesis test for a biomedical engineering experiment",
     "state_description": "Has run a t-test in MATLAB comparing two groups of tissue samples and got p=0.03. Has been told this is significant but genuinely does not understand what the p-value means or why 0.05 is the threshold. Has not written up results yet.",
@@ -52,56 +78,43 @@
     "notes": "Thermodynamics / mechanical engineering. Has an attempt, is stalled and frustrated. PARTIAL support is justified. Tests frustration detection and whether tutor directs attention to the sign convention or system boundary definition without solving it outright."
   },
   {
-    "id": "perf_intermediate_hci_conceptual",
-    "topic": "understanding the difference between formative and summative evaluation in a usability study",
-    "state_description": "Is designing a user study for a human-computer interaction course project. Has read the definitions but keeps conflating the two when planning which methods to use and when. Is now trying to decide whether to run think-aloud sessions before or after the prototype is finished.",
-    "expertise_level": "INTERMEDIATE",
-    "request_kind": "RESOURCE",
-    "emotional_state": "Intellectually stuck — not distressed, just going in circles",
-    "start_phase": "PERFORMANCE",
-    "phase_target": "PERFORMANCE",
-    "expected_support_level": "EXPLAIN",
-    "expected_request_kind": "RESOURCE",
-    "notes": "HCI conceptual understanding. RESOURCE request. Tutor should give a clear direct explanation grounded in the student's actual planning situation, not a textbook definition."
-  },
-  {
-    "id": "perf_novice_no_attempt_code",
-    "topic": "writing a Python script to parse a CSV file and compute the average of a column",
-    "state_description": "Has been given a dataset of wind turbine sensor readings for a sustainable energy course assignment. Knows Python exists and has attended one lecture on it. Has not written any code. Wants the tutor to write the script for them.",
+    "id": "perf_novice_high_frustration_code",
+    "topic": "writing a Python function to filter a list of sensor readings below a threshold",
+    "state_description": "Is a second-year environmental engineering student. Has been stuck on this for two hours. Has tried writing a for loop three different times and each time gets a NameError or an IndentationError they do not understand. Has pasted the same broken code into the chat repeatedly. Says they just want to know the answer and do not care about learning it right now.",
     "expertise_level": "NOVICE",
     "request_kind": "PRODUCT",
-    "emotional_state": "Passive and slightly avoidant — hoping to get the answer directly",
+    "emotional_state": "Highly frustrated and exhausted — has given up on understanding, just wants it to work",
     "start_phase": "PERFORMANCE",
     "phase_target": "PERFORMANCE",
-    "expected_support_level": "HINT",
+    "expected_support_level": "PARTIAL",
     "expected_request_kind": "PRODUCT",
-    "notes": "No attempt present. Critical test of implementation_gate — tutor MUST NOT produce runnable code. The sustainability context makes this realistic for non-CS students encountering Python for the first time."
+    "notes": "HIGH frustration, multiple failed attempts, explicit helplessness signal. The code allowance rules in the rubric permit near-complete code here. Tests whether the system correctly detects HIGH frustration and relaxes the scaffolding gate. The student should get working annotated code with a brief explanation — not another round of Socratic questioning. Checks FRUSTRATION_NOT_ESCALATED fail flag."
   },
   {
-    "id": "perf_advanced_arch_tradeoff",
-    "topic": "deciding whether to model a district heating network as a steady-state or dynamic simulation",
-    "state_description": "Is working on a master's thesis in sustainable energy systems. Understands both modelling approaches technically. The choice depends on whether thermal inertia of the pipe network matters for the control strategy being tested. Has already built a steady-state model but is questioning whether it is sufficient.",
+    "id": "perf_advanced_fast_progress",
+    "topic": "optimising the time complexity of a graph search algorithm for a large transport network dataset",
+    "state_description": "Is implementing a route optimisation pipeline for their thesis on urban mobility. Has already implemented Dijkstra's algorithm and confirmed it is correct on a 500-node test graph. Is now testing on a 50,000-node real network and it runs in 8 seconds per query. Has profiled the code and identified that 80% of the time is in the priority queue operations. Has heard about bidirectional search and A* but has not implemented either. Is asking which is the better starting point given the specific bottleneck.",
     "expertise_level": "ADVANCED",
     "request_kind": "RESOURCE",
-    "emotional_state": "Analytically confident but genuinely uncertain about the modelling assumption",
+    "emotional_state": "Focused and efficient — wants targeted guidance, not background explanation",
     "start_phase": "PERFORMANCE",
     "phase_target": "PERFORMANCE",
     "expected_support_level": "EXPLAIN",
     "expected_request_kind": "RESOURCE",
-    "notes": "Sustainable energy systems, advanced modelling decision. RESOURCE from ADVANCED student — should receive a direct peer-level discussion of the trade-off, not a tutorial. Tests expertise_adaptive_language and request_kind_respect for ADVANCED."
+    "notes": "Fast-progressing ADVANCED student who has already done the diagnostic work — profiled, identified the bottleneck, and named two algorithmic options. Wants a direct comparison at the trade-off level, not an explanation of what A* is. Response must engage with the specific bottleneck (priority queue cost dominance), not give a general tutorial on graph search. Checks RE_EXPLAINS_DEMONSTRATED_KNOWLEDGE and ADVANCED_STUDENT_GIVEN_GENERIC_SCAFFOLD fail flags."
   },
   {
-    "id": "refl_intermediate_experiment_results",
-    "topic": "interpreting unexpected results from a materials fatigue test",
-    "state_description": "Has conducted a three-point bending fatigue test on two composite material samples. Expected sample B to fail first based on its lower fibre volume fraction, but sample A failed at 40% fewer cycles. Has the raw data and the S-N curve plots. Does not know whether this is a measurement error, a specimen defect, or a genuine material behaviour worth reporting.",
-    "expertise_level": "INTERMEDIATE",
+    "id": "refl_novice_confused_results",
+    "topic": "understanding why their bar chart from a sustainability survey adds up to more than 100 percent",
+    "state_description": "Has collected survey data on household recycling behaviour and plotted a bar chart in Excel. The bars show percentages but they add up to more than 100 percent. Is confused about whether they made a calculation error or whether the chart type is wrong. Has the raw spreadsheet but does not understand pivot tables or data aggregation. Thinks they might have double-counted something.",
+    "expertise_level": "NOVICE",
     "request_kind": "RESOURCE",
-    "emotional_state": "Puzzled and a bit anxious — worried the result will invalidate the experiment",
+    "emotional_state": "Confused and worried — afraid the data is wrong and the whole analysis is invalid",
     "start_phase": "REFLECTION",
     "phase_target": "REFLECTION",
     "expected_support_level": "EXPLAIN",
     "expected_request_kind": "RESOURCE",
-    "notes": "Materials / mechanical engineering reflection on experimental results. Tutor should help the student reason through possible explanations, not dismiss or validate the anomaly directly. Tests REFLECTION on a lab science context."
+    "notes": "NOVICE in a REFLECTION phase — unusual combination. The student has a concrete artefact (the chart) and a specific observable anomaly. Tutor should explain why multi-select survey questions produce percentages that exceed 100 percent, not treat this as a calculation error. Tests whether the system gives a direct RESOURCE answer in REFLECTION for a NOVICE without deflecting to Socratic questions."
   },
   {
     "id": "refl_advanced_thesis_discussion",
@@ -127,6 +140,32 @@
     "phase_target": "PERFORMANCE",
     "expected_support_level": "QUESTION",
     "expected_request_kind": "PRODUCT",
-    "notes": "Industrial / biomedical engineering process task. Phase transition test — should move FORETHOUGHT -> PERFORMANCE as the student builds out the FMEA structure. Tests multi_turn_coherence and phase transition on a structured engineering process task."
+    "notes": "Industrial / biomedical engineering process task. Phase transition test — should move FORETHOUGHT to PERFORMANCE as the student builds out the FMEA structure. Tests multi_turn_coherence and phase transition on a structured engineering process task."
+  },
+  {
+    "id": "multi_turn_novice_recovering",
+    "topic": "writing a Python script to read temperature sensor data from a text file and plot it",
+    "state_description": "Started completely lost — did not know what a file path was, could not open the file, and in the first turn asked the tutor to just write the whole script. After the first tutor turn gave a structural outline, the student attempted to open the file and got a FileNotFoundError. After the second tutor turn explained path handling, the student fixed the file path and successfully read the data. Is now asking how to plot it with matplotlib but has no idea how the library works.",
+    "expertise_level": "NOVICE",
+    "request_kind": "PRODUCT",
+    "emotional_state": "Gaining confidence — was scared at the start but is now engaged and making real progress",
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "HINT",
+    "expected_request_kind": "PRODUCT",
+    "notes": "Novice student who started stuck but is genuinely recovering across turns. Critical test of multi_turn_coherence: the tutor MUST acknowledge that the student fixed the file path before moving on to matplotlib. Progress acknowledgment is mandatory. Also tests that the system does not regress to over-scaffolding when the student is now MOVING — a STRUCTURE response at this point would be wrong. Should give a single hint about plt.plot() without explaining the full matplotlib API."
+  },
+  {
+    "id": "multi_turn_intermediate_frustration_escalation",
+    "topic": "debugging an AttributeError in a Python class hierarchy for a software engineering course",
+    "state_description": "Has a base class and two subclasses. Has been stuck on the same AttributeError for three turns. First tutor turn gave a hint about __init__ method overriding — student tried it, same error. Second tutor turn gave a slightly different hint about super() — student tried it, still same error. Is now saying they have no idea what they are doing, this does not make sense, and asking the tutor to just show them. Has shared the actual code in the most recent message.",
+    "expertise_level": "INTERMEDIATE",
+    "request_kind": "PRODUCT",
+    "emotional_state": "Highly frustrated — three failed attempts, two rounds of hints that did not work, explicit helplessness",
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "PARTIAL",
+    "expected_request_kind": "PRODUCT",
+    "notes": "HIGH frustration with repeated failed hints — classic escalation case. The rubric requires FRUSTRATION_NOT_ESCALATED to fire if the tutor gives a third hint. The correct response is PARTIAL: show the corrected __init__ and super() pattern directly with a brief annotation, then ask the student to apply the same fix to the second subclass. Tests whether the system correctly detects the escalation obligation and whether multi_turn_coherence acknowledges the two failed attempts before moving to a new strategy."
   }
 ]
