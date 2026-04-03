@@ -14,6 +14,13 @@ JUDGE_SYSTEM = """
     - Do not give advice, coaching, or rewrites.
     - If evidence is missing, say so in the rationale rather than guessing.
     - Return ONLY valid JSON matching the required schema.
+    
+    IMPORTANT: The system you are evaluating may have made real errors.
+    Do not assume the response is good. Your job is to find failures,
+    not confirm quality. Score 3 only when you can point to specific
+    text that satisfies every condition in the rubric. If you cannot
+    find that text verbatim in the transcript, the criterion does not
+    score 3.
     """
 
 RUBRIC_TYPE_DESCRIPTIONS = {

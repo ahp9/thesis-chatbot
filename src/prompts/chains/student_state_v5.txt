@@ -196,68 +196,138 @@ without a specific task, attempt, or question.
 
 Establish this FIRST. It governs every subsequent decision.
 
-The goal is to infer the student's actual working level from their demonstrated behaviour —
-not from the topic area, course level, or degree programme.
+The classification is based on what the student is DOING WITH their knowledge —
+not on which words they use, which topic they are studying, or what course level
+they are at. A PhD student asking "what does loop mean?" is NOVICE for that
+question. A first-year student identifying a design trade-off unprompted is ADVANCED.
 
-A PhD student asking "what does loop mean?" is NOVICE for that question.
-A first-year student naming model trade-offs with correct vocabulary is INTERMEDIATE.
+The three levels correspond to three different OPERATIONAL MODES:
 
-NOVICE:
-  No working vocabulary for their task. Cannot yet name the relevant approach,
-  method, or tools. Describes the task in entirely everyday language.
-  Makes conceptual errors about foundational ideas.
-  Asks "what is X?" for basic terms the field takes for granted.
+─────────────────────────────────────────────────────────────────
+NOVICE — Operating on surface features
+─────────────────────────────────────────────────────────────────
+The student is interacting with the FORM of the problem, not its structure.
+They do not yet have a working mental model of how the pieces connect.
+This is true even if they paste code that looks advanced — if they cannot
+explain what any part of it does or why, the code is cargo, not evidence
+of understanding.
 
-  Signals:
-  - Uses vague or everyday language ("the thing that repeats", "the graph part")
-  - Asks what a standard term means
-  - Cannot distinguish between basic options
-  - Has no mental model of what the task structure involves
+The key test: can the student explain WHY their approach would work or fail?
+If not → NOVICE regardless of the topic or the tools they mention.
 
-INTERMEDIATE:
-  Has a working mental model of the task even without full implementation.
-  Can name the kind of work involved, identify sub-steps, articulate a direction.
-  Makes implementation or design errors, not foundational conceptual errors.
-  Can describe the problem but may struggle to debug or extend it.
+Signals (ONE is sufficient):
+  - Cannot explain why their approach would work, only that they were told to use it
+  - Describes errors by symptom with no hypothesis ("it just doesn't work")
+  - Uses a correct term but misapplies it in the same message
+    ("I used a for loop to store the variable")
+  - Pastes code but cannot describe what a specific line does
+  - Has no sense of what the task structure involves — asks "what should I do?"
+    with no attempted direction at all
+  - Foundational misconception: confuses variable and value, function call and
+    definition, index and element, correlation and causation, etc.
+  - Uses vague everyday language for things the field has specific terms for
+    ("the thing that repeats", "the graph part")
 
-  Signals:
-  - Names a method, tool, or approach by its correct term
-  - States what they are trying to find out or test
-  - Distinguishes between options with some reasoning
-  - Frames the task in field-recognisable language
-  - Makes errors at the implementation level, not the concept level
+─────────────────────────────────────────────────────────────────
+INTERMEDIATE — Operating on structure
+─────────────────────────────────────────────────────────────────
+The student understands the task structure and can navigate it, but their
+reasoning lives at the COMPONENT level, not the system level. They know
+what they are trying to do and roughly how. They make errors at the
+implementation or design level, not the conceptual level.
 
-ADVANCED:
-  Has clear command of subject matter and implementation.
-  Uses precise technical vocabulary correctly and confidently.
-  Errors occur at the architectural, optimisation, or design-tension level —
-  not at the syntax or basic concept level.
-  Questions assume prior mastery — about trade-offs, edge cases, or interpretation,
-  not about how to do the standard thing.
+The key test: can the student describe what they expected to happen and why,
+even if they are wrong? If yes → at least INTERMEDIATE.
 
-  Signals — REQUIRE AT LEAST TWO of these to classify as ADVANCED:
-  - Names specific versions, configurations, algorithms, or design patterns
-  - Identifies a trade-off, design tension, or architectural consideration unprompted
-  - Frames the question at optimisation or interpretation level, not how-to level
-  - Has already implemented the standard approach and is questioning its limits
-  - Uses domain-specific vocabulary precisely (not just mentions it)
-  - Discusses time constants, failure modes, edge cases, or non-obvious constraints
+This does NOT require advanced vocabulary. A very simple question can be
+INTERMEDIATE: "I used pd.read_csv() but I'm getting a KeyError on the column
+name" shows structural operation — the student knows what tool to use, what it
+should produce, and where the failure is.
 
-  ANTI-PATTERNS — Do NOT infer ADVANCED from:
-  - Topic difficulty alone (thermodynamics, machine learning, structural mechanics)
-  - Course or degree level (master's, PhD, senior)
-  - The student merely mentioning a technical term without demonstrating command of it
-  - The student asking for clarification about their own work without showing mastery
+Signals (ONE is sufficient):
+  - States what they expected to happen and what happened instead
+  - Names the relevant approach, method, or tool correctly and uses it in context
+  - Makes an error at the implementation level — wrong parameter, wrong index,
+    wrong formula sign, wrong method call — not a foundational conceptual error
+  - Can describe the problem in field-recognisable language even without solving it
+  - Asks "how do I do X correctly?" where X is already the right approach
+  - With a code example: can explain what the code is TRYING to do, even if
+    the implementation is wrong
 
-  INTERMEDIATE vs ADVANCED — the decisive test:
-  Is the student asking HOW to do the standard approach, OR questioning the limits
-  and trade-offs of an approach they have already understood and applied?
-    HOW to do it → INTERMEDIATE
-    Questioning whether it is right, what it breaks under, or which variant fits → ADVANCED
+─────────────────────────────────────────────────────────────────
+ADVANCED — Operating on the system
+─────────────────────────────────────────────────────────────────
+The student is reasoning about TRADE-OFFS, CONSTRAINTS, and LIMITS — not
+asking how to do the standard thing, but asking whether the standard thing
+is the right choice, what it breaks under, or how to extend it.
 
-  Keep previously established expertise unless clear evidence suggests otherwise.
-  Expertise should only escalate in the same session, not drop, unless the student
+The key test: has the student already resolved the "how do I do this" question
+and is now operating one level up — asking whether, why, or under what conditions?
+
+ADVANCED does NOT require a long message, technical vocabulary, or that the
+student mention they are at a senior level. A short message can be ADVANCED
+if it shows system-level reasoning.
+
+ADVANCED DOES require that the student is reasoning about the system, not
+just using it. Mentioning a technical term is not ADVANCED. Using a technical
+term correctly in an argument about why an approach may not fit the constraint
+at hand IS ADVANCED.
+
+ONE signal is sufficient for ADVANCED classification:
+
+  - Has already implemented the standard approach and is questioning its
+    limits, correctness, or applicability to their specific situation
+    Example: "I've got Dijkstra working but I'm worried about scale —
+    the bottleneck is in the queue, is A* actually going to help or just
+    shift the problem?"
+
+  - Identifies a trade-off, architectural tension, or non-obvious constraint
+    UNPROMPTED — before being asked about trade-offs
+    Example: "Centralised control works at steady state but starts oscillating
+    when zone loads change simultaneously — I'm not sure if that's a tuning
+    issue or an architectural one"
+
+  - Frames the question as "is X the right choice given Y constraint?" —
+    not "how do I do X?"
+    Example: "I'm using a steady-state model but I'm questioning whether
+    thermal inertia matters enough for my control bandwidth to affect the result"
+
+  - Points to a specific failure mode, edge case, or non-obvious behaviour
+    they have observed or anticipated
+    Example: "The relay feedback test gives clean results in single-zone tests
+    but I'm concerned about interaction effects in the multi-zone case"
+
+  - With a code example: points to a specific DESIGN DECISION and questions
+    whether it is correct for their situation — not whether the syntax works
+    Example: "Here's my implementation — I'm updating parameters sequentially
+    but I suspect this is causing the slow convergence. Is vectorised update
+    conceptually different or just faster?"
+
+CODE SNIPPET RULE:
+  A code snippet alone does not determine expertise level. Ask: what is the
+  student doing with the code?
+    "Does this work?" → INTERMEDIATE (knows what they built, wants verification)
+    "I made it work but I'm worried it won't hold up when X" → ADVANCED
+      (questioning limits of a working implementation)
+    "What does this do?" → NOVICE (does not own the code)
+    "Here's my code, I'm getting error Y" → INTERMEDIATE (debugging at component level)
+
+PROGRESSION RULE:
+  Expertise can only escalate within a session, not drop, unless the student
   reveals a foundational gap that contradicts earlier signals.
+  If a student showed INTERMEDIATE signals in turn 1, do not reclassify as
+  NOVICE in turn 2 because their turn-2 question was simpler.
+  If a student showed ADVANCED signals at any point, maintain ADVANCED unless
+  they reveal they were repeating something without understanding it.
+
+ANTI-PATTERNS — do NOT infer expertise from:
+  - Topic difficulty (thermodynamics, ML, structural mechanics do not imply ADVANCED)
+  - Course or degree level (master's, PhD, senior do not imply ADVANCED)
+  - The student mentioning a technical term without deploying it in an argument
+  - The student asking for clarification about their own work — clarification
+    requests are compatible with any level
+  - Length or confidence of the message — a long confident message can still be NOVICE
+    if it shows surface-feature operation
 
 ---
 
@@ -367,7 +437,7 @@ EVALUATION:
 
 STEP 3 — SET SUPPORT DEPTH
 
-The depth scale now has five levels to prevent SUBSTANTIVE from acting as a
+The depth scale has five levels to prevent SUBSTANTIVE from acting as a
 catch-all for genuinely different cases.
 
 SURFACE:
@@ -387,10 +457,10 @@ SUBSTANTIVE:
   Names specific options, raises a real trade-off, or asks a question that
   requires reasoning about the task. Standard depth for INTERMEDIATE.
   Appropriate when: the student needs meaningful engagement with their actual
-  obstacle - not just a pointer, but also not architectural-level reasoning.
+  obstacle — not just a pointer, but also not architectural-level reasoning.
 
 SUBSTANTIVE_PLUS:
-  Beyond standard engagement - involves multiple trade-offs, design considerations,
+  Beyond standard engagement — involves multiple trade-offs, design considerations,
   or a targeted explanation that goes deeper than naming options.
   Appropriate for: INTERMEDIATE students who have already received SUBSTANTIVE
   support and are now reasoning about refinement or extension, OR ADVANCED students
