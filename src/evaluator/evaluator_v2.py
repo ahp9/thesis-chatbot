@@ -19,6 +19,11 @@ REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Default personas file
 DEFAULT_PERSONAS_FILE = "personas.json"
+RUBRIC_ALIASES = {
+    # Backward-compatible alias for explicit simplified naming.
+    "rubric_classification_v1": "rubric_classification_v1.yaml",
+    "rubric_classification_v1.yaml": "rubric_classification_v1.yaml",
+}
 
 # Version constants
 VERSION_BASE_SRL    = "v7"
@@ -117,6 +122,31 @@ def load_personas(path: Path) -> List[Dict[str, Any]]:
 def require_file(path: Path, kind: str) -> None:
     if not path.exists():
         raise FileNotFoundError(f"{kind} not found: {path}")
+
+
+def normalize_rubric_file(rubric_file: str) -> str:
+    """Resolve known rubric aliases to canonical filenames."""
+    return RUBRIC_ALIASES.get(rubric_file, rubric_file)
+
+
+def summarize_rubric_shape(rubric: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Provide a lightweight rubric-shape summary to catch overly complex setups.
+    This does not fail evaluation; it only informs logs.
+    """
+    criteria = rubric.get("criteria", {}) or {}
+    criterion_count = len(criteria)
+    anchors_1_to_5 = 0
+
+    for c in criteria.values():
+        if all(f"score_{i}" in c for i in range(1, 6)):
+            anchors_1_to_5 += 1
+
+    return {
+        "criterion_count": criterion_count,
+        "criteria_with_1_to_5_anchors": anchors_1_to_5,
+        "all_criteria_use_1_to_5": anchors_1_to_5 == criterion_count if criterion_count else True,
+    }
 
 
 def _build_version_tag() -> str:
@@ -424,6 +454,7 @@ async def run_dynamic(
     """
     client = get_client()
 
+    rubric_file = normalize_rubric_file(rubric_file)
     rubric_path   = RUBRICS_DIR / rubric_file
     personas_path = PERSONAS_DIR / personas_file
     require_file(rubric_path,   "Rubric")
@@ -431,6 +462,7 @@ async def run_dynamic(
 
     rubric   = load_yaml(rubric_path)
     personas = load_personas(personas_path)
+    rubric_shape = summarize_rubric_shape(rubric)
 
     if max_cases is not None:
         personas = personas[:max_cases]
@@ -453,6 +485,12 @@ async def run_dynamic(
     if verbose:
         print(f"[DYN] Personas : {personas_path} ({len(personas)} total, {len(personas_to_run)} to run)")
         print(f"[DYN] Rubric   : {rubric_path}  type={rubric.get('rubric_type', 'response')}")
+        print(
+            "[DYN] Rubric shape: "
+            f"criteria={rubric_shape['criterion_count']} "
+            f"anchored_1to5={rubric_shape['criteria_with_1_to_5_anchors']} "
+            f"all_1to5={rubric_shape['all_criteria_use_1_to_5']}"
+        )
         print(f"[DYN] Tutor    : {tutor_type}")
         print(f"[DYN] Max turns: {max_turns_per_case}")
         print(f"[DYN] Concurrency: {concurrency}")

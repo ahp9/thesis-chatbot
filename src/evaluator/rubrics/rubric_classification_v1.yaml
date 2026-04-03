@@ -1,0 +1,70 @@
+rubric_name: "SRL Chain — Simplified Classification Accuracy"
+rubric_type: chain
+
+criteria:
+  field_accuracy:
+    what_to_evaluate: >
+      Check whether core diagnostic fields match observable student evidence:
+      frustration_level, expertise_level, progress_state, context_gap,
+      request_kind, and task_stage.
+
+      Score from transcript evidence only.
+
+    score_5: "Core fields are accurate and evidence-grounded across the case."
+    score_4: "Mostly accurate with one borderline or weakly justified field."
+    score_3: "Mixed accuracy: multiple fields plausible but not strongly evidenced."
+    score_2: "At least one core field is clearly wrong."
+    score_1: "Multiple core fields are wrong or unsupported."
+
+  support_depth_fit:
+    what_to_evaluate: >
+      Check whether decision.support_depth matches demonstrated student need.
+
+      Use this practical anchor:
+      - lighter need (orientation/single pointer) should not be over-deep
+      - deeper strategic need should not be flattened to shallow support
+
+    score_5: "Selected depth clearly matches required granularity."
+    score_4: "Depth choice is mostly right with minor over/under-scope."
+    score_3: "Depth is plausible but mixed; adjacent level may fit similarly."
+    score_2: "Depth is likely one level off and impacts support usefulness."
+    score_1: "Depth clearly mismatches the case and distorts support type."
+
+  middle_bucket_pressure:
+    applicability: >
+      Apply only when decision.support_depth is the middle bucket used by your
+      taxonomy (e.g., SUBSTANTIVE).
+
+    what_to_evaluate: >
+      Check whether the middle bucket is genuinely best-fit or used as a safe default.
+
+    score_5: "Middle bucket is clearly justified by evidence; not a default choice."
+    score_4: "Middle bucket is acceptable with minor pressure toward adjacent level."
+    score_3: "Middle bucket is plausible but evidence is mixed."
+    score_2: "Middle bucket appears overused; adjacent level better fits evidence."
+    score_1: "Middle bucket is clearly a catch-all and masks distinct support needs."
+
+  field_consistency:
+    what_to_evaluate: >
+      Check internal coherence across diagnostic fields and decision fields.
+
+      Penalize meaningful contradictions that would change support behavior.
+
+    score_5: "Fields are coherent and mutually supportive."
+    score_4: "Mostly coherent with minor explainable tension."
+    score_3: "One notable inconsistency but partial coherence remains."
+    score_2: "Clear inconsistency likely harms decision quality."
+    score_1: "Multiple or severe inconsistencies indicate unreliable classification."
+
+fail_flags:
+  - id: CORE_FIELD_MISLABEL
+    trigger: "One or more core diagnosis fields are clearly unsupported by transcript evidence."
+
+  - id: SUPPORT_DEPTH_CLEAR_MISFIT
+    trigger: "Selected support depth clearly mismatches student need granularity."
+
+  - id: MIDDLE_BUCKET_CATCH_ALL
+    trigger: "Middle support depth bucket is used as default despite better adjacent fit."
+
+  - id: INTERNAL_FIELD_CONTRADICTION
+    trigger: "Diagnosis/decision fields contain meaningful unresolved contradictions."

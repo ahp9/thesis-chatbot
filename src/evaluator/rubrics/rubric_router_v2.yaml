@@ -1,171 +1,70 @@
-rubric_name: "SRL Router — Phase Classification"
+rubric_name: "SRL Router — Simplified Phase Routing Reliability"
 rubric_type: router
 
 criteria:
-
-  phase_signal_accuracy:
+  signal_grounding:
     what_to_evaluate: >
-      Evaluate whether each signal in route.signals is directly traceable to
-      an observable phrase, action, omission, or artifact in STUDENT_MESSAGE
-      or RECENT_CONTEXT.
+      Check whether route signals are explicitly grounded in the student's words
+      or clear omissions in context.
 
-      Signals must describe only what is explicitly present or absent.
-      Do not reward inferred intent unless the wording clearly supports it.
+      Signals must be observable, specific, and routing-relevant.
 
-    score_3: "All signals map directly to observable student behaviour or explicit absence of required task information."
-    score_2: "Most signals are grounded. One signal slightly over-interprets wording but remains plausible."
-    score_1: "At least one signal depends on inferred intent or weak interpretation not supported by the wording."
-    score_0: "Signals contradict the student message, invent evidence, or are too generic to have routing value."
+    score_5: "All key signals are explicit, observable, and specific to the student message."
+    score_4: "Signals are mostly grounded; one is slightly generic or weakly evidenced."
+    score_3: "Mixed grounding: some concrete signals, some vague interpretation."
+    score_2: "Several signals depend on inference or are too generic to justify routing."
+    score_1: "Signals are largely invented, contradictory, or not evidence-grounded."
 
-    do_not_accept:
-      - Signals describing what the student might mean without wording support
-      - Generic signals reusable across almost any message
-      - Signals derived from tutor response rather than student input
-
-  phase_correctness:
+  phase_choice_fit:
     what_to_evaluate: >
-      Evaluate whether the selected SRL phase matches the student's actual learning state.
+      Check whether selected phase is the best fit for current student intent.
 
-      FORETHOUGHT (Planning / Orientation): The student is still orienting,
-      defining the task, identifying constraints, clarifying goals, or deciding
-      how to begin. This phase applies when the task is not yet sufficiently
-      defined for concrete technical progress. Simply expressing a need to start
-      an assignment, naming a subject area, or asking for general direction
-      remains FORETHOUGHT if the specific objective is still unclear.
+      FORETHOUGHT: orientation/planning.
+      PERFORMANCE: active task progress.
+      REFLECTION: evaluation of existing work.
 
-      PERFORMANCE (Execution / Active Help): The student has a sufficiently
-      defined task, goal, or subtask and is actively trying to progress.
-      This begins once the task definition or concrete objective is clear enough
-      that technical, conceptual, or procedural support can be given. The
-      student does not need to have produced an artifact yet — PERFORMANCE
-      includes working through the assignment after task definition.
-
-      REFLECTION (Evaluation / Review): The student is evaluating completed work,
-      interpreting results, reviewing mistakes, judging correctness, or assessing
-      learning outcomes. This phase applies when the primary intent is to assess
-      or interpret existing work rather than continue task execution.
-
-    score_3: "Phase is clearly correct and best supported by the message. No adjacent phase could reasonably compete."
-    score_2: "Phase is correct but adjacent competition exists. The selected phase is still the best fit."
-    score_1: "An adjacent phase would fit better. The selected phase is not clearly wrong but misses the dominant signal."
-    score_0: "Wrong phase selected. The response mode would become inappropriate as a result."
-
-    do_not_accept:
-      - Phase stagnation (staying in FORETHOUGHT after an actionable objective is established)
-      - Phase prematureness (selecting PERFORMANCE before the objective is defined)
-      - Phase misalignment (selecting REFLECTION while the student is still actively building)
+    score_5: "Selected phase is clearly best and well-supported by message intent."
+    score_4: "Selected phase is reasonable with minor adjacent-phase competition."
+    score_3: "Phase choice is mixed or weakly separated from adjacent phase."
+    score_2: "Likely wrong phase; adjacent phase fits better."
+    score_1: "Clearly wrong phase that would lead to inappropriate tutor mode."
 
   confidence_calibration:
     what_to_evaluate: >
-      Evaluate whether confidence reflects actual phase competition, not merely
-      missing task detail.
+      Check if confidence matches ambiguity in phase evidence.
 
-      High confidence is appropriate when one phase clearly dominates, even if
-      task details remain underspecified.
+      High confidence is justified when one phase dominates.
+      Lower confidence is justified when adjacent phases genuinely compete.
 
-      Lower confidence is required only when multiple phases are genuinely plausible.
+    score_5: "Confidence is well-calibrated to observed phase ambiguity."
+    score_4: "Small over/under-confidence but still broadly reasonable."
+    score_3: "Calibration is mixed; confidence does not cleanly match ambiguity."
+    score_2: "Noticeable calibration error likely to mislead downstream components."
+    score_1: "Confidence strongly contradicts evidence (e.g., very high under real ambiguity)."
 
-    score_3: "Confidence matches actual phase competition — high when one phase dominates, lower when adjacent phases genuinely compete."
-    score_2: "Slight over- or under-confidence but still reasonable given the evidence."
-    score_1: "Noticeable mismatch — very high confidence when phases compete, or very low confidence when one phase clearly dominates."
-    score_0: "Confidence strongly contradicts the evidence in the message."
-
-    do_not_accept:
-      - Penalising high confidence solely because task details are incomplete
-      - High confidence when multiple phases are equally plausible
-      - Very low confidence when one phase clearly dominates
-
-  task_definition_boundary:
+  boundary_handling:
     what_to_evaluate: >
-      Evaluate whether the router correctly distinguishes between:
+      Check two common boundary decisions:
+      - task mentioned vs task defined
+      - artifact present: continuation intent (PERFORMANCE) vs evaluation intent (REFLECTION)
 
-      task MENTIONED:
-        Domain, subject, or broad activity named but no executable objective exists.
-        Examples: "I need to do something with Python", "I have math homework",
-        "I need help with my essay but haven't started"
+      Apply artifact logic only when an artifact is present.
 
-      task DEFINED:
-        Enough concrete objective exists that meaningful task support can begin.
-        Examples: "I need to write a Python loop that sums a list",
-        "How do I sort this list?", "Why does this equation fail?"
-
-    score_3: "Correctly distinguishes mention from definition. Domain-only messages route to FORETHOUGHT; concrete objective messages route to PERFORMANCE."
-    score_2: "Mostly correct with slight over-reading of a vague objective as sufficiently defined."
-    score_1: "Boundary handled inconsistently within the conversation."
-    score_0: "Domain mention is incorrectly treated as task definition, routing to PERFORMANCE when FORETHOUGHT is required."
-
-    examples_forethought:
-      - "I need to do something with Python"
-      - "I have math homework and don't know where to start"
-      - "I need help with my essay but haven't started"
-
-    examples_performance:
-      - "I need to write a Python loop that reverses a string"
-      - "How do I sort this list in descending order?"
-      - "Why does this equation produce a negative result?"
-
-  artifact_rule_applied:
-    applicability: >
-      Score only if the student provided code, draft, text, plan, result, or artifact.
-
-    what_to_evaluate: >
-      Distinguish between:
-      - evaluation / judgement / verification of existing artifact → REFLECTION
-      - continuation / revision / next-step help with existing artifact → PERFORMANCE
-
-      The student's intent determines the phase, not the presence of the artifact alone.
-
-    score_3: "Correct phase selected. Artifact explicitly cited in signals. Evaluation vs continuation distinction clearly stated in rationale."
-    score_2: "Correct phase selected. Artifact noticed but evaluation vs continuation distinction only partially stated."
-    score_1: "Correct phase selected but artifact not cited in signals — right call, insufficient reasoning."
-    score_0: "Artifact present but wrong phase assigned."
-
-    do_not_accept:
-      - Evaluation request routed to PERFORMANCE
-      - Continuation request routed to REFLECTION
-
-  affective_phase_sensitivity:
-    what_to_evaluate: >
-      Evaluate whether the router correctly detected affective or motivational
-      signals and represented them in the phase classification and/or confidence.
-
-      The router does not need to change the phase based on affect — it needs to
-      detect the signal and represent it in the route output (e.g., in a signal
-      entry, confidence note, or explicit emotional flag).
-
-      Signals include:
-      - Explicit anxiety ("I'm panicking", "I don't know where to even start")
-      - Learned helplessness ("just tell me", "I give up")
-      - Self-efficacy language ("I think I can figure this out if...")
-      - Emotional punctuation ("???", ALL CAPS, ellipses indicating uncertainty)
-
-    score_3: "Router correctly detected the emotional signal and represented it in the route output."
-    score_2: "Router detected the signal but represented it only weakly (e.g., buried in a generic signal)."
-    score_1: "Router missed a moderate emotional signal but otherwise classified the phase correctly."
-    score_0: "Router completely ignored an explicit emotional signal. Route output contains no representation of the emotional context."
-
-    do_not_accept:
-      - Ignoring explicit emotional language in signals entirely
-      - Changing the phase based on affect alone without cognitive evidence
+    score_5: "Both boundaries are handled correctly and explicitly in routing logic."
+    score_4: "Boundary handling is mostly correct with minor ambiguity."
+    score_3: "One boundary is unclear or weakly handled."
+    score_2: "One boundary is clearly mishandled."
+    score_1: "Boundary handling is consistently wrong and causes phase misrouting."
 
 fail_flags:
-  - id: FORETHOUGHT_AFTER_EXECUTABLE_TASK_DEFINED
-    trigger: "FORETHOUGHT selected when prior context already contains a concrete executable task."
-
-  - id: HIGH_CONFIDENCE_WITH_REAL_PHASE_COMPETITION
-    trigger: "Confidence ≥ 0.80 when two adjacent phases are genuinely plausible."
-
-  - id: PHASE_REGRESSION_WITHOUT_EXPLICIT_EVIDENCE
-    trigger: "Phase moved backward without clear student evidence."
-
-  - id: DOMAIN_MISREAD_AS_TASK_DEFINITION
-    trigger: "Domain mention treated as executable task definition, routing to PERFORMANCE before a concrete objective is established."
-
-  - id: ARTIFACT_INTENT_MISCLASSIFIED
-    trigger: "Artifact present but continuation/evaluation intent routed incorrectly."
-
   - id: SIGNALS_NOT_OBSERVABLE
-    trigger: "One or more signals depend on invented intent rather than observable wording."
+    trigger: "Route signals are not directly traceable to student wording or clear context gaps."
 
-  - id: AFFECTIVE_SIGNAL_MISSED
-    trigger: "Student message contains explicit emotional or motivational language that is absent from all route signals."
+  - id: TASK_MENTION_MISREAD_AS_DEFINED
+    trigger: "Domain-level mention is routed as executable task definition without concrete objective."
+
+  - id: ARTIFACT_INTENT_MISROUTED
+    trigger: "Artifact continuation/evaluation intent is routed to the wrong phase."
+
+  - id: CONFIDENCE_OVERSTATED_UNDER_AMBIGUITY
+    trigger: "High confidence used despite clear adjacent-phase competition."
