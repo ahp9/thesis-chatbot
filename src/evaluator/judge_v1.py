@@ -1,64 +1,12 @@
 import json
 from typing import Any, Dict, Optional
 
-
 JUDGE_SYSTEM = """
-    ROLE: You are an impartial evaluator (AI-as-a-Judge).
-    
-    PURPOSE: Your task is to evaluate the assistant strictly against the provided rubric.
-    
-    CORE REQUIREMENTS:
-    - Be precise, evidence-based, and consistent.
-    - Judge only what is supported by the transcript and any chain internals provided.
-    - Do not invent evidence.
-    - Do not give advice, coaching, or rewrites.
-    - If evidence is missing, say so in the rationale rather than guessing.
-    - Return ONLY valid JSON matching the required schema.
-    
-    IMPORTANT: The system you are evaluating may have made real errors.
-    Do not assume the response is good. Your job is to find failures,
-    not confirm quality. Score 3 only when you can point to specific
-    text that satisfies every condition in the rubric. If you cannot
-    find that text verbatim in the transcript, the criterion does not
-    score 3.
-    """
-
-RUBRIC_TYPE_DESCRIPTIONS = {
-    "router": (
-        "You are evaluating the ROUTER decision only. "
-        "Focus on whether the phase classification is correct, well-supported, "
-        "and appropriately confident. The transcript is supporting context."
-    ),
-    "chain": (
-        "You are evaluating the INTERNAL CHAIN DECISIONS only. "
-        "Focus on diagnosis quality, support-level selection, checks, and whether "
-        "the internal reasoning objects align with the rubric. The final response "
-        "is supporting context, not the primary target."
-    ),
-    "response": (
-        "You are evaluating the FINAL RESPONSE shown to the student. "
-        "Focus primarily on the response text in the transcript. "
-        "Use chain internals only to check fidelity, consistency, and whether the "
-        "final reply matches the intended behavior."
-    ),
-}
-
-RUBRIC_INPUT_GUIDANCE = {
-    "router": (
-        "Prioritize: route object (all turns if snapshots are provided).\n"
-        "Secondary context: transcript.\n"
-        "Ignore response style unless the rubric explicitly requires it."
-    ),
-    "chain": (
-        "Prioritize: diagnosis, decision, check, and rewrite status (all turns if snapshots are provided).\n"
-        "Secondary context: transcript.\n"
-        "Do not over-penalize final phrasing unless chain fidelity is part of the rubric."
-    ),
-    "response": (
-        "Prioritize: transcript and final reply (all turns if snapshots are provided).\n"
-        "Secondary context: route/diagnosis/decision/check/draft reply for fidelity checking."
-    ),
-}
+ROLE: You are an impartial evaluator (AI-as-a-Judge).
+Evaluate strictly using only transcript and provided chain fields.
+Do not guess missing evidence. Do not coach or rewrite.
+Return ONLY valid JSON.
+""".strip()
 
 OUTPUT_SCHEMA = {
     "rubric_name": "string",
@@ -69,14 +17,12 @@ OUTPUT_SCHEMA = {
             "score": "number | null",
             "rationale": "string",
             "evidence_quotes": ["string"],
-            "turn_evidence": {
-                "<turn_number>": "string | null"
-            }
+            "turn_evidence": {"<turn_number>": "string | null"},
         }
     },
     "overall_score": "number",
     "fail_flags": ["string"],
-    "summary": ["string"]
+    "summary": ["string"],
 }
 
 
@@ -84,172 +30,33 @@ def _pretty_json(data: Any) -> str:
     return json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True)
 
 
-def _select_chain_view(
-    rubric_type: str,
-    chain_internals: Dict[str, Any],
-) -> Dict[str, Any]:
-    """
-    Build the chain view passed to the judge.
-
-    Dynamic path (chain_internals contains 'turn_snapshots'):
-        Returns a trimmed per-turn sequence for all turns.
-        rubric_type controls which fields within each snapshot are included.
-        The judge receives the full trajectory, not just the last turn.
-
-    Legacy / static path (no 'turn_snapshots'):
-        Falls back to flat single-turn fields for backward compatibility
-        with evaluator_v1.py static test cases.
-    """
+def _select_chain_view(rubric_type: str, chain_internals: Dict[str, Any]) -> Dict[str, Any]:
     snapshots = chain_internals.get("turn_snapshots")
 
-    # ── Legacy / static path ─────────────────────────────────────────────────
     if not snapshots:
-        if rubric_type == "router":
-            return {"route": chain_internals.get("route")}
-
-        if rubric_type == "chain":
-            return {
-                "route":         chain_internals.get("route"),
-                "diagnosis":     chain_internals.get("diagnosis"),
-                "decision":      chain_internals.get("decision"),
-                "check":         chain_internals.get("check"),
-                "was_rewritten": chain_internals.get("was_rewritten", False),
-            }
-
         return {
-            "route":         chain_internals.get("route"),
-            "diagnosis":     chain_internals.get("diagnosis"),
-            "decision":      chain_internals.get("decision"),
-            "check":         chain_internals.get("check"),
-            "draft_reply":   chain_internals.get("draft_reply"),
-            "final_reply":   chain_internals.get("final_reply"),
-            "was_rewritten": chain_internals.get("was_rewritten", False),
+            "route": chain_internals.get("route"),
+            "diagnosis": chain_internals.get("diagnosis"),
+            "decision": chain_internals.get("decision"),
+            "check": chain_internals.get("check"),
+            "final_reply": chain_internals.get("final_reply"),
         }
 
-    # ── Dynamic path: full turn-by-turn sequence ─────────────────────────────
     def _trim_snapshot(s: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Trim a single turn snapshot to only the fields relevant for
-        the given rubric_type, keeping turn index and user message for context.
-        """
-        base = {
-            "turn":         s.get("turn"),
-            "user_message": s.get("user_message"),
-        }
-        if rubric_type == "router":
-            return {**base, "route": s.get("route")}
-
-        if rubric_type == "chain":
-            return {
-                **base,
-                "route":         s.get("route"),
-                "diagnosis":     s.get("diagnosis"),
-                "decision":      s.get("decision"),
-                "check":         s.get("check"),
-                "was_rewritten": s.get("was_rewritten", False),
-            }
-
-        # response
         return {
-            **base,
-            "route":         s.get("route"),
-            "diagnosis":     s.get("diagnosis"),
-            "decision":      s.get("decision"),
-            "check":         s.get("check"),
-            "draft_reply":   s.get("draft_reply"),
-            "final_reply":   s.get("final_reply"),
-            "was_rewritten": s.get("was_rewritten", False),
+            "turn": s.get("turn"),
+            "route": s.get("route"),
+            "diagnosis": s.get("diagnosis"),
+            "decision": s.get("decision"),
+            "check": s.get("check"),
+            "final_reply": s.get("final_reply"),
         }
 
     return {
-        "total_turns":    chain_internals.get("total_turns", len(snapshots)),
-        "final_phase":    chain_internals.get("final_phase"),
+        "total_turns": chain_internals.get("total_turns", len(snapshots)),
+        "final_phase": chain_internals.get("final_phase"),
         "turn_snapshots": [_trim_snapshot(s) for s in snapshots],
     }
-
-
-def _build_evidence_rules() -> str:
-    return """EVIDENCE RULES:
-                - Base every score on explicit evidence from the transcript and/or provided chain internals.
-                - Use 1-3 short verbatim evidence quotes for each criterion.
-                - Prefer the shortest quote that proves the point.
-                - Do not fabricate quotes.
-                - If evidence is insufficient, state that explicitly in the rationale rather than guessing.
-            """
-
-
-def _build_scoring_rules() -> str:
-    return """SCORING RULES:
-                - Score each criterion exactly on the scale defined in the rubric.
-                - Apply the rubric strictly.
-                - Respect applicability notes in the rubric.
-                - If a criterion is not applicable, set:
-                  - applicable = false
-                  - score = null
-                  - rationale = brief explanation of why it is not applicable
-                - If a criterion is applicable, set:
-                  - applicable = true
-                  - score = numeric rubric score
-                - Do not inflate scores for partially met criteria.
-                - If fail_flags apply, include them by exact name.
-                - Compute overall_score as the arithmetic mean of APPLICABLE criterion scores only, rounded to 1 decimal.
-                - Exclude any criterion with score = null from the mean.
-                - Keep summary to at most 5 bullets.
-            """
-
-
-def _build_trajectory_rules(has_snapshots: bool) -> Optional[str]:
-    """
-    Returned only when the judge is given multi-turn chain snapshots.
-    Instructs the judge to evaluate the full classification sequence, not
-    just the final turn, and to reason explicitly about trajectory.
-    """
-    if not has_snapshots:
-        return None
-
-    return """TRAJECTORY EVALUATION RULES:
-        The chain internals you received contain a 'turn_snapshots' list.
-        Each entry represents one turn of the conversation with its own
-        route, diagnosis, decision, check, and reply fields.
-
-        YOU MUST:
-        - Evaluate EACH turn's classification individually before aggregating.
-        - Consider whether classifications IMPROVE, STAY CONSISTENT, or REGRESS
-          across turns when assessing criteria related to adaptation or progression.
-        - Surface errors from EARLY turns — a correct final-turn classification
-          does NOT redeem a wrong classification on turn 1 or 2.
-        - When a criterion asks about support_level or phase routing, cite
-          the specific turn numbers and values, not a single summary judgment.
-        - For criteria that require cross-turn reasoning (e.g. adaptation,
-          consistency, phase progression), explicitly describe the turn-by-turn
-          trajectory in the rationale field.
-        - Use the 'turn_evidence' field in score_per_criterion to record
-          what happened at each turn for trajectory-relevant criteria.
-
-        YOU MUST NOT:
-        - Collapse the trajectory to only the last turn's classifications.
-        - Award full marks if the system recovered only at the final turn.
-        - Ignore classification errors that were "corrected later."
-        - Treat a late correction as equivalent to correct behavior throughout.
-
-        Evidence format for trajectory criteria (use in rationale):
-        "Turn 1: support_level=HINT (appropriate). Turn 2: support_level=SUBSTANTIVE
-        (escalation not warranted — student had not yet attempted the hint). Turn 3: ..."
-
-        If support_depth appears too broad too early (e.g. SUBSTANTIVE given before
-        the student has attempted any scaffolded step), flag this as an error even
-        if later turns are correct.
-    """
-
-
-def _build_output_contract() -> str:
-    return (
-        "OUTPUT CONTRACT:\n"
-        "Return ONLY valid JSON.\n"
-        "Do not wrap the JSON in markdown fences.\n"
-        "Do not include commentary before or after the JSON.\n"
-        f"Required schema:\n{_pretty_json(OUTPUT_SCHEMA)}"
-    )
 
 
 def build_judge_user_prompt(
@@ -258,74 +65,57 @@ def build_judge_user_prompt(
     chain_internals: Optional[Dict[str, Any]] = None,
 ) -> str:
     rubric_type = str(rubric.get("rubric_type", "response")).strip().lower()
-    if rubric_type not in RUBRIC_TYPE_DESCRIPTIONS:
-        rubric_type = "response"
-
-    type_instruction = RUBRIC_TYPE_DESCRIPTIONS[rubric_type]
-    input_guidance = RUBRIC_INPUT_GUIDANCE[rubric_type]
-
-    assistant_turn_count = transcript.count("ASSISTANT:")
-    user_turn_count = transcript.count("USER:")
 
     sections: list[str] = []
 
     sections.append(
-        "SECTION: EVALUATION FOCUS\n"
+        "SECTION: TASK\n"
         f"rubric_type: {rubric_type}\n"
-        f"{type_instruction}"
-    )
-
-    sections.append(
-        "SECTION: INPUT PRIORITIZATION\n"
-        f"{input_guidance}"
+        "Evaluate each criterion independently. Use only observable evidence."
     )
 
     sections.append(
         "SECTION: RUBRIC\n"
-        "The following rubric was originally written in YAML and converted to JSON:\n"
+        "Apply this rubric exactly as written:\n"
         f"{_pretty_json(rubric)}"
     )
 
     if chain_internals:
-        relevant_chain = _select_chain_view(rubric_type, chain_internals)
         sections.append(
-            "SECTION: CHAIN INTERNALS\n"
-            "Use only the fields below when they are relevant to the rubric:\n"
-            f"{_pretty_json(relevant_chain)}"
+            "SECTION: CHAIN CONTEXT\n"
+            "Use only these fields when relevant:\n"
+            f"{_pretty_json(_select_chain_view(rubric_type, chain_internals))}"
         )
-
-        # Add trajectory rules only when the judge has multi-turn snapshots to work with
-        has_snapshots = bool(chain_internals.get("turn_snapshots"))
-        traj_rules = _build_trajectory_rules(has_snapshots)
-        if traj_rules:
-            sections.append(traj_rules)
-
-    sections.append(
-        "SECTION: CONVERSATION METADATA\n"
-        f"user_turn_count: {user_turn_count}\n"
-        f"assistant_turn_count: {assistant_turn_count}\n"
-        "For criteria requiring prior tutor turns, at least one assistant turn must exist before the evaluated response."
-    )
 
     sections.append(
         "SECTION: TRANSCRIPT\n"
-        "This is the ground-truth interaction to evaluate:\n"
+        "Ground-truth interaction:\n"
         f"{transcript}"
     )
 
-    sections.append(_build_evidence_rules())
-    sections.append(_build_scoring_rules())
-
     sections.append(
-        "GUARDRAILS:\n"
-        "- Do not infer hidden intent unless supported by evidence.\n"
-        "- Do not reward style when the rubric targets routing or chain logic.\n"
-        "- Do not penalize missing chain fields if they were not provided.\n"
-        "- Do not use external knowledge.\n"
-        "- If transcript and chain internals conflict, note the conflict explicitly.\n"
-        "- If a criterion says it applies only when prior tutor turns exist, mark it not applicable when the transcript does not contain a prior assistant turn before the evaluated response."
+        "SCORING PROCEDURE (MANDATORY):\n"
+        "1) Evidence extraction: for each criterion, list 1-3 short verbatim quotes.\n"
+        "2) Fit check: compare evidence against score anchors. Pick the SINGLE best-matching score (no averaging).\n"
+        "3) Boundary check: explain why the score is not one level lower and not one level higher.\n"
+        "4) If criterion is not applicable, set applicable=false and score=null."
     )
 
-    sections.append(_build_output_contract())
+    sections.append(
+        "ANTI-MIDDLE-SCORE SAFEGUARDS:\n"
+        "- Score 3 is allowed only when evidence shows true mixed/partial performance.\n"
+        "- If evidence aligns clearly with score 2 or 4, do NOT use score 3.\n"
+        "- If you output score 3, rationale must explicitly state both: why not 2 and why not 4.\n"
+        "- Do not infer intent. If evidence is missing, lower confidence in rationale, not score inflation."
+    )
+
+    sections.append(
+        "OUTPUT CONTRACT:\n"
+        "- Return ONLY valid JSON (no markdown).\n"
+        "- Keep summary to max 5 bullets.\n"
+        "- overall_score = arithmetic mean of applicable scores only, rounded to 1 decimal.\n"
+        "- rationale format (required): 'evidence: ... | why_not_lower: ... | why_not_higher: ...'\n"
+        f"Required schema:\n{_pretty_json(OUTPUT_SCHEMA)}"
+    )
 
     return "\n\n".join(sections)

@@ -1,0 +1,78 @@
+rubric_name: "SRL Chain — Simplified Decision Reliability"
+rubric_type: chain
+
+criteria:
+  diagnosis_fit:
+    what_to_evaluate: >
+      Check whether diagnosis fields match observable student evidence.
+
+      Required checks:
+      - request_kind (PRODUCT vs RESOURCE)
+      - expertise_level (NOVICE/INTERMEDIATE/ADVANCED)
+      - progress_state (MOVING/STALLED/DONEISH)
+      - context_gap (NONE/SMALL/CRITICAL)
+
+      Score only from transcript-visible cues, not inferred intent.
+
+    score_5: "All key diagnosis fields match observable evidence and rationale is specific."
+    score_4: "Most fields match; one field is borderline or weakly justified."
+    score_3: "Mixed accuracy: some fields correct, some uncertain or weakly grounded."
+    score_2: "At least one key field is clearly wrong and affects decision quality."
+    score_1: "Multiple key fields are wrong or unsupported by evidence."
+
+  decision_fit:
+    what_to_evaluate: >
+      Check whether decision fields follow diagnosis and phase constraints.
+
+      Observable checks:
+      - support_level matches diagnosed need
+      - support_depth matches expertise and obstacle complexity
+      - CLARIFY is used when context_gap is CRITICAL
+
+    score_5: "Support level/depth clearly fit diagnosis and phase constraints."
+    score_4: "Decision is mostly right with minor depth or level mismatch."
+    score_3: "Partly aligned but contains one notable mismatch."
+    score_2: "Decision is weakly aligned; support choice likely unhelpful."
+    score_1: "Decision contradicts diagnosis or core chain rules."
+
+  implementation_gate_safety:
+    what_to_evaluate: >
+      Check whether implementation/code gates are safely set.
+
+      Observable checks:
+      - implementation_allowed and can_show_code are closed when student has
+        no attempt on PRODUCT requests.
+      - gate opening is justified by stall/frustration and support mode.
+
+    score_5: "Gate decisions are safe and clearly justified by case evidence."
+    score_4: "Gate decisions are mostly safe with minor over/under-caution."
+    score_3: "Borderline gate call with mixed evidence."
+    score_2: "Unsafe leaning gate choice in a sensitive case."
+    score_1: "Unsafe gate open for no-attempt PRODUCT case or equivalent leak risk."
+
+  check_rewrite_consistency:
+    what_to_evaluate: >
+      Check consistency across safety check, rewrite flag, and final reply.
+
+      Observable checks:
+      - if check.leaks_solution is true, rewrite must occur
+      - final reply should remove leak after rewrite
+
+    score_5: "Safety check and rewrite behavior are fully consistent and effective."
+    score_4: "Consistency is good; minor residual quality issue after rewrite."
+    score_3: "Rewrite/check path is partially consistent but not fully reliable."
+    score_2: "Rewrite/check mismatch leaves unresolved risk."
+    score_1: "Leak flagged but not rewritten, or leak remains clearly present."
+
+fail_flags:
+  - id: DIAGNOSIS_NOT_EVIDENCE_GROUNDED
+    trigger: "Diagnosis fields are assigned without observable transcript evidence."
+
+  - id: CLARIFY_MISSED_ON_CRITICAL_GAP
+    trigger: "context_gap=CRITICAL but support_level is not CLARIFY."
+
+  - id: UNSAFE_IMPLEMENTATION_GATE
+    trigger: "implementation_allowed=true or can_show_code=true in unsafe no-attempt PRODUCT context."
+
+  - id: LEAK_FLAG_WITHOUT_EFFECTIVE_REWRITE
+    trigger: "check.leaks_solution=true and rewrite path does not remove leak risk in final reply."
