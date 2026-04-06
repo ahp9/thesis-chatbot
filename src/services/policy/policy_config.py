@@ -23,19 +23,24 @@ CODE_ALLOWED_LEVELS = {
 }
 
 RESPONSE_PROMPT_FILES = {
-    SupportLevel.CLARIFY: "responses/respond_diagnose_v1.txt",
-    SupportLevel.QUESTION: "responses/respond_question_v2.txt",
-    SupportLevel.HINT: "responses/respond_hint_v1.txt",
-    SupportLevel.STRUCTURE: "responses/respond_structure_v1.txt",
-    SupportLevel.EXPLAIN: "responses/respond_explain_v1.txt",
-    SupportLevel.PARTIAL: "responses/respond_partial_v2.txt",
-    SupportLevel.REFLECT: "responses/respond_reflect_v1.txt",
-    SupportLevel.EVALUATION: "responses/respond_evaluation_v1.txt",
+    SupportLevel.CLARIFY:    "responses/respond_clarify_v2.txt",
+    SupportLevel.QUESTION:   "responses/respond_question_v3.txt",
+    SupportLevel.HINT:       "responses/respond_hint_v2.txt",       
+    SupportLevel.STRUCTURE:  "responses/respond_structure_v2.txt",
+    SupportLevel.EXPLAIN:    "responses/respond_explain_v2.txt",
+    SupportLevel.PARTIAL:    "responses/respond_partial_v3.txt",
+    SupportLevel.REFLECT:    "responses/respond_reflect_v2.txt",
+    SupportLevel.EVALUATION: "responses/respond_evaluation_v2.txt",
 }
+
 
 def response_prompt_file_for(support_level: SupportLevel | str) -> str:
     try:
-        level = support_level if isinstance(support_level, SupportLevel) else SupportLevel(str(support_level).upper())
+        level = (
+            support_level
+            if isinstance(support_level, SupportLevel)
+            else SupportLevel(str(support_level).upper())
+        )
     except Exception:
         level = SupportLevel.QUESTION
     return RESPONSE_PROMPT_FILES[level]

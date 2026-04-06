@@ -3,13 +3,14 @@ import logging
 from typing import Any, Dict
 
 from lib.enums import Phase
+from services.history_adapter import build_learning_trajectory
 from services.policy.policy_config import SWITCH_THRESHOLD, TRANSITIONS
 from services.prompt_loader import load_prompt
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-ROUTER_MODEL = "gpt-4o-mini"
+ROUTER_MODEL = "gpt-4.1-mini"
 
 
 def _coerce_phase(value: str | None) -> Phase:
@@ -38,9 +39,7 @@ def update_phase(
 async def route_message(
     client, user_message: str, llm_history: list, current_phase: str
 ) -> Dict[str, Any]:
-    # Direct instruction prompting is still appropriate for a narrow JSON routing task.
-    # [Ch. 3.1.1, p. 38]
-    router_system = load_prompt("base/router/router_system_prompt_v7.txt")
+    router_system = load_prompt("base/router/router_system_prompt_v8.txt")
 
     recent = llm_history[-6:] if llm_history else []
     context_lines = []
@@ -54,14 +53,19 @@ async def route_message(
         "\n".join(context_lines) if context_lines else "(no prior context)"
     )
 
-    router_input = f"""RECENT_CONTEXT (most recent messages):
-{context_text}
+    trajectory = build_learning_trajectory(llm_history, limit=3)
 
-CURRENT_PHASE_STATE: {current_phase}
+    router_input = f"""LEARNING_TRAJECTORY (last 3 turns, most recent last):
+                    {trajectory}
 
-CURRENT_USER_MESSAGE:
-{user_message}
-"""
+                    RECENT_CONTEXT (most recent messages):
+                    {context_text}
+
+                    CURRENT_PHASE_STATE: {current_phase}
+
+                    CURRENT_USER_MESSAGE:
+                    {user_message}
+                    """
 
     resp = await client.chat.completions.create(
         model=ROUTER_MODEL,
@@ -81,9 +85,11 @@ CURRENT_USER_MESSAGE:
             "srl_signal": "NONE",
             "confidence": 0.2,
             "signals": ["router_json_parse_failed"],
+            "trajectory_note": "",
             "one_optional_question": "",
         }
 
     data["phase"] = (data.get("phase") or "PERFORMANCE").upper()
     data["srl_signal"] = (data.get("srl_signal") or "NONE").upper()
+    data.setdefault("trajectory_note", "")
     return data

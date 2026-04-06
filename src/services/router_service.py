@@ -15,6 +15,7 @@ class RouterService:
         llm_history: list[dict],
         current_phase: Phase,
     ) -> RouteResult:
+
         data = await route_message(
             self.client,
             user_message,
@@ -33,4 +34,5 @@ class RouterService:
             confidence=float(data.get("confidence", 0.0) or 0.0),
             srl_signal=str(data.get("srl_signal") or "NONE").upper(),
             signals=list(data.get("signals", []) or []),
+            trajectory_note=str(data.get("trajectory_note") or ""),
         )

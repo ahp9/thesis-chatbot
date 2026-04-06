@@ -61,3 +61,42 @@ def last_assistant_reply(
             content = (item.get("content") or "").strip()
             return content[:max_chars] if content else default
     return default
+
+
+def build_learning_trajectory(
+    llm_history: list[dict[str, Any]],
+    limit: int = 3,
+) -> str:
+    entries: list[str] = []
+    turn_num = 0
+
+    for item in reversed(llm_history or []):
+        if item.get("role") != "assistant":
+            continue
+        if turn_num >= limit:
+            break
+
+        route = item.get("route") or {}
+        checkpoint = item.get("checkpoint") or item.get("diagnosis") or {}
+        decision = item.get("decision") or {}
+
+        phase = route.get("phase", "UNKNOWN")
+        support_level = decision.get("support_level", "UNKNOWN")
+        progress_state = checkpoint.get("progress_state", "UNKNOWN")
+        frustration_level = checkpoint.get("frustration_level", "UNKNOWN")
+        expertise_level = checkpoint.get("expertise_level", "UNKNOWN")
+
+        entries.append(
+            f"phase={phase} | support_level={support_level} | "
+            f"progress_state={progress_state} | frustration_level={frustration_level} | "
+            f"expertise_level={expertise_level}"
+        )
+        turn_num += 1
+
+    if not entries:
+        return "(no prior turns — treat as turn 1)"
+
+    # Reverse so most recent is last (chronological reading order)
+    entries.reverse()
+    lines = [f"  turn {i + 1}: {e}" for i, e in enumerate(entries)]
+    return "\n".join(lines)

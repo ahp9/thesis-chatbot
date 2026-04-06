@@ -42,6 +42,7 @@ class RouteResult(SerializableContract):
     confidence: float
     srl_signal: str
     signals: List[str]
+    trajectory_note: str
 
 
 @dataclass

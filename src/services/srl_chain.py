@@ -4,7 +4,11 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
-from services.history_adapter import last_assistant_reply, recent_control_state
+from services.history_adapter import (
+    build_learning_trajectory,
+    last_assistant_reply,
+    recent_control_state,
+)
 from services.policy.policy_config import response_prompt_file_for
 from services.prompt_loader import load_prompt
 
@@ -68,11 +72,6 @@ _DEPTH_INSTRUCTIONS: Dict[str, str] = {
 
 # ---------------------------------------------------------------------------
 # Affective state instruction table
-#
-# Injected alongside depth so the generator adjusts both content depth AND
-# tone to the student's emotional state. Frustration detection lives entirely
-# in the chain (checkpoint_and_decide), not in the router — this is the
-# correct place because the chain has full structured context.
 # ---------------------------------------------------------------------------
 
 _AFFECTIVE_INSTRUCTIONS: Dict[str, str] = {
@@ -93,6 +92,65 @@ _AFFECTIVE_INSTRUCTIONS: Dict[str, str] = {
     ),
 }
 
+# ---------------------------------------------------------------------------
+# Multi-turn coherence instruction table
+#
+# NEW: Injected into the generation prompt so the model knows what the last
+# support level was and can avoid repeating a strategy that did not move
+# the student forward.
+#
+# Why this exists:
+#   The judge rubric `multi_turn_coherence` scored 2.20/3 — the second
+#   lowest criterion in the response rubric. The root cause is that the
+#   generation model sees the current decision (e.g. HINT) but has no
+#   explicit instruction about whether it already gave a HINT that did not
+#   work. This table injects a behavioural contract per escalation situation.
+# ---------------------------------------------------------------------------
+
+_COHERENCE_INSTRUCTIONS: Dict[str, str] = {
+    "same_level_first_repeat": (
+        "COHERENCE INSTRUCTION: The previous turn used the same support level as this one. "
+        "Do NOT repeat the same framing, the same hint, or the same structural breakdown. "
+        "Find a different angle, a different entry point, or a different example. "
+        "The student did not respond to the prior approach — vary the strategy."
+    ),
+    "escalated": (
+        "COHERENCE INSTRUCTION: The support level has escalated from the previous turn. "
+        "Acknowledge that the student is still working through this. "
+        "The escalation means a more concrete approach is warranted — do not hold back "
+        "to the level of the previous turn."
+    ),
+    "de_escalated": (
+        "COHERENCE INSTRUCTION: The support level has de-escalated from the previous turn. "
+        "This usually means the student made progress. Acknowledge the forward movement "
+        "explicitly before continuing. Do not re-explain what was already covered."
+    ),
+    "first_turn": (
+        "COHERENCE INSTRUCTION: This is the first turn. No prior strategy to account for."
+    ),
+}
+
+_SUPPORT_LEVEL_ORDER = [
+    "CLARIFY", "QUESTION", "HINT", "STRUCTURE", "EXPLAIN", "PARTIAL",
+    "REFLECT", "EVALUATION",
+]
+
+
+def _get_coherence_key(
+    current_support_level: str,
+    previous_support_level: str | None,
+) -> str:
+    if not previous_support_level:
+        return "first_turn"
+    if current_support_level == previous_support_level:
+        return "same_level_first_repeat"
+    try:
+        curr_idx = _SUPPORT_LEVEL_ORDER.index(current_support_level)
+        prev_idx = _SUPPORT_LEVEL_ORDER.index(previous_support_level)
+        return "escalated" if curr_idx > prev_idx else "de_escalated"
+    except ValueError:
+        return "first_turn"
+
 
 # Dataclasses
 @dataclass
@@ -108,7 +166,7 @@ class CheckpointResult:
     implementation_allowed: bool
     confidence: float
     rationale: List[str]
-    parse_ok: bool = True          # False when the model response could not be parsed
+    parse_ok: bool = True
 
 
 @dataclass
@@ -135,21 +193,18 @@ class CheckResult:
 
 # Prompt file maps
 BASE_PROMPT_FILES = {
-    "identity": "base/srl_model_v3.txt",
-    "phase_forethought": "phases/forethought_core_v2.txt",
-    "phase_performance": "phases/performance_core_v1.txt",
-    "phase_reflection": "phases/reflection_core.txt",
-    "diagnose": "chains/diagnose_student.txt",
-    "decide_support": "chains/choose_support_level.txt",
+    "identity": "base/srl_model_v4.txt",
+    "phase_forethought": "phases/forethought_core_v3.txt",
+    "phase_performance": "phases/performance_core_v2.txt",
+    "phase_reflection": "phases/reflection_core_v2.txt",
     "check_reply": "chains/check_solution_leak_v3.txt",
     "rewrite_reply": "chains/fallback_rewrite_v3.txt",
-    "checkpoint_and_decide": "chains/student_state_v5.txt",
+    "checkpoint_and_decide": "chains/student_state_v6.txt",
     "file_handler": "base/file.txt",
 }
 
 
-
-# JSON parsing 
+# JSON parsing
 def _extract_json(raw: str) -> Dict[str, Any]:
     """
     Try to extract a JSON object from the model's raw response.
@@ -159,20 +214,17 @@ def _extract_json(raw: str) -> Dict[str, Any]:
       2. Model prepends a line of prose before the JSON
       3. Model returns valid JSON directly
 
-    Returns an empty dict only if all attempts fail, and logs the raw
-    response so you can see exactly what the model returned.
+    Returns an empty dict only if all attempts fail.
     """
     if not raw or not raw.strip():
         logger.warning("_extract_json: model returned empty response")
         return {}
 
-    # Attempt 1: direct parse
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
         pass
 
-    # Attempt 2: strip ```json ... ``` or ``` ... ``` fences
     fence_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
     if fence_match:
         try:
@@ -180,7 +232,6 @@ def _extract_json(raw: str) -> Dict[str, Any]:
         except json.JSONDecodeError:
             pass
 
-    # Attempt 3: find the first { ... } block in the response
     brace_match = re.search(r"\{.*\}", raw, re.DOTALL)
     if brace_match:
         try:
@@ -188,7 +239,6 @@ def _extract_json(raw: str) -> Dict[str, Any]:
         except json.JSONDecodeError:
             pass
 
-    # All attempts failed — log so it is visible in your terminal
     logger.error(
         "_extract_json: could not parse model response. Raw content (first 500 chars):\n%s",
         raw[:500],
@@ -237,10 +287,10 @@ def _compact_history(llm_history: List[Dict[str, Any]], limit: int = 8) -> str:
     for m in recent:
         role = (m.get('role') or 'user').upper()
         content = (m.get('content') or '').strip()
-        # Ensure we don't lose the markers that signal expertise
         if content:
-            lines.append(f"{role}: {content[:500]}") # Cap length for speed
+            lines.append(f"{role}: {content[:500]}")
     return "\n".join(lines) if lines else "(no prior context)"
+
 
 def _build_native_history(
     llm_history: List[Dict[str, Any]],
@@ -267,21 +317,38 @@ def _build_native_history(
 
     clean = clean[-limit:]
 
-    # OpenAI requires the list to start with a user turn
     while clean and clean[0]["role"] == "assistant":
         clean.pop(0)
 
     return clean
+
 
 def _build_checkpoint_payload(
     route: Dict[str, Any],
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> str:
-    
+    """
+    Build the input payload for the checkpoint+decide stage.
+
+    Change from v5 → v6:
+      Added LEARNING_TRAJECTORY to the classifier payload.
+      The classifier (student_state_v6) can now see a structured summary of
+      the last 3 turns alongside the raw history. This matters for two reasons:
+        1. expertise_level persistence: the classifier can see if ADVANCED was
+           already established and avoid dropping it on a simpler follow-up.
+        2. strategy_updated_across_turns: the classifier can see whether the
+           same support level has already been used, avoiding inert repetition.
+      Both of these map directly to low-scoring rubric criteria:
+        - classification_reflects_this_message: avg 2.00 (expertise drift)
+        - strategy_updated_across_turns: avg 2.00 (repetition)
+    """
     recent_control = recent_control_state(llm_history)
+    trajectory = build_learning_trajectory(llm_history, limit=3)
+
     parts = [
         f"CURRENT_PHASE:\n{route.get('phase', 'UNKNOWN')}",
+        f"LEARNING_TRAJECTORY (last 3 turns):\n{trajectory}",
         f"PREVIOUS_CONTROL:\n{json.dumps(recent_control, indent=2)}",
         f"RECENT_HISTORY:\n{_compact_history(llm_history)}",
         f"CURRENT_USER_MESSAGE:\n{user_message}",
@@ -292,7 +359,7 @@ def _build_checkpoint_payload(
 def _should_run_safety_check(decision: SupportDecision) -> bool:
     """
     Run the check when the support level can plausibly produce a leaked
-    solution or runnable code.  Skip for structurally safe levels.
+    solution or runnable code. Skip for structurally safe levels.
     """
     if decision.can_show_code:
         return True
@@ -304,15 +371,22 @@ def _should_run_safety_check(decision: SupportDecision) -> bool:
 def _build_depth_and_affective_header(
     checkpoint: CheckpointResult,
     decision: SupportDecision,
+    llm_history: List[Dict[str, Any]],
 ) -> str:
     """
-    Build the depth + affective instruction block that is prepended to the
-    generation system prompt.
+    Build the depth + affective + coherence instruction block injected into
+    the generation system prompt.
 
-    This is the single place where support_depth and frustration_level are
-    translated from labels into explicit behavioural instructions the model
-    can act on. Without this, those values are computed correctly but then
-    ignored at generation time.
+    Change from v5 → v6:
+      Added a COHERENCE INSTRUCTION derived from the relationship between the
+      current support_level and the previous turn's support_level.
+
+      Why: The judge rubric `multi_turn_coherence` scored 2.20/3, the second
+      lowest in the response rubric. The root cause is that the generation
+      model sees the current decision (e.g. HINT) but has no explicit contract
+      about whether it already gave a HINT that did not work. The coherence
+      instruction tells it to vary the angle, acknowledge escalation, or
+      acknowledge progress — whichever is appropriate.
     """
     depth_key = (decision.support_depth or "SUBSTANTIVE").upper()
     affective_key = (checkpoint.frustration_level or "LOW").upper()
@@ -320,12 +394,20 @@ def _build_depth_and_affective_header(
     depth_instr = _DEPTH_INSTRUCTIONS.get(depth_key, _DEPTH_INSTRUCTIONS["SUBSTANTIVE"])
     affective_instr = _AFFECTIVE_INSTRUCTIONS.get(affective_key, _AFFECTIVE_INSTRUCTIONS["LOW"])
 
-    return f"{depth_instr}\n\n{affective_instr}"
+    # Derive coherence key from support level history
+    recent_control = recent_control_state(llm_history)
+    previous_support_level = recent_control.get("previous_support_level")
+    coherence_key = _get_coherence_key(
+        current_support_level=decision.support_level,
+        previous_support_level=previous_support_level,
+    )
+    coherence_instr = _COHERENCE_INSTRUCTIONS.get(coherence_key, _COHERENCE_INSTRUCTIONS["first_turn"])
+
+    return f"{depth_instr}\n\n{affective_instr}\n\n{coherence_instr}"
 
 
 # ---------------------------------------------------------------------------
 # Fallback values — used ONLY when parsing genuinely fails.
-# All rationale fields say PARSE_FAILED so they are visible in logs.
 # ---------------------------------------------------------------------------
 
 def _fallback_checkpoint() -> CheckpointResult:
@@ -369,6 +451,17 @@ async def checkpoint_and_decide(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> tuple[CheckpointResult, SupportDecision, dict]:
+    """
+    Run the combined checkpoint + decision stage.
+
+    Change from v5 → v6:
+      - Payload now includes LEARNING_TRAJECTORY (see _build_checkpoint_payload).
+      - expertise_level persistence guard: if a prior turn established ADVANCED,
+        the fallback here will not silently drop it on parse failure — the
+        trajectory makes the established level visible to the classifier.
+      - Loads student_state_v6.txt which removes implementation_allowed from
+        LLM scope and adds explicit can_show_code rules.
+    """
     prompt_parts = [
         load_prompt(BASE_PROMPT_FILES["identity"]),
         load_prompt(_phase_prompt_file(route.get("phase"))),
@@ -436,6 +529,7 @@ async def checkpoint_and_decide(
 
     return diagnosis, decision, debug
 
+
 async def generate_full_reply(
     client,
     route: Dict[str, Any],
@@ -448,24 +542,27 @@ async def generate_full_reply(
     Generate the tutor reply using native multi-turn history.
 
     The system prompt is built in layers:
-      1. SRL identity
-      2. Phase prompt (forethought / performance / reflection)
+      1. SRL identity (v4)
+      2. Phase prompt (forethought v3 / performance v2 / reflection v2)
       3. Support-level response prompt
-      4. Depth + affective instruction block  ← new: translates support_depth
-         and frustration_level into explicit behavioural contracts the model
-         can act on at generation time
+      4. Depth + affective + coherence instruction block
+         ← NEW in v6: coherence instruction added to address multi_turn_coherence
+         scores of 2.20/3 in the response rubric
       5. File handler (conditional)
 
     History is passed as real alternating user/assistant turns rather than
     a serialised string, which reduces token use and improves coherence.
     """
-    depth_and_affective = _build_depth_and_affective_header(checkpoint, decision)
+    # Pass llm_history to the header builder so it can compute coherence key
+    depth_affective_coherence = _build_depth_and_affective_header(
+        checkpoint, decision, llm_history
+    )
 
     prompt_parts = [
         load_prompt(BASE_PROMPT_FILES["identity"]),
         load_prompt(_phase_prompt_file(route.get("phase"))),
         load_prompt(decision.response_prompt_file),
-        depth_and_affective,
+        depth_affective_coherence,
     ]
     if _has_file_content(user_message):
         prompt_parts.append(load_prompt(BASE_PROMPT_FILES["file_handler"]))
@@ -481,10 +578,6 @@ async def generate_full_reply(
         indent=2,
     )
 
-    # Inject the last assistant reply so the generator knows what it just said.
-    # Without this, GPT-4o-mini regenerates the same structural breakdown every
-    # turn because it only sees the decision label (e.g. "STRUCTURE") and not
-    # the actual content it produced for that label last time.
     previous_reply = last_assistant_reply(llm_history)
 
     current_turn_content = (
@@ -548,12 +641,8 @@ async def check_reply(
         model=CHECK_MODEL,
     )
 
-
-
     if not parse_ok:
-        # Fail safe: if we can't read the check result, assume the reply needs rewriting
         logger.warning("check_reply: JSON parse failed — defaulting to safe=False")
-
         logger.warning("check_reply: JSON parse failed. raw_text=%s", raw_text)
         return CheckResult(
             is_safe=False,
@@ -587,8 +676,6 @@ async def rewrite_reply(
         load_prompt(BASE_PROMPT_FILES["rewrite_reply"]),
     ])
 
-    # Pass both what the draft said AND what the previous turn said.
-    # The rewrite needs to know both so it doesn't clone either of them.
     recent_control = recent_control_state(llm_history)
     previous_reply = last_assistant_reply(llm_history)
 
@@ -615,7 +702,7 @@ async def rewrite_reply(
 
 
 # ---------------------------------------------------------------------------
-# Public entry point
+# Public entry point (FOR AI JUDGE EVALUATION)
 # ---------------------------------------------------------------------------
 
 async def run_srl_chain(

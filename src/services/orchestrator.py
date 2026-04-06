@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from lib.contracts import CombinedControlResult, TurnResult
 from lib.enums import Phase
 from services.history_adapter import recent_control_state, recent_support_levels
@@ -30,10 +32,6 @@ class Orchestrator:
 
         router_predicted_phase = route.phase
 
-        # Pull the previous turn's frustration level so resolve_phase can raise
-        # the confidence threshold before switching phase when the student was
-        # highly frustrated. A frustrated student saying "I give up" reads like
-        # re-orientation language but is usually still mid-task PERFORMANCE.
         previous_state = recent_control_state(llm_history)
         previous_frustration = previous_state.get("previous_frustration_level")
 
@@ -79,6 +77,10 @@ class Orchestrator:
             llm_history,
             user_message,
         )
+
+        logger = logging.getLogger(__name__)
+        if getattr(route, "trajectory_note", ""):
+            logger.info("TRAJECTORY NOTE: %s", route.trajectory_note)
 
         return TurnResult(
             reply=final_reply,
