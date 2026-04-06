@@ -65,6 +65,8 @@ def build_judge_user_prompt(
     chain_internals: Optional[Dict[str, Any]] = None,
 ) -> str:
     rubric_type = str(rubric.get("rubric_type", "response")).strip().lower()
+    criteria = rubric.get("criteria", {}) or {}
+    criterion_ids = list(criteria.keys())
 
     sections: list[str] = []
 
@@ -72,6 +74,13 @@ def build_judge_user_prompt(
         "SECTION: TASK\n"
         f"rubric_type: {rubric_type}\n"
         "Evaluate each criterion independently. Use only observable evidence."
+    )
+
+    sections.append(
+        "SECTION: REQUIRED CRITERIA\n"
+        "You MUST return one entry in score_per_criterion for EVERY criterion id below.\n"
+        "Do not omit any criterion.\n"
+        f"{_pretty_json(criterion_ids)}"
     )
 
     sections.append(
@@ -95,26 +104,38 @@ def build_judge_user_prompt(
 
     sections.append(
         "SCORING PROCEDURE (MANDATORY):\n"
-        "1) Evidence extraction: for each criterion, list 1-3 short verbatim quotes.\n"
-        "2) Fit check: compare evidence against score anchors. Pick the SINGLE best-matching score (no averaging).\n"
-        "3) Boundary check: explain why the score is not one level lower and not one level higher.\n"
-        "4) If criterion is not applicable, set applicable=false and score=null."
+        "1) Evidence extraction: for EACH criterion, list 1-3 short verbatim quotes.\n"
+        "2) Fill turn_evidence for every assistant turn from 1 to total_turns.\n"
+        "3) Fit check: compare evidence against score anchors. Pick the SINGLE best-matching score (no averaging).\n"
+        "4) Boundary check: explain why the score is not one level lower and not one level higher.\n"
+        "5) If criterion is not applicable, set applicable=false and score=null."
     )
 
     sections.append(
-        "ANTI-MIDDLE-SCORE SAFEGUARDS:\n"
-        "- Score 3 is allowed only when evidence shows true mixed/partial performance.\n"
-        "- If evidence aligns clearly with score 2 or 4, do NOT use score 3.\n"
-        "- If you output score 3, rationale must explicitly state both: why not 2 and why not 4.\n"
-        "- Do not infer intent. If evidence is missing, lower confidence in rationale, not score inflation."
+        "ANTI-DEFAULT-3 SAFEGUARDS:\n"
+        "- Do not use score 3 as a safe middle.\n"
+        "- Score 3 is allowed only when the rubric's middle anchor is the best fit.\n"
+        "- If you assign score 3, rationale must explicitly explain why not the lower adjacent score and why not the higher adjacent score.\n"
+        "- If evidence clearly matches a lower or higher anchor, use that score."
+    )
+    
+    sections.append(
+        "TURN_EVIDENCE RULES:\n"
+        "- For every criterion, turn_evidence must contain one key for every assistant turn number from 1 to total_turns.\n"
+        "- If that turn contains relevant evidence for the criterion, set the value to 'relevant'.\n"
+        "- If that turn is not relevant, set the value to null.\n"
+        "- Do not omit any turn key.\n"
+        "- Do not leave turn_evidence empty."
     )
 
     sections.append(
-        "OUTPUT CONTRACT:\n"
-        "- Return ONLY valid JSON (no markdown).\n"
-        "- Keep summary to max 5 bullets.\n"
-        "- overall_score = arithmetic mean of applicable scores only, rounded to 1 decimal.\n"
-        "- rationale format (required): 'evidence: ... | why_not_lower: ... | why_not_higher: ...'\n"
+        "OUTPUT RULES:\n"
+        "- Return ONLY valid JSON.\n"
+        "- score_per_criterion must contain EVERY required criterion id exactly once.\n"
+        "- For every criterion object include: applicable, score, rationale, evidence_quotes, turn_evidence.\n"
+        "- rationale format: 'evidence: ... | why_not_lower: ... | why_not_higher: ...'\n"
+        "- overall_score should be the arithmetic mean of applicable scores only, rounded to 1 decimal.\n"
+        "- Keep summary to max 3 bullets.\n"
         f"Required schema:\n{_pretty_json(OUTPUT_SCHEMA)}"
     )
 

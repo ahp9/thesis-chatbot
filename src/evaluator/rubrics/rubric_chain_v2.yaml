@@ -1,112 +1,213 @@
-rubric_name: "SRL Chain — Diagnosis and Support-Level Decision"
+rubric_name: "Chain — Pedagogical Decision Quality Over the Conversation"
 rubric_type: chain
+
+# What this rubric grades
+# -----------------------
+# Each tutor turn is graded individually, but several criteria explicitly ask
+# the judge to look ACROSS turns — not just at the current one.
+#
+# The chain makes pedagogical decisions: diagnosis → support level → depth →
+# implementation gate → safety check. This rubric asks whether those decisions
+# were good ones, and whether the chain updated its strategy as the student's
+# state evolved.
+#
+# When turn_snapshots are present, the judge should look for patterns:
+#   - Is the chain classifying the student the same way every turn even when
+#     the student's messages are changing?
+#   - Is the support level stuck even when the student is not progressing?
+#   - Did the chain respond to new signals (frustration increase, progress, etc.)?
+
 
 criteria:
 
-  diagnosis_accuracy:
+  classification_reflects_this_message:
+    label: "The student state fields match what this specific message shows"
     what_to_evaluate: >
-      Evaluate whether the checkpoint correctly identified:
-      - request_kind      (RESOURCE vs PRODUCT)
-      - task_stage        (STARTING / WORKING / REVIEWING)
-      - progress_state    (MOVING / STALLED / DONEISH)
-      - expertise_level   (NOVICE / INTERMEDIATE / ADVANCED)
-      - context_gap       (NONE / SMALL / CRITICAL)
-      Check that the rationale cites specific evidence from the user message
-      for each of these fields.
+      Do the classification fields (expertise_level, frustration, progress_state,
+      request_kind, context_gap) correctly reflect the student's state as
+      shown in THIS message?
 
-    score_3: "All fields accurately match the student's message. Rationale cites specific evidence for expertise and progress state."
-    score_2: "Fields are mostly correct but rationale is thin or missing evidence for one field."
-    score_1: "One major field (request_kind or expertise_level) is wrong, or rationale is entirely missing."
-    score_0: "Two or more major fields are wrong. Diagnosis does not reflect the student's actual state."
+      Check each field against observable evidence:
+        - expertise_level: does it match the student's operational mode?
+          (see rubric_classification for full definitions)
+        - frustration: does it match the emotional tone of this message?
+        - progress_state: is it consistent with whether the student is moving,
+          stuck, or done?
+        - request_kind: does it match the primary intent?
+        - context_gap: is it consistent with how much information is present?
 
-  support_alignment_and_depth:
+      A classification that is internally consistent but wrong for THIS message
+      scores low here.
+
+    score_3: "All classification fields accurately match the student's state in this message. Rationale cites specific evidence for the key fields."
+    score_2: "Mostly correct. One field is slightly off or the rationale is thin for one field."
+    score_1: "One major field is wrong (most commonly expertise_level or frustration)."
+    score_0: "Two or more fields are wrong, or the classification does not reflect the student's observable state at all."
+
+    do_not_accept:
+      - Expertise inferred from topic or vocabulary rather than demonstrated behaviour
+      - Frustration = LOW when the student used explicit distress language
+      - Progress_state = MOVING when the student is clearly stuck with no new approach
+
+
+  support_level_is_right_for_right_now:
+    label: "Support level matches the student's current need — not the same decision as last time"
     what_to_evaluate: >
-      Evaluate whether the support_level and support_depth match the expertise_level floors:
-        - NOVICE:       Surface or Substantive (floor = Surface)
-        - INTERMEDIATE: Substantive floor
-        - ADVANCED:     Deep floor
+      Was the support_level selection appropriate for this specific turn?
 
-      Also check whether CLARIFY was used when context_gap is CRITICAL,
-      and whether QUESTION was used for NOVICE/STARTING combinations.
+      This criterion looks at the current turn AND prior turns (if available).
 
-      The support depth must also map to the correct metacognitive strategy type
-      for the current SRL phase:
-        FORETHOUGHT:  depth should scaffold PLANNING or GOAL-SETTING
-        PERFORMANCE:  depth should scaffold MONITORING or ERROR-DETECTION
-        REFLECTION:   depth should scaffold SELF-EVALUATION or ATTRIBUTION
+      Two questions:
 
-    score_3: "Support level is appropriate for the stage. Depth meets or exceeds the expertise floor. Metacognitive strategy type matches the current phase."
-    score_2: "Support level is appropriate but depth is one level off, or depth is correct but metacognitive type is slightly misaligned."
-    score_1: "Support level is inappropriate for the student's state (e.g., HINT when STALLED with a CRITICAL context gap)."
-    score_0: "Support level violates core SRL rules (e.g., PARTIAL or EXPLAIN to a NOVICE with no attempt on a PRODUCT request)."
+      1. Is the support level right for the diagnosed state right now?
+           CLARIFY  → context_gap is CRITICAL
+           QUESTION → NOVICE or STARTING, student needs orientation
+           HINT     → student is MOVING and just needs a nudge
+           EXPLAIN  → RESOURCE request or conceptual gap identified
+           PARTIAL  → student is STALLED or HIGH frustration, needs more help
+           STRUCTURE → student has no attempt and needs a framework
 
-  implementation_gate:
+      2. If prior turns exist: did the support level change appropriately
+         as the student's state changed?
+           - If the student made progress, the support should shift to the
+             next step (not repeat the same support)
+           - If the student did not progress, the support should escalate
+             (not stay at HINT after two turns with no movement)
+           - If new frustration signals appeared, support should reflect that
+
+    score_3: "Support level is correct for this turn AND updated appropriately from the prior turn based on the student's response."
+    score_2: "Support level is correct for this turn but did not visibly update in response to a change in the student's state."
+    score_1: "Support level is one step off — too cautious when more help was needed, or too forward when the student was making progress."
+    score_0: "Support level repeats a failed strategy without escalation, or escalates to full solution without justification."
+
+    do_not_accept:
+      - HINT repeated when the student has been STALLED across two or more turns
+      - QUESTION given to a student with HIGH frustration who has already been given questions
+      - Support level that does not account for frustration escalation
+
+
+  implementation_gate_is_correct:
+    label: "Code and implementation only unlocked when the student has earned it"
     what_to_evaluate: >
-      Evaluate whether implementation_allowed and can_show_code are set correctly.
+      Were implementation_allowed and can_show_code set correctly?
 
-      Should be FALSE when:
-      - PRODUCT request with no student attempt.
-      - Support level is QUESTION, CLARIFY, or HINT.
+      The gate should be CLOSED (false) when:
+        - The student is making a PRODUCT request with no attempt yet
+        - Support level is QUESTION, CLARIFY, or HINT
 
-      May be TRUE when:
-      - Support is PARTIAL or EXPLAIN AND the student is STALLED, highly frustrated,
-        or is a NOVICE who has made at least one attempt.
+      The gate may be OPEN (true) when:
+        - Support is PARTIAL or EXPLAIN AND:
+          - The student has made at least one attempt, OR
+          - The student shows HIGH frustration and has been stuck for multiple turns
 
-    score_3: "Gate is correctly closed or open. Rationale references the relevant rule and cites supporting evidence."
-    score_2: "Gate is technically correct but rationale does not explain which rule triggered the decision."
-    score_1: "Gate is open in a borderline case where a more cautious decision would have been safer."
-    score_0: "Gate is open for a PRODUCT request with no student attempt."
+      Check the rationale explains which condition triggered the decision.
 
-  check_rewrite_consistency:
+    score_3: "Gate is correctly set. Rationale names the rule that applies."
+    score_2: "Gate is technically correct but the rationale does not explain why."
+    score_1: "Gate is open in a borderline case where closing it would have been safer."
+    score_0: "Gate is open for a PRODUCT request with no student attempt and no HIGH frustration justification."
+
+    do_not_accept:
+      - Gate open for a PRODUCT request where the student has not tried anything
+      - Gate open when support level is HINT or QUESTION
+
+
+  safety_check_handled_correctly:
+    label: "If the response was going to leak the answer, the rewrite fixed it"
     what_to_evaluate: >
-      Evaluate the internal check field. If the check flagged leaks_solution,
-      was_rewritten must be true. If was_rewritten is true, verify the final
-      response no longer contains the leak.
+      Did the internal check field and rewrite process work correctly?
 
-    score_3: "Check passed cleanly, or a flagged leak was fully resolved by the rewrite."
-    score_2: "Rewrite triggered and resolved the leak, but the final response became too brief or unhelpful as a result."
+        - If check.leaks_solution = false: no rewrite was needed. Confirm the
+          final response does not contain a full solution when it should not.
+        - If check.leaks_solution = true: a rewrite should have happened
+          (was_rewritten = true), and the final response should no longer
+          contain the leak.
+        - If was_rewritten = true: the rewrite should have fixed the problem
+          without making the response unhelpfully vague.
+
+    score_3: "Check passed cleanly, or a flagged leak was fully resolved by the rewrite without over-correcting."
+    score_2: "Rewrite triggered and resolved the leak, but the final response became noticeably weaker as a result."
     score_1: "Rewrite triggered but a partial leak remains in the final output."
-    score_0: "Check flagged a leak but was_rewritten is false. Leak is present in the final response."
+    score_0: "Check flagged a leak but no rewrite happened, or the rewrite did not remove the leak."
 
-  affective_signal_sensitivity:
+    do_not_accept:
+      - leaks_solution = true with was_rewritten = false
+      - Rewrite that removes the leak but makes the response so brief it gives the student nothing
+
+
+  strategy_updated_across_turns:
+    label: "The chain adjusted its approach as the conversation evolved — not stuck on repeat"
     what_to_evaluate: >
-      Evaluate whether the chain correctly detected and responded to the student's
-      emotional or motivational signals.
+      Looking across all available turn_snapshots: is the chain updating
+      its strategy based on new information from each student message?
 
-      Signals to detect:
-      - Explicit frustration language ("I've been stuck for an hour", "I give up")
-      - Passive helplessness ("just tell me", "I don't know")
-      - Confidence language ("I think I understand but...", "I'm not sure if...")
-      - Emotional punctuation (repeated question marks, capitalisation)
+      If turn_snapshots shows only one turn, mark this criterion not applicable.
 
-      Evaluate whether:
-      1. The frustration or emotional_state field correctly reflects the signal.
-      2. The support_level decision accounts for it —
-         high frustration + STALLED should escalate support beyond HINT.
+      Signs that the chain is NOT adapting (should score low):
+        - expertise_level classified the same way every single turn even as
+          the student demonstrates new signals
+        - support_level unchanged across turns while the student is not
+          progressing (the chain is not escalating)
+        - frustration_level unchanged even after the student sends explicit
+          distress signals in a later turn
+        - Same HINT given two turns in a row when the student did not respond
+          to it the first time
 
-    score_3: "Chain correctly detected the emotional signal and the support_level decision reflects it appropriately."
-    score_2: "Chain correctly detected the signal but the support_level decision does not fully account for it."
-    score_1: "Chain partially detected the signal (e.g., notes some frustration but sets frustration=LOW)."
-    score_0: "Chain completely missed a clear emotional signal, leading to an inappropriate support decision."
+      Signs that the chain IS adapting (should score high):
+        - Expertise updated when the student demonstrated new signals
+        - Support escalated when the student stalled or expressed frustration
+        - A new approach tried when the previous one did not produce progress
+        - Phase updated appropriately as the student's situation changed
+
+      This criterion evaluates learning across the arc, not just one turn.
+
+    applicability: >
+      Only score when at least two prior assistant turns exist. If only one
+      turn has happened, set applicable = false.
+
+    score_3: "Chain clearly updated its diagnosis and/or strategy in response to new signals across turns."
+    score_2: "Chain mostly adapted but missed one signal that should have changed the approach."
+    score_1: "Chain shows limited adaptation — one major update that should have happened did not."
+    score_0: "Chain shows no adaptation across turns. Same diagnosis and same support strategy even as student signals changed."
+
+    do_not_accept:
+      - Same expertise classification every turn regardless of what the student showed
+      - Same support level across three or more turns when the student made no progress
+      - Frustration level unchanged after explicit escalation in the student's message
+
 
 fail_flags:
-  - id: DEPTH_BELOW_FLOOR
-    trigger: "support_depth=SURFACE when expertise_level is INTERMEDIATE or ADVANCED"
 
-  - id: IMPLEMENTATION_WITHOUT_ATTEMPT
-    trigger: "implementation_allowed=true for PRODUCT request when has_attempt=false"
+  - id: IMPLEMENTATION_GATE_OPEN_NO_ATTEMPT
+    trigger: >
+      implementation_allowed = true for a PRODUCT request when the student
+      has not made any attempt and frustration is not HIGH.
 
   - id: CLARIFY_SKIPPED_ON_CRITICAL_GAP
-    trigger: "context_gap=CRITICAL but support_level is not CLARIFY"
+    trigger: >
+      context_gap = CRITICAL but support_level is not CLARIFY.
 
-  - id: CODE_SHOWN_WITHOUT_FRUSTRATION_OR_STALL
-    trigger: "can_show_code=true when frustration=LOW and progress=MOVING and expertise is not NOVICE"
+  - id: LEAK_NOT_FIXED
+    trigger: >
+      check.leaks_solution = true but was_rewritten = false, or the
+      final response still contains the solution after a rewrite.
 
-  - id: CHECK_FAILED_NO_REWRITE
-    trigger: "check.leaks_solution=true but was_rewritten=false"
+  - id: SUPPORT_REPEATED_ON_STALL
+    trigger: >
+      Student received the same support type (e.g., HINT) in two consecutive
+      turns with no visible progress between them — no escalation occurred.
 
-  - id: METACOGNITIVE_TYPE_MISMATCH
-    trigger: "Support depth scaffolds a metacognitive process belonging to a different SRL phase than the current one."
+  - id: FRUSTRATION_ESCALATION_SKIPPED
+    trigger: >
+      Frustration is HIGH and progress_state is STALLED but support_level
+      remained at HINT or QUESTION — no escalation to PARTIAL or EXPLAIN.
 
-  - id: FRUSTRATION_IGNORED_IN_SUPPORT_DECISION
-    trigger: "frustration=HIGH or emotional_state indicates distress, but support_level was not escalated beyond HINT despite progress_state=STALLED."
+  - id: EXPERTISE_NEVER_UPDATED
+    trigger: >
+      expertise_level is classified identically across all turns even though
+      the student demonstrated meaningfully different signals across messages.
+
+  - id: ADVANCED_MISSED_IN_CHAIN
+    trigger: >
+      Student has implemented the standard approach and is questioning its
+      limits or design choices — but expertise_level = INTERMEDIATE.

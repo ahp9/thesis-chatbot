@@ -1,171 +1,230 @@
-rubric_name: "SRL Router — Phase Classification"
+rubric_name: "Router — SRL Phase Classification and Response Fit"
 rubric_type: router
+
+# What this rubric grades
+# -----------------------
+# Each tutor turn is graded individually with the partial transcript up to
+# that turn as context. The rubric asks two things per turn:
+#   1. Was the SRL phase classified correctly?
+#   2. Did the tutor's response actually behave like that phase?
+#
+# Grading the response fit here is intentional — a correct phase label that
+# produces a wrong-mode response is still a routing failure in practice.
+
 
 criteria:
 
-  phase_signal_accuracy:
+  correct_phase_selected:
+    label: "Right SRL phase chosen for this message"
     what_to_evaluate: >
-      Evaluate whether each signal in route.signals is directly traceable to
-      an observable phrase, action, omission, or artifact in STUDENT_MESSAGE
-      or RECENT_CONTEXT.
+      Was the classified SRL phase the best match for what the student is
+      doing in this message?
 
-      Signals must describe only what is explicitly present or absent.
-      Do not reward inferred intent unless the wording clearly supports it.
+      Use these definitions:
 
-    score_3: "All signals map directly to observable student behaviour or explicit absence of required task information."
-    score_2: "Most signals are grounded. One signal slightly over-interprets wording but remains plausible."
-    score_1: "At least one signal depends on inferred intent or weak interpretation not supported by the wording."
-    score_0: "Signals contradict the student message, invent evidence, or are too generic to have routing value."
+      FORETHOUGHT — The student is still orienting. They are defining the
+        task, picking a direction, setting a goal, or deciding how to begin.
+        The task is not yet concrete enough to start executing. Naming a
+        subject area or saying they "need to start" something without
+        describing a specific objective is still FORETHOUGHT.
+
+      PERFORMANCE — The student has a clear enough task or subtask to work
+        on it. They are executing, debugging, building, or trying to make
+        progress. The student does not need to have produced anything yet —
+        PERFORMANCE starts once the objective is specific enough to act on.
+
+      REFLECTION — The student is evaluating or reviewing something that
+        exists. Their primary intent is to assess, interpret, or understand
+        an outcome rather than continue working.
+
+      Common errors to check:
+        - Staying in FORETHOUGHT after the student has given a concrete task
+        - Jumping to PERFORMANCE before the objective is defined
+        - Routing to REFLECTION while the student is still actively building
+        - Treating the presence of an artifact alone as REFLECTION
+          (continuation intent → PERFORMANCE; evaluation intent → REFLECTION)
+
+    score_3: "Phase is clearly correct. No adjacent phase would fit better."
+    score_2: "Phase is correct but an adjacent phase is a plausible runner-up. The selected phase is still the better fit."
+    score_1: "An adjacent phase fits better. The selected phase is not outright wrong but misses the dominant signal."
+    score_0: "Wrong phase. The student's message clearly calls for a different phase."
+
+    do_not_accept:
+      - FORETHOUGHT when the student has named a specific task objective and is ready to work on it
+      - PERFORMANCE before the student has defined what they are trying to do
+      - REFLECTION while the student is still mid-execution with no finished artifact
+      - Routing based on artifact presence alone without considering the student's intent
+
+
+  phase_signals_are_grounded:
+    label: "Phase evidence is drawn from what the student actually said"
+    what_to_evaluate: >
+      Each signal used to justify the phase must be directly traceable to
+      something observable in the student's message or recent conversation.
+
+      A signal is grounded if it describes:
+        - Something the student explicitly said or asked
+        - The absence of something that would be expected (e.g., no task defined)
+        - A specific artifact or attempt the student described
+
+      A signal is NOT grounded if it:
+        - Infers intent not supported by the wording
+        - Is generic enough to apply to almost any message
+        - Describes something from the tutor's response rather than the student's input
+
+    score_3: "All signals map to specific, observable student behaviour or an explicit absence of required information."
+    score_2: "Most signals are grounded. One signal slightly over-interprets the wording but remains plausible."
+    score_1: "At least one signal depends on inferred intent not supported by the actual wording."
+    score_0: "Signals are generic, contradictory, or invented. They do not reflect what the student said."
 
     do_not_accept:
       - Signals describing what the student might mean without wording support
-      - Generic signals reusable across almost any message
-      - Signals derived from tutor response rather than student input
+      - Signals that would apply to almost any student message regardless of content
+      - Signals drawn from the tutor's reply rather than the student's input
 
-  phase_correctness:
-    what_to_evaluate: >
-      Evaluate whether the selected SRL phase matches the student's actual learning state.
-
-      FORETHOUGHT (Planning / Orientation): The student is still orienting,
-      defining the task, identifying constraints, clarifying goals, or deciding
-      how to begin. This phase applies when the task is not yet sufficiently
-      defined for concrete technical progress. Simply expressing a need to start
-      an assignment, naming a subject area, or asking for general direction
-      remains FORETHOUGHT if the specific objective is still unclear.
-
-      PERFORMANCE (Execution / Active Help): The student has a sufficiently
-      defined task, goal, or subtask and is actively trying to progress.
-      This begins once the task definition or concrete objective is clear enough
-      that technical, conceptual, or procedural support can be given. The
-      student does not need to have produced an artifact yet — PERFORMANCE
-      includes working through the assignment after task definition.
-
-      REFLECTION (Evaluation / Review): The student is evaluating completed work,
-      interpreting results, reviewing mistakes, judging correctness, or assessing
-      learning outcomes. This phase applies when the primary intent is to assess
-      or interpret existing work rather than continue task execution.
-
-    score_3: "Phase is clearly correct and best supported by the message. No adjacent phase could reasonably compete."
-    score_2: "Phase is correct but adjacent competition exists. The selected phase is still the best fit."
-    score_1: "An adjacent phase would fit better. The selected phase is not clearly wrong but misses the dominant signal."
-    score_0: "Wrong phase selected. The response mode would become inappropriate as a result."
-
-    do_not_accept:
-      - Phase stagnation (staying in FORETHOUGHT after an actionable objective is established)
-      - Phase prematureness (selecting PERFORMANCE before the objective is defined)
-      - Phase misalignment (selecting REFLECTION while the student is still actively building)
-
-  confidence_calibration:
-    what_to_evaluate: >
-      Evaluate whether confidence reflects actual phase competition, not merely
-      missing task detail.
-
-      High confidence is appropriate when one phase clearly dominates, even if
-      task details remain underspecified.
-
-      Lower confidence is required only when multiple phases are genuinely plausible.
-
-    score_3: "Confidence matches actual phase competition — high when one phase dominates, lower when adjacent phases genuinely compete."
-    score_2: "Slight over- or under-confidence but still reasonable given the evidence."
-    score_1: "Noticeable mismatch — very high confidence when phases compete, or very low confidence when one phase clearly dominates."
-    score_0: "Confidence strongly contradicts the evidence in the message."
-
-    do_not_accept:
-      - Penalising high confidence solely because task details are incomplete
-      - High confidence when multiple phases are equally plausible
-      - Very low confidence when one phase clearly dominates
 
   task_definition_boundary:
+    label: "Topic mentioned vs. task defined — boundary correctly handled"
     what_to_evaluate: >
-      Evaluate whether the router correctly distinguishes between:
+      A topic being mentioned is not the same as a task being defined.
 
-      task MENTIONED:
-        Domain, subject, or broad activity named but no executable objective exists.
-        Examples: "I need to do something with Python", "I have math homework",
-        "I need help with my essay but haven't started"
+      Topic mentioned (→ FORETHOUGHT):
+        The student names a subject area, course, or activity but no specific
+        executable objective exists yet.
+        Examples: "I need to do something with Python", "I have an essay due",
+        "I'm working on a machine learning assignment"
 
-      task DEFINED:
-        Enough concrete objective exists that meaningful task support can begin.
-        Examples: "I need to write a Python loop that sums a list",
-        "How do I sort this list?", "Why does this equation fail?"
+      Task defined (→ PERFORMANCE):
+        The student has described a concrete enough objective that meaningful
+        technical or procedural support can begin — even if they have not
+        started working on it.
+        Examples: "I need to write a function that reverses a list",
+        "How do I implement binary search?", "Why does my loop skip the first element?"
 
-    score_3: "Correctly distinguishes mention from definition. Domain-only messages route to FORETHOUGHT; concrete objective messages route to PERFORMANCE."
-    score_2: "Mostly correct with slight over-reading of a vague objective as sufficiently defined."
-    score_1: "Boundary handled inconsistently within the conversation."
-    score_0: "Domain mention is incorrectly treated as task definition, routing to PERFORMANCE when FORETHOUGHT is required."
+      Judge whether the router correctly identified which situation applies.
 
-    examples_forethought:
-      - "I need to do something with Python"
-      - "I have math homework and don't know where to start"
-      - "I need help with my essay but haven't started"
+    score_3: "Boundary correctly handled. Domain-only messages go to FORETHOUGHT; messages with a concrete objective go to PERFORMANCE."
+    score_2: "Mostly correct. Slight over-reading of a vague objective as sufficiently defined, or vice versa."
+    score_1: "Boundary handled inconsistently — the router treats a vague domain mention as a defined task, or vice versa."
+    score_0: "Domain mention treated as a defined task and routed to PERFORMANCE, or a clear concrete task routed to FORETHOUGHT."
 
-    examples_performance:
-      - "I need to write a Python loop that reverses a string"
-      - "How do I sort this list in descending order?"
-      - "Why does this equation produce a negative result?"
+    do_not_accept:
+      - '"I need help with my Python assignment" routed to PERFORMANCE'
+      - '"I need to write a loop that sums a list" routed to FORETHOUGHT'
 
-  artifact_rule_applied:
+
+  response_fits_the_phase:
+    label: "What the tutor said matches the classified phase"
+    what_to_evaluate: >
+      Given the phase that was selected, did the tutor's response actually
+      behave in a way consistent with that phase?
+
+      This criterion catches cases where the phase label is correct but the
+      response content belongs to a different phase — a routing failure in
+      practice even if the classification is technically right.
+
+      What each phase should look like in the response:
+
+      FORETHOUGHT response should:
+        - Help the student frame their goal, choose a direction, or decide
+          how to begin
+        - Ask about objectives, constraints, prior knowledge, or approach
+        - NOT begin solving, implementing, or executing the task
+
+      PERFORMANCE response should:
+        - Support progress on the student's current task step
+        - Give hints, questions, explanations, or partial help on the active problem
+        - NOT introduce planning discussion or reflective review of finished work
+          unless the student initiated it
+
+      REFLECTION response should:
+        - Help the student inspect, interpret, or learn from existing work
+        - Ask about what they observed, what worked, what they would do differently
+        - NOT introduce new task work or new implementation steps
+
+    score_3: "Response content clearly matches the classified phase. The dominant instructional move is phase-correct."
+    score_2: "Response is mostly phase-correct with minor drift into an adjacent phase."
+    score_1: "Response mixes phases noticeably — the student receives conflicting signals about what they are supposed to do."
+    score_0: "Response directly contradicts the classified phase — e.g., FORETHOUGHT phase but tutor begins solving the task."
+
+    do_not_accept:
+      - FORETHOUGHT phase but tutor provides an implementation or detailed execution steps
+      - PERFORMANCE phase but tutor focuses on planning or reviewing finished work
+      - REFLECTION phase but tutor introduces new task objectives or new implementation
+
+
+  emotional_signal_noted:
+    label: "Emotional or motivational state detected and represented"
+    what_to_evaluate: >
+      Did the router detect any emotional or motivational signals in the
+      student's message and represent them in the route output?
+
+      The router does not need to change the phase because of affect. It
+      needs to note the signal so downstream chain decisions can use it.
+
+      Signals to look for:
+        - Explicit anxiety or panic ("I don't know where to start", "I'm panicking")
+        - Helplessness language ("just tell me", "I give up")
+        - Confidence or self-efficacy ("I think I can figure it out if...")
+        - Emotional punctuation (multiple question marks, ALL CAPS, ellipses)
+
+      If no emotional signal is present in the message, mark this criterion
+      not applicable (applicable = false).
+
     applicability: >
-      Score only if the student provided code, draft, text, plan, result, or artifact.
+      Only score if the student's message contains an observable emotional
+      or motivational signal. If the message is neutral and task-focused,
+      set applicable = false.
 
-    what_to_evaluate: >
-      Distinguish between:
-      - evaluation / judgement / verification of existing artifact → REFLECTION
-      - continuation / revision / next-step help with existing artifact → PERFORMANCE
-
-      The student's intent determines the phase, not the presence of the artifact alone.
-
-    score_3: "Correct phase selected. Artifact explicitly cited in signals. Evaluation vs continuation distinction clearly stated in rationale."
-    score_2: "Correct phase selected. Artifact noticed but evaluation vs continuation distinction only partially stated."
-    score_1: "Correct phase selected but artifact not cited in signals — right call, insufficient reasoning."
-    score_0: "Artifact present but wrong phase assigned."
+    score_3: "Signal correctly detected and represented in the route output (signal entry, confidence note, or explicit flag)."
+    score_2: "Signal detected but only weakly represented — mentioned in passing or buried in a generic signal."
+    score_1: "Signal partially detected but mischaracterised (e.g., mild frustration noted when the student expressed explicit distress)."
+    score_0: "Clear emotional signal present in the message but absent from all route output."
 
     do_not_accept:
-      - Evaluation request routed to PERFORMANCE
-      - Continuation request routed to REFLECTION
-
-  affective_phase_sensitivity:
-    what_to_evaluate: >
-      Evaluate whether the router correctly detected affective or motivational
-      signals and represented them in the phase classification and/or confidence.
-
-      The router does not need to change the phase based on affect — it needs to
-      detect the signal and represent it in the route output (e.g., in a signal
-      entry, confidence note, or explicit emotional flag).
-
-      Signals include:
-      - Explicit anxiety ("I'm panicking", "I don't know where to even start")
-      - Learned helplessness ("just tell me", "I give up")
-      - Self-efficacy language ("I think I can figure this out if...")
-      - Emotional punctuation ("???", ALL CAPS, ellipses indicating uncertainty)
-
-    score_3: "Router correctly detected the emotional signal and represented it in the route output."
-    score_2: "Router detected the signal but represented it only weakly (e.g., buried in a generic signal)."
-    score_1: "Router missed a moderate emotional signal but otherwise classified the phase correctly."
-    score_0: "Router completely ignored an explicit emotional signal. Route output contains no representation of the emotional context."
-
-    do_not_accept:
-      - Ignoring explicit emotional language in signals entirely
+      - Ignoring explicit emotional language entirely
       - Changing the phase based on affect alone without cognitive evidence
+      - Treating mild hedging language as HIGH frustration
+
 
 fail_flags:
-  - id: FORETHOUGHT_AFTER_EXECUTABLE_TASK_DEFINED
-    trigger: "FORETHOUGHT selected when prior context already contains a concrete executable task."
 
-  - id: HIGH_CONFIDENCE_WITH_REAL_PHASE_COMPETITION
-    trigger: "Confidence ≥ 0.80 when two adjacent phases are genuinely plausible."
+  - id: TASK_NOT_YET_DEFINED_BUT_ROUTED_TO_PERFORMANCE
+    trigger: >
+      Student message describes a domain or broad activity only, with no
+      concrete executable task — but the router selected PERFORMANCE.
 
-  - id: PHASE_REGRESSION_WITHOUT_EXPLICIT_EVIDENCE
-    trigger: "Phase moved backward without clear student evidence."
+  - id: CONCRETE_TASK_DEFINED_BUT_STUCK_IN_FORETHOUGHT
+    trigger: >
+      Student message contains a specific task objective, but the router
+      selected FORETHOUGHT when PERFORMANCE was clearly warranted.
 
-  - id: DOMAIN_MISREAD_AS_TASK_DEFINITION
-    trigger: "Domain mention treated as executable task definition, routing to PERFORMANCE before a concrete objective is established."
+  - id: ARTIFACT_INTENT_WRONG
+    trigger: >
+      Student provided an artifact. Router selected REFLECTION for a
+      continuation request, or PERFORMANCE for an evaluation request.
 
-  - id: ARTIFACT_INTENT_MISCLASSIFIED
-    trigger: "Artifact present but continuation/evaluation intent routed incorrectly."
+  - id: PHASE_WENT_BACKWARD_WITHOUT_REASON
+    trigger: >
+      Phase moved to an earlier phase (e.g., PERFORMANCE → FORETHOUGHT)
+      with no clear student evidence for the regression.
 
-  - id: SIGNALS_NOT_OBSERVABLE
-    trigger: "One or more signals depend on invented intent rather than observable wording."
+  - id: HIGH_CONFIDENCE_WITH_COMPETING_PHASES
+    trigger: >
+      Confidence is 0.80 or above but two adjacent phases are genuinely
+      both plausible given the message.
 
-  - id: AFFECTIVE_SIGNAL_MISSED
-    trigger: "Student message contains explicit emotional or motivational language that is absent from all route signals."
+  - id: SIGNALS_NOT_GROUNDED
+    trigger: >
+      One or more route signals depend on inferred intent rather than
+      observable wording from the student's message.
+
+  - id: EMOTIONAL_SIGNAL_IGNORED
+    trigger: >
+      Student message contains explicit emotional language but no route
+      signal or field records it.
+
+  - id: RESPONSE_CONTRADICTS_PHASE
+    trigger: >
+      The classified phase is X but the tutor response clearly performs
+      the instructional moves of a different phase.

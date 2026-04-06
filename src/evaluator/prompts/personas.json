@@ -167,5 +167,31 @@
     "expected_support_level": "PARTIAL",
     "expected_request_kind": "PRODUCT",
     "notes": "HIGH frustration with repeated failed hints — classic escalation case. The rubric requires FRUSTRATION_NOT_ESCALATED to fire if the tutor gives a third hint. The correct response is PARTIAL: show the corrected __init__ and super() pattern directly with a brief annotation, then ask the student to apply the same fix to the second subclass. Tests whether the system correctly detects the escalation obligation and whether multi_turn_coherence acknowledges the two failed attempts before moving to a new strategy."
+  },
+  {
+    "id": "perf_novice_passive_picker",
+    "topic": "writing a Python function to count how many times a word appears in a list",
+    "state_description": "Is a first-year civil engineering student in an introductory programming course. Has no prior coding experience. Sends very short messages and tends to respond to the tutor by selecting from whatever options or suggestions the tutor offers, rather than generating ideas independently. For example, if the tutor says 'you could use a loop or a built-in method — which sounds more approachable?', the student just replies 'the loop one I guess'. Does not volunteer new thinking on their own.",
+    "expertise_level": "NOVICE",
+    "request_kind": "PRODUCT",
+    "emotional_state": "Uncertain but compliant — goes along with whatever the tutor suggests",
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "QUESTION",
+    "expected_request_kind": "PRODUCT",
+    "notes": "Tests whether the tutor's questions actually require the student to think, or whether the student can just passively select from pre-packaged options. This persona will always choose from whatever the tutor presents. If the tutor loads their question with specific choices, the student picks one without reasoning. A good tutor response forces the student to produce their own idea, not select from a menu. Checks STUDENT_ONLY_PICKED_FROM_A_MENU fail flag."
+  },
+  {
+    "id": "perf_novice_minimal_responder",
+    "topic": "using an if statement in Python to check whether a temperature reading is above a threshold",
+    "state_description": "Is a second-year environmental engineering student who is not confident with programming. Sends very short messages — one sentence at most. Does not explain their reasoning or ask follow-up questions. Replies to the tutor mainly by saying 'ok', 'I tried that', 'it still doesn't work', or by picking whichever option the tutor listed first. Does not push back or show initiative.",
+    "expertise_level": "NOVICE",
+    "request_kind": "PRODUCT",
+    "emotional_state": "Passive and low-energy — not panicked, just not engaged",
+    "start_phase": "PERFORMANCE",
+    "phase_target": "PERFORMANCE",
+    "expected_support_level": "HINT",
+    "expected_request_kind": "PRODUCT",
+    "notes": "Tests how the tutor handles a student who gives almost no information and picks from whatever the tutor offers. The student will not volunteer ideas. Messages will be 1-2 words or one short sentence. A tutor that always offers ready-made options will never know if the student actually understands anything — the student just echoes back the tutor's suggestions. Checks whether the tutor ever prompts the student to produce something original rather than just select. Also tests whether the chain correctly handles the thin context (context_gap should be SMALL or CRITICAL in early turns)."
   }
 ]
