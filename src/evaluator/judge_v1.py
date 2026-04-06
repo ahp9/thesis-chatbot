@@ -120,6 +120,14 @@ def build_judge_user_prompt(
     )
     
     sections.append(
+        "NUMERIC SCORE RULES:\n"
+        "- If applicable=true, score MUST be a numeric value from the rubric scale.\n"
+        "- If applicable=false, score MUST be null.\n"
+        "- It is invalid to return applicable=true with score=null.\n"
+        "- Before finishing, verify every required criterion has a numeric score or is explicitly not applicable."
+    )
+    
+    sections.append(
         "TURN_EVIDENCE RULES:\n"
         "- For every criterion, turn_evidence must contain one key for every assistant turn number from 1 to total_turns.\n"
         "- If that turn contains relevant evidence for the criterion, set the value to 'relevant'.\n"
