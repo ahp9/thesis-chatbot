@@ -4,12 +4,16 @@ import logging
 import os
 import sqlite3
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Optional
 
+import aiofiles
 import chainlit as cl
 from chainlit.data.sql_alchemy import SQLAlchemyDataLayer
 from chainlit.element import File
 from chainlit.types import ThreadDict
+
+from chainlit.data.storage_clients.base import BaseStorageClient
 
 from lib.enums import Phase, TutorMode
 from services.llm_client import get_client
@@ -44,16 +48,73 @@ MOCK_USERS = {
     "user_1_2@usability_test_1_2.local": "usability1_2",
     "user_2_2@usability_test_2_2.local": "usability2_2",
     "user_3_2@usability_test_3_2.local": "usability3_2",
-    "user_4_2@usability_test_4_2.local": "usability4_2",
+    "user_4_2@usability_test_4.local": "usability4_2",
     "user_5_2@usability_test_5_2.local": "usability5_2",
 }
 
 MAX_CHARS = 80_000
 LOG_FILE = "transcripts"
+UPLOAD_ROOT = Path("./uploaded_files")
+
+
+class LocalStorageClient(BaseStorageClient):
+    """
+    Minimal local filesystem storage provider for Chainlit elements.
+
+    SQLAlchemyDataLayer uses the storage provider to persist file-backed elements.
+    It also asks for read URLs again when restoring threads, so we implement
+    upload_file, delete_file, and get_read_url.
+    """
+
+    def __init__(self, root: str | Path = "./uploaded_files"):
+        self.root = Path(root).resolve()
+        self.root.mkdir(parents=True, exist_ok=True)
+
+    def _path_for_key(self, object_key: str) -> Path:
+        # Keep nested directories if Chainlit passes them.
+        safe_key = object_key.lstrip("/").replace("..", "_")
+        path = self.root / safe_key
+        path.parent.mkdir(parents=True, exist_ok=True)
+        return path
+    
+    async def close(self):  
+        pass
+
+    async def upload_file(
+        self,
+        object_key: str,
+        data: bytes,
+        mime: str,
+        overwrite: bool = True,
+    ):
+        path = self._path_for_key(object_key)
+
+        if path.exists() and not overwrite:
+            return {"url": path.resolve().as_uri(), "object_key": object_key}
+
+        async with aiofiles.open(path, "wb") as f:
+            await f.write(data)
+
+        return {
+            "url": path.resolve().as_uri(),
+            "object_key": object_key,
+        }
+
+    async def delete_file(self, object_key: str):
+        path = self._path_for_key(object_key)
+        if path.exists():
+            path.unlink()
+
+    async def get_read_url(self, object_key: str):
+        path = self._path_for_key(object_key)
+        if not path.exists():
+            raise FileNotFoundError(f"Stored file not found for object_key={object_key}")
+        return path.resolve().as_uri()
 
 
 def get_log_filename(user_id, session_id):
-    return os.path.join(LOG_FILE, f"user_{user_id}_session_{session_id}.jsonl")
+    os.makedirs(LOG_FILE, exist_ok=True)
+    return os.path.join(LOG_FILE, f"user_{user_id}_session_{session_id}.json")
 
 
 def load_conversation(user_id, session_id):
@@ -87,8 +148,55 @@ def _coerce_phase(value: Any) -> Phase:
         return Phase.FORETHOUGHT
 
 
-def _build_combined_user_content(message: cl.Message) -> str:
+async def _persist_uploaded_elements_for_message(
+    incoming_message: cl.Message,
+    assistant_message_id: str,
+) -> list[dict[str, str]]:
+    """
+    Re-send uploaded files as persisted Chainlit File elements attached to the
+    assistant reply. This ensures the file elements are stored by the data layer
+    and available again when the thread is reopened.
+    """
+    persisted_info: list[dict[str, str]] = []
+
+    if not incoming_message.elements:
+        return persisted_info
+
+    outgoing_elements = []
+    for el in incoming_message.elements:
+        if isinstance(el, File) and getattr(el, "path", None):
+            try:
+                outgoing_elements.append(
+                    cl.File(
+                        name=el.name or Path(el.path).name,
+                        path=el.path,
+                        mime=el.mime or "application/octet-stream",
+                        for_id=assistant_message_id,
+                    )
+                )
+                persisted_info.append(
+                    {
+                        "name": el.name or Path(el.path).name,
+                        "mime": el.mime or "application/octet-stream",
+                        "path": el.path,
+                    }
+                )
+            except Exception as exc:
+                logger.warning("Failed to prepare file element %s: %s", getattr(el, "name", "?"), exc)
+
+    if outgoing_elements:
+        # Sending a dedicated message with attached file elements makes persistence explicit.
+        await cl.Message(
+            content="",
+            elements=outgoing_elements,
+        ).send()
+
+    return persisted_info
+
+
+def _build_combined_user_content(message: cl.Message) -> tuple[str, list[dict[str, str]]]:
     file_text_blocks: list[str] = []
+    uploaded_files_meta: list[dict[str, str]] = []
 
     if message.elements:
         for el in message.elements:
@@ -96,18 +204,30 @@ def _build_combined_user_content(message: cl.Message) -> str:
                 try:
                     content = read_uploaded_file(el)
                     content = content[:MAX_CHARS]
+
+                    uploaded_files_meta.append(
+                        {
+                            "name": el.name or Path(el.path).name,
+                            "mime": el.mime or "application/octet-stream",
+                            "path": el.path,
+                        }
+                    )
+
                     file_text_blocks.append(
-                        f"--- FILE: {el.name} ({el.mime}) --- CONTENT START ---\n"
-                        f"{content}\n--- END FILE ---"
+                        f"--- FILE: {el.name or Path(el.path).name} ({el.mime or 'application/octet-stream'}) ---\n"
+                        f"CONTENT START\n"
+                        f"{content}\n"
+                        f"CONTENT END\n"
+                        f"--- END FILE ---"
                     )
                 except Exception as exc:
-                    file_text_blocks.append(f"[Error reading file {el.name}: {exc}]")
+                    file_text_blocks.append(f"[Error reading file {getattr(el, 'name', 'unknown file')}: {exc}]")
 
     combined_user_content = message.content or ""
     if file_text_blocks:
         combined_user_content += "\n\n" + "\n\n".join(file_text_blocks)
 
-    return combined_user_content
+    return combined_user_content, uploaded_files_meta
 
 
 @cl.password_auth_callback
@@ -125,7 +245,11 @@ async def auth_callback(username: str, password: str) -> Optional[cl.User]:
 
 @cl.data_layer
 def get_data_layer():
-    return SQLAlchemyDataLayer(conninfo="sqlite+aiosqlite:///./chainlit.db")
+    UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+    return SQLAlchemyDataLayer(
+        conninfo="sqlite+aiosqlite:///./chainlit.db",
+        storage_provider=LocalStorageClient(UPLOAD_ROOT),
+    )
 
 
 @cl.set_chat_profiles
@@ -154,6 +278,8 @@ async def start():
     cl.user_session.set("session_id", thread_id)
     cl.user_session.set("llm_history", [])
     cl.user_session.set("current_phase", Phase.FORETHOUGHT.value)
+
+    logger.info("Chat started | user=%s | thread=%s | mode=%s", student_id, thread_id, tutor_type)
 
 
 @cl.on_chat_resume
@@ -213,6 +339,8 @@ async def on_chat_resume(thread: ThreadDict):
         metadata.get("current_phase", Phase.FORETHOUGHT.value),
     )
 
+    logger.info("Resumed thread from Chainlit history | thread=%s | steps=%d", session_id, len(steps))
+
 
 @cl.on_message
 async def main(message: cl.Message):
@@ -222,7 +350,7 @@ async def main(message: cl.Message):
     llm_history: list[dict[str, Any]] = cl.user_session.get("llm_history") or []
     current_phase = _coerce_phase(cl.user_session.get("current_phase"))
 
-    combined_user_content = _build_combined_user_content(message)
+    combined_user_content, uploaded_files_meta = _build_combined_user_content(message)
 
     ai_text = ""
     prefix = ""
@@ -264,7 +392,7 @@ async def main(message: cl.Message):
                 result.route.srl_signal,
             )
             logger.info(
-                "CHECKPOINT: Kind=%s | Stage=%s | Progress=%s | Attempt=%s | Gap=%s" " | SRL=%s",
+                "CHECKPOINT: Kind=%s | Stage=%s | Progress=%s | Attempt=%s | Gap=%s | SRL=%s",
                 result.control.checkpoint.request_kind.value,
                 result.control.checkpoint.task_stage.value,
                 result.control.checkpoint.progress_state.value,
@@ -299,6 +427,7 @@ async def main(message: cl.Message):
             ai_text = await run_tutor(client, system_prompt, llm_history)
 
     msg = cl.Message(content="")
+    await msg.send()
 
     if prefix:
         await msg.stream_token(prefix)
@@ -307,14 +436,18 @@ async def main(message: cl.Message):
         await msg.stream_token(chunk + " ")
         await asyncio.sleep(0.01)
 
-    await msg.send()
+    await msg.update()
     await step.remove()
+
+    # Persist uploaded files as message elements in Chainlit storage.
+    persisted_files = await _persist_uploaded_elements_for_message(message, msg.id)
 
     llm_history.append(
         {
             "role": "user",
             "content": combined_user_content,
             "timestamp": datetime.now().isoformat(),
+            "uploaded_files": uploaded_files_meta,
         }
     )
 
@@ -327,6 +460,7 @@ async def main(message: cl.Message):
         "decision": decision_for_history,
         "check": safety_for_history,
         "draft_reply": draft_reply_for_history or ai_text,
+        "persisted_files": persisted_files,
     }
 
     llm_history.append(history_entry)

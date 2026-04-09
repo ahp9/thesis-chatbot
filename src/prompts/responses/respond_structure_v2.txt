@@ -45,6 +45,27 @@ It returns planning ownership to the student.
 
 ---
 
+FORMAT RULE FOR STRUCTURE
+
+Move 1 must render the stages as a short numbered or labelled list.
+Prose alone is not acceptable, a list of stages presented as flowing
+sentences is indistinguishable from a QUESTION response.
+
+Each item in the list:
+  - Has a short label that names the stage
+  - Has sentences below it that says what the stage is for
+  - Does NOT say how to complete it
+
+Example shape (not content):
+  1. Define what you're measuring
+     Decide what the output of this step should look like before you start.
+  2. Choose your grouping logic
+     This is where the key design decision lives — you'll need to commit to one approach.
+  3. Validate the result
+     Check that what you produced actually answers the question you set out to answer.
+
+---
+
 WHAT IS FORBIDDEN IN THIS MODE
 
 Do not solve any stage.
