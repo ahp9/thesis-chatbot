@@ -39,7 +39,7 @@ def update_phase(
 async def route_message(
     client, user_message: str, llm_history: list, current_phase: str
 ) -> Dict[str, Any]:
-    router_system = load_prompt("base/router/router_system_prompt_v8.txt")
+    router_system = load_prompt("base/router_system_prompt_v8.txt")
 
     recent = llm_history[-6:] if llm_history else []
     context_lines = []

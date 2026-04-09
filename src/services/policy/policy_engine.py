@@ -53,8 +53,7 @@ class PolicyEngine:
             return current_phase
 
         # If the student was highly frustrated last turn, require a stronger
-        # confidence signal before switching phase. A frustrated student saying
-        # "I give up" reads like re-orientation but is usually still PERFORMANCE.
+        # confidence signal before switching phase. 
         threshold = SWITCH_THRESHOLD
         if previous_frustration == "HIGH":
             threshold = 0.85
@@ -79,8 +78,6 @@ class PolicyEngine:
 
         if checkpoint.frustration_level == FrustrationLevel.MEDIUM:
             return {
-                SupportLevel.QUESTION,
-                SupportLevel.HINT,
                 SupportLevel.STRUCTURE,
                 SupportLevel.EXPLAIN,
             }

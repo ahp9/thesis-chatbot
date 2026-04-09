@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
+from services.generation.generation import build_generation_context
 from services.history_adapter import (
     build_learning_trajectory,
     last_assistant_reply,
@@ -194,6 +195,7 @@ class CheckResult:
 # Prompt file maps
 BASE_PROMPT_FILES = {
     "identity": "base/srl_model_v4.txt",
+    "generation_style": "base/srl_respond_tone.txt",
     "phase_forethought": "phases/forethought_core_v3.txt",
     "phase_performance": "phases/performance_core_v2.txt",
     "phase_reflection": "phases/reflection_core_v2.txt",
@@ -368,44 +370,6 @@ def _should_run_safety_check(decision: SupportDecision) -> bool:
     return False
 
 
-def _build_depth_and_affective_header(
-    checkpoint: CheckpointResult,
-    decision: SupportDecision,
-    llm_history: List[Dict[str, Any]],
-) -> str:
-    """
-    Build the depth + affective + coherence instruction block injected into
-    the generation system prompt.
-
-    Change from v5 → v6:
-      Added a COHERENCE INSTRUCTION derived from the relationship between the
-      current support_level and the previous turn's support_level.
-
-      Why: The judge rubric `multi_turn_coherence` scored 2.20/3, the second
-      lowest in the response rubric. The root cause is that the generation
-      model sees the current decision (e.g. HINT) but has no explicit contract
-      about whether it already gave a HINT that did not work. The coherence
-      instruction tells it to vary the angle, acknowledge escalation, or
-      acknowledge progress — whichever is appropriate.
-    """
-    depth_key = (decision.support_depth or "SUBSTANTIVE").upper()
-    affective_key = (checkpoint.frustration_level or "LOW").upper()
-
-    depth_instr = _DEPTH_INSTRUCTIONS.get(depth_key, _DEPTH_INSTRUCTIONS["SUBSTANTIVE"])
-    affective_instr = _AFFECTIVE_INSTRUCTIONS.get(affective_key, _AFFECTIVE_INSTRUCTIONS["LOW"])
-
-    # Derive coherence key from support level history
-    recent_control = recent_control_state(llm_history)
-    previous_support_level = recent_control.get("previous_support_level")
-    coherence_key = _get_coherence_key(
-        current_support_level=decision.support_level,
-        previous_support_level=previous_support_level,
-    )
-    coherence_instr = _COHERENCE_INSTRUCTIONS.get(coherence_key, _COHERENCE_INSTRUCTIONS["first_turn"])
-
-    return f"{depth_instr}\n\n{affective_instr}\n\n{coherence_instr}"
-
-
 # ---------------------------------------------------------------------------
 # Fallback values — used ONLY when parsing genuinely fails.
 # ---------------------------------------------------------------------------
@@ -529,6 +493,19 @@ async def checkpoint_and_decide(
 
     return diagnosis, decision, debug
 
+def _build_writer_brief(route, checkpoint, decision) -> dict:
+    return {
+        "phase":                route.get("phase", "PERFORMANCE"),
+        "support_level":        decision.support_level,
+        "support_depth":        decision.support_depth,
+        "can_show_code":        decision.can_show_code,
+        "must_end_with_question": decision.must_end_with_question,
+        "expertise_level":      checkpoint.expertise_level,
+        "frustration_level":    checkpoint.frustration_level,
+        "srl_focus":            checkpoint.srl_focus,
+        "has_attempt":          checkpoint.has_attempt,
+    }
+
 
 async def generate_full_reply(
     client,
@@ -554,43 +531,43 @@ async def generate_full_reply(
     a serialised string, which reduces token use and improves coherence.
     """
     # Pass llm_history to the header builder so it can compute coherence key
-    depth_affective_coherence = _build_depth_and_affective_header(
-        checkpoint, decision, llm_history
-    )
-
+    recent_control = recent_control_state(llm_history)
+    previous_support_level = recent_control.get("previous_support_level")
+ 
+    # generation_context = build_generation_context(
+    #     support_depth=decision.support_depth,
+    #     frustration_level=checkpoint.frustration_level,
+    #     support_level=decision.support_level,
+    #     phase=route.get("phase", "PERFORMANCE"),
+    #     previous_support_level=previous_support_level,
+    # )
+ 
     prompt_parts = [
         load_prompt(BASE_PROMPT_FILES["identity"]),
         load_prompt(_phase_prompt_file(route.get("phase"))),
         load_prompt(decision.response_prompt_file),
-        depth_affective_coherence,
+        # generation_context,
     ]
     if _has_file_content(user_message):
         prompt_parts.append(load_prompt(BASE_PROMPT_FILES["file_handler"]))
-
+ 
     system_prompt = "\n\n".join(prompt_parts)
-
-    control_header = json.dumps(
-        {
-            "route": route,
-            "checkpoint": checkpoint.__dict__,
-            "decision": decision.__dict__,
-        },
-        indent=2,
-    )
-
+ 
+    # Slim brief — only what a writer needs
+    writer_brief = _build_writer_brief(route, checkpoint, decision)
     previous_reply = last_assistant_reply(llm_history)
-
+ 
     current_turn_content = (
-        f"CONTROL_STATE:\n{control_header}\n\n"
+        f"TUTOR_BRIEF:\n{json.dumps(writer_brief, indent=2)}\n\n"
         f"PREVIOUS_REPLY:\n{previous_reply}\n\n"
         f"CURRENT_USER_INPUT_WITH_FILES:\n{user_message}"
     )
-
+ 
     history_turns = _build_native_history(llm_history)
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(history_turns)
     messages.append({"role": "user", "content": current_turn_content})
-
+ 
     resp = await client.chat.completions.create(
         model=GENERATION_MODEL,
         messages=messages,
