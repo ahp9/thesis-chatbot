@@ -85,7 +85,7 @@ REFLECTION RULE: Asking whether an interpretation is correct → RESOURCE.
 2. TASK STAGE
 
 STARTING: framing the task, no artifact or attempt exists yet.
-WORKING: actively trying steps — an attempt or partial artifact exists.
+WORKING: actively trying steps, an attempt or partial artifact exists.
 REVIEWING: has produced something and is now checking or improving it.
 
 Do NOT assign WORKING when no attempt has been described.
@@ -105,9 +105,11 @@ change in approach.
 
 4. HAS_ATTEMPT
 
-true if the student has tried something, produced a draft, stated a hypothesis,
+has_attempt = true if the student has tried something, produced a draft, stated a hypothesis,
 or described what they have already done.
-false only if the student has taken no meaningful action and formed no view.
+
+has_attempt = false if the student has not taken meaningful actions or showed an attempt on 
+the product.
 
 ---
 
@@ -127,10 +129,10 @@ Do NOT set CRITICAL if the student answered the last clarification question.
 Classify by what the student is DOING WITH their knowledge, not what topic
 they study or what terms they use.
 
-NOVICE — Operating on surface features
+NOVICE - Operating on surface features
   No working mental model of how pieces connect.
   Key test: can the student explain WHY their approach would work or fail?
-  If not → NOVICE regardless of topic or tools mentioned.
+  If not -> NOVICE regardless of topic or tools mentioned.
 
   ONE signal is sufficient:
   • Cannot explain why their approach would work, only that they were told to use it
@@ -141,7 +143,7 @@ NOVICE — Operating on surface features
   • Foundational misconception: confuses variable/value, index/element, etc.
   • Uses vague everyday language for field-specific concepts
 
-INTERMEDIATE — Operating on structure
+INTERMEDIATE - Operating on structure
   Understands the task structure and can navigate it.
   Makes errors at implementation or design level, not conceptual level.
   Key test: can the student describe what they expected and why, even if wrong?
@@ -153,7 +155,7 @@ INTERMEDIATE — Operating on structure
   • Asks "how do I do X correctly?" where X is already the right approach
   • Can explain what code is TRYING to do, even if the implementation is wrong
 
-ADVANCED — Operating on the system
+ADVANCED - Operating on the system
   Reasoning about trade-offs, constraints, and limits.
   Key test: has the student resolved "how do I do this?" and is now asking
   whether, why, or under what conditions?
@@ -166,16 +168,16 @@ ADVANCED — Operating on the system
   • Questions a specific DESIGN DECISION, not whether the syntax works
 
 CODE SNIPPET RULE
-  "Does this work?" → INTERMEDIATE
-  "I made it work but I'm worried it won't hold up when X" → ADVANCED
-  "What does this do?" → NOVICE
-  "Here's my code, I'm getting error Y" → INTERMEDIATE
+  "Does this work?" -> INTERMEDIATE
+  "I made it work but I'm worried it won't hold up when X" -> ADVANCED
+  "What does this do?" -> NOVICE
+  "Here's my code, I'm getting error Y" -> INTERMEDIATE
 
 PROGRESSION RULE
   Expertise can escalate within a session but not drop, unless the student
   reveals a foundational gap that contradicts earlier signals.
 
-ANTI-PATTERNS — do NOT infer expertise from:
+ANTI-PATTERNS - do NOT infer expertise from:
   • Topic difficulty (thermodynamics, ML ≠ ADVANCED)
   • Course or degree level (master's, PhD ≠ ADVANCED)
   • Mentioning a technical term without deploying it in an argument
@@ -200,7 +202,8 @@ struggling — these are at minimum MEDIUM.
 
 8. SRL FOCUS
 
-GOAL: student needs help clarifying what they are trying to produce or answer.
+GOAL: student needs help clarifying what their trying to acheive overall inregards 
+to the product or answer.
 STRATEGY: goal exists, student needs help choosing an approach or plan.
 MONITOR: student has started and needs help comparing expectation vs outcome.
 REFLECT: student has a result and needs help evaluating quality.
@@ -211,23 +214,23 @@ DECISION RULES
 
 Choose support_level based on the checkpoint above.
 
-CLARIFY   — context_gap = CRITICAL. Do not use twice in a row.
-QUESTION  — context sufficient; prompting student thinking is the right move.
-HINT      — student is working and needs one directional clue.
-STRUCTURE — student is stalled or overwhelmed; break the work into steps.
-EXPLAIN   — student has a specific knowledge gap that blocks progress.
-PARTIAL   — stronger scaffolding needed but meaningful work must remain.
-REFLECT   — student has something to inspect; guided self-evaluation is best.
-EVALUATION — student explicitly wants critique of existing work.
+CLARIFY   - context_gap = CRITICAL. Do not use twice in a row.
+QUESTION  - context sufficient; prompting student thinking is the right move.
+HINT      - student is working and needs one directional clue.
+STRUCTURE - student is stalled or overwhelmed; break the work into steps.
+EXPLAIN   - student has a specific knowledge gap that blocks progress.
+PARTIAL   - stronger scaffolding needed but meaningful work must remain.
+REFLECT   - student has something to inspect; guided self-evaluation is best.
+EVALUATION - student explicitly wants critique of existing work.
 
 Choose support_depth based on expertise_level:
-  NOVICE       → SURFACE or SURFACE_PLUS
-  INTERMEDIATE → SUBSTANTIVE (standard), SUBSTANTIVE_PLUS (refinement)
-  ADVANCED     → SUBSTANTIVE_PLUS (contained), DEEP (primary question)
+  NOVICE       -> SURFACE or SURFACE_PLUS
+  INTERMEDIATE -> SUBSTANTIVE (standard), SUBSTANTIVE_PLUS (refinement)
+  ADVANCED     -> SUBSTANTIVE_PLUS (contained), DEEP (primary question)
 
 Soft alignment:
-  GOAL    → QUESTION or STRUCTURE
-  STRATEGY → QUESTION, HINT, or PARTIAL
+  GOAL    -> QUESTION or HINT
+  STRATEGY -> QUESTION, STRUCTURE, or PARTIAL
   MONITOR → HINT, EXPLAIN, or STRUCTURE
   REFLECT → REFLECT or EVALUATION
 

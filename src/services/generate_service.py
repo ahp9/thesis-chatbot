@@ -14,6 +14,7 @@ class GenerateService:
     control: CombinedControlResult,
     llm_history: list[dict],
     user_message: str,
+    gate_hint: str | None = None,
     ) -> str:
         checkpoint = CheckpointResult(
             request_kind=control.checkpoint.request_kind.value,
@@ -49,4 +50,5 @@ class GenerateService:
             decision,
             llm_history,
             user_message,
+            gate_hint,
     )

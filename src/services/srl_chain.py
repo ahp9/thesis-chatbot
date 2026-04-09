@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from services.generation.generation import build_generation_context
 from services.history_adapter import (
@@ -96,16 +96,9 @@ _AFFECTIVE_INSTRUCTIONS: Dict[str, str] = {
 # ---------------------------------------------------------------------------
 # Multi-turn coherence instruction table
 #
-# NEW: Injected into the generation prompt so the model knows what the last
+# Injected into the generation prompt so the model knows what the last
 # support level was and can avoid repeating a strategy that did not move
 # the student forward.
-#
-# Why this exists:
-#   The judge rubric `multi_turn_coherence` scored 2.20/3 — the second
-#   lowest criterion in the response rubric. The root cause is that the
-#   generation model sees the current decision (e.g. HINT) but has no
-#   explicit instruction about whether it already gave a HINT that did not
-#   work. This table injects a behavioural contract per escalation situation.
 # ---------------------------------------------------------------------------
 
 _COHERENCE_INSTRUCTIONS: Dict[str, str] = {
@@ -139,7 +132,7 @@ _SUPPORT_LEVEL_ORDER = [
 
 def _get_coherence_key(
     current_support_level: str,
-    previous_support_level: str | None,
+    previous_support_level: Optional[str],
 ) -> str:
     if not previous_support_level:
         return "first_turn"
@@ -269,7 +262,7 @@ async def _call_json(
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _phase_prompt_file(phase: str | None) -> str:
+def _phase_prompt_file(phase: Optional[str]) -> str:
     phase = (phase or "PERFORMANCE").upper()
     if phase == "FORETHOUGHT":
         return BASE_PROMPT_FILES["phase_forethought"]
@@ -332,18 +325,6 @@ def _build_checkpoint_payload(
 ) -> str:
     """
     Build the input payload for the checkpoint+decide stage.
-
-    Change from v5 → v6:
-      Added LEARNING_TRAJECTORY to the classifier payload.
-      The classifier (student_state_v6) can now see a structured summary of
-      the last 3 turns alongside the raw history. This matters for two reasons:
-        1. expertise_level persistence: the classifier can see if ADVANCED was
-           already established and avoid dropping it on a simpler follow-up.
-        2. strategy_updated_across_turns: the classifier can see whether the
-           same support level has already been used, avoiding inert repetition.
-      Both of these map directly to low-scoring rubric criteria:
-        - classification_reflects_this_message: avg 2.00 (expertise drift)
-        - strategy_updated_across_turns: avg 2.00 (repetition)
     """
     recent_control = recent_control_state(llm_history)
     trajectory = build_learning_trajectory(llm_history, limit=3)
@@ -414,17 +395,9 @@ async def checkpoint_and_decide(
     route: Dict[str, Any],
     llm_history: List[Dict[str, Any]],
     user_message: str,
-) -> tuple[CheckpointResult, SupportDecision, dict]:
+) -> Tuple[CheckpointResult, SupportDecision, dict]:
     """
     Run the combined checkpoint + decision stage.
-
-    Change from v5 → v6:
-      - Payload now includes LEARNING_TRAJECTORY (see _build_checkpoint_payload).
-      - expertise_level persistence guard: if a prior turn established ADVANCED,
-        the fallback here will not silently drop it on parse failure — the
-        trajectory makes the established level visible to the classifier.
-      - Loads student_state_v6.txt which removes implementation_allowed from
-        LLM scope and adds explicit can_show_code rules.
     """
     prompt_parts = [
         load_prompt(BASE_PROMPT_FILES["identity"]),
@@ -493,17 +466,18 @@ async def checkpoint_and_decide(
 
     return diagnosis, decision, debug
 
+
 def _build_writer_brief(route, checkpoint, decision) -> dict:
     return {
-        "phase":                route.get("phase", "PERFORMANCE"),
-        "support_level":        decision.support_level,
-        "support_depth":        decision.support_depth,
-        "can_show_code":        decision.can_show_code,
+        "phase":                  route.get("phase", "PERFORMANCE"),
+        "support_level":          decision.support_level,
+        "support_depth":          decision.support_depth,
+        "can_show_code":          decision.can_show_code,
         "must_end_with_question": decision.must_end_with_question,
-        "expertise_level":      checkpoint.expertise_level,
-        "frustration_level":    checkpoint.frustration_level,
-        "srl_focus":            checkpoint.srl_focus,
-        "has_attempt":          checkpoint.has_attempt,
+        "expertise_level":        checkpoint.expertise_level,
+        "frustration_level":      checkpoint.frustration_level,
+        "srl_focus":              checkpoint.srl_focus,
+        "has_attempt":            checkpoint.has_attempt,
     }
 
 
@@ -514,60 +488,72 @@ async def generate_full_reply(
     decision: SupportDecision,
     llm_history: List[Dict[str, Any]],
     user_message: str,
+    gate_hint: Optional[str] = None,
 ) -> str:
     """
     Generate the tutor reply using native multi-turn history.
 
     The system prompt is built in layers:
-      1. SRL identity (v4)
-      2. Phase prompt (forethought v3 / performance v2 / reflection v2)
-      3. Support-level response prompt
-      4. Depth + affective + coherence instruction block
-         ← NEW in v6: coherence instruction added to address multi_turn_coherence
-         scores of 2.20/3 in the response rubric
-      5. File handler (conditional)
+      1. SRL identity (srl_model_v4)
+      2. Phase prompt (forethought / performance / reflection)
+      3. Support-level response prompt (respond_X)
+      4. Generation context: depth + affective + coherence + expansion instructions
+         These were previously commented out. They are now active and also carry
+         expertise_level so the writer has an explicit anti-parroting contract
+         for INTERMEDIATE/ADVANCED students.
+      5. File handler (conditional on file content in message)
 
     History is passed as real alternating user/assistant turns rather than
     a serialised string, which reduces token use and improves coherence.
     """
-    # Pass llm_history to the header builder so it can compute coherence key
     recent_control = recent_control_state(llm_history)
     previous_support_level = recent_control.get("previous_support_level")
- 
-    # generation_context = build_generation_context(
-    #     support_depth=decision.support_depth,
-    #     frustration_level=checkpoint.frustration_level,
-    #     support_level=decision.support_level,
-    #     phase=route.get("phase", "PERFORMANCE"),
-    #     previous_support_level=previous_support_level,
-    # )
- 
-    prompt_parts = [
+
+    # Build the dynamic instruction block from generation.py.
+    # expertise_level is now passed so the writer receives an explicit tone
+    # contract: INTERMEDIATE students must not have their own words parroted
+    # back at them; ADVANCED students skip orientation entirely.
+    generation_context = build_generation_context(
+        support_depth=decision.support_depth,
+        frustration_level=checkpoint.frustration_level,
+        support_level=decision.support_level,
+        phase=route.get("phase", "PERFORMANCE"),
+        previous_support_level=previous_support_level,
+        expertise_level=checkpoint.expertise_level,
+    )
+    
+    prompt_parts = []
+    
+    if gate_hint:
+        prompt_parts.append(gate_hint)
+
+    prompt_parts.extend([
         load_prompt(BASE_PROMPT_FILES["identity"]),
         load_prompt(_phase_prompt_file(route.get("phase"))),
         load_prompt(decision.response_prompt_file),
-        # generation_context,
-    ]
+        generation_context,
+    ])
+    
     if _has_file_content(user_message):
         prompt_parts.append(load_prompt(BASE_PROMPT_FILES["file_handler"]))
- 
+
     system_prompt = "\n\n".join(prompt_parts)
- 
+
     # Slim brief — only what a writer needs
     writer_brief = _build_writer_brief(route, checkpoint, decision)
     previous_reply = last_assistant_reply(llm_history)
- 
+
     current_turn_content = (
         f"TUTOR_BRIEF:\n{json.dumps(writer_brief, indent=2)}\n\n"
         f"PREVIOUS_REPLY:\n{previous_reply}\n\n"
         f"CURRENT_USER_INPUT_WITH_FILES:\n{user_message}"
     )
- 
+
     history_turns = _build_native_history(llm_history)
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(history_turns)
     messages.append({"role": "user", "content": current_turn_content})
- 
+
     resp = await client.chat.completions.create(
         model=GENERATION_MODEL,
         messages=messages,
@@ -679,7 +665,7 @@ async def rewrite_reply(
 
 
 # ---------------------------------------------------------------------------
-# Public entry point (FOR AI JUDGE EVALUATION)
+# Public entry point
 # ---------------------------------------------------------------------------
 
 async def run_srl_chain(
@@ -688,6 +674,7 @@ async def run_srl_chain(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> Dict[str, Any]:
+  
     diagnosis, decision, _ = await checkpoint_and_decide(
         client, route, llm_history, user_message
     )

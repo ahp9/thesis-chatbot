@@ -4,6 +4,7 @@ import logging
 
 from lib.contracts import CombinedControlResult, TurnResult
 from lib.enums import Phase
+from services.gate_service import GateService
 from services.history_adapter import recent_control_state, recent_support_levels
 from services.classify_service import ClassifyService
 from services.generate_service import GenerateService
@@ -12,6 +13,8 @@ from services.router_service import RouterService
 from services.safety_service import SafetyService
 from services.telemetry import Telemetry
 
+logger = logging.getLogger(__name__)
+
 
 class Orchestrator:
     def __init__(self, client):
@@ -19,6 +22,7 @@ class Orchestrator:
         self.classify = ClassifyService(client)
         self.generator = GenerateService(client)
         self.safety = SafetyService(client)
+        self.gate = GateService(client)
         self.policy = PolicyEngine()
         self.telemetry = Telemetry()
 
@@ -28,6 +32,11 @@ class Orchestrator:
         llm_history: list[dict],
         current_phase: Phase,
     ) -> TurnResult:
+
+        gate_hint: str | None = None
+        if not llm_history:
+            gate_hint = await self.gate.get_hint(user_message)
+
         route = await self.router.route(user_message, llm_history, current_phase)
 
         router_predicted_phase = route.phase
@@ -63,11 +72,14 @@ class Orchestrator:
             decision=policy_decision,
         )
 
+        # gate_hint flows into generate() where it is prepended to the
+        # system prompt. If None, generate() behaves exactly as before.
         draft_reply = await self.generator.generate(
             route,
             final_control,
             llm_history,
             user_message,
+            gate_hint=gate_hint,
         )
 
         final_reply, safety, was_rewritten = await self.safety.enforce(
@@ -78,7 +90,6 @@ class Orchestrator:
             user_message,
         )
 
-        logger = logging.getLogger(__name__)
         if getattr(route, "trajectory_note", ""):
             logger.info("TRAJECTORY NOTE: %s", route.trajectory_note)
 
