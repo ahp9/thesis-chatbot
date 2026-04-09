@@ -13,20 +13,21 @@ GATE_MODEL = "gpt-4o-mini"
 _GATE_CLASSIFIER_SYSTEM = (
     "You classify student messages. Return JSON only — no prose, no fences.\n\n"
     "Decide: is the student's opening message asking for a direct answer, "
-    "calculation, result, or complete solution — with no prior attempt shown?\n\n"
+    "calculation, result, or a conclusion derived from data — with no prior attempt shown?\n\n"
     "Return exactly one of:\n"
     '  {"should_gate": true}\n'
     '  {"should_gate": false}\n\n'
     "Mark should_gate=true when the message:\n"
     "  - asks the tutor to compute, calculate, or run something directly\n"
-    "  - requests a final answer or result with no described attempt\n"
-    "  - would be fully resolved by a number, table, or code block\n\n"
+    "  - requests a final answer, result, or interpretation of a relationship (e.g., correlation, trends, or differences)\n"
+    "  - asks the tutor to determine if a specific hypothesis is true based on the data\n"
+    "  - would be fully resolved by a number, table, or a 'yes/no' conclusion about the data\n\n"
     "Mark should_gate=false when the message:\n"
     "  - describes something the student has already tried\n"
-    "  - asks a conceptual or setup question\n"
-    "  - requests guidance on how to approach a task\n"
+    "  - asks for a definition of a concept (e.g., 'What is correlation?')\n"
+    "  - requests guidance on the steps to approach a task\n"
     "  - shares code or partial work and asks for feedback\n"
-    "  - uploads a file and asks what it contains"
+    "  - uploads a file and asks what it contains (metadata only)"
 )
 
 

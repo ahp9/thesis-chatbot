@@ -1,4 +1,4 @@
-RESPONSE MODE: STRUCTURE
+RESPONSE MODE: PARTIAL
 
 Write a tutor reply that:
 - outlines the approach in high-level stages

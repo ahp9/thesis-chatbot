@@ -28,7 +28,7 @@ RESPONSE_PROMPT_FILES = {
     SupportLevel.HINT:       "responses/old_responses/respond_hint_v1.txt",       
     SupportLevel.STRUCTURE:  "responses/old_responses/respond_structure_v1.txt",
     SupportLevel.EXPLAIN:    "responses/old_responses/respond_explain_v1.txt",
-    SupportLevel.PARTIAL:    "responses/old_responses/respond_partial_v2.txt",
+    SupportLevel.PARTIAL:    "responses/respond_partial_v3.txt",
     SupportLevel.REFLECT:    "responses/old_responses/respond_reflect_v1.txt",
     SupportLevel.EVALUATION: "responses/old_responses/respond_evaluation_v1.txt",
 }

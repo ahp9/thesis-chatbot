@@ -23,129 +23,6 @@ REWRITE_MODEL = "gpt-4o-mini"      # rewrite if needed
 # Support levels where a safety/leak check is actually meaningful.
 SAFETY_CHECK_LEVELS = {"PARTIAL", "EXPLAIN", "STRUCTURE", "EVALUATION"}
 
-
-# ---------------------------------------------------------------------------
-# Depth instruction table
-#
-# These instructions are injected directly into the generation prompt so the
-# model sees an explicit behavioural contract, not just a label.
-# The key insight: support_depth was previously computed and then ignored at
-# generation time. This table closes that gap.
-# ---------------------------------------------------------------------------
-
-_DEPTH_INSTRUCTIONS: Dict[str, str] = {
-    "SURFACE": (
-        "DEPTH INSTRUCTION: Keep this response brief and orienting. "
-        "One concept, one pointer. Do not go beyond what the student needs "
-        "to take their very next step."
-    ),
-    "SURFACE_PLUS": (
-        "DEPTH INSTRUCTION: Give a brief multi-part orientation. "
-        "Name the relevant concept and provide one small grounding step or example. "
-        "Do not expand into trade-offs or design considerations yet — the student "
-        "needs to establish the basics before moving further."
-    ),
-    "SUBSTANTIVE": (
-        "DEPTH INSTRUCTION: Engage with the student's actual decision or problem at a "
-        "domain-appropriate level. Name specific options, trade-offs, or failure modes "
-        "relevant to their specific case. Do not define terms they already used correctly. "
-        "Do not ask what method or tool they plan to use if they already named one. "
-        "The response must help them choose, evaluate, or act — not restate what they know."
-    ),
-    "SUBSTANTIVE_PLUS": (
-        "DEPTH INSTRUCTION: Go beyond naming options — engage with the specific "
-        "trade-offs, constraints, or design considerations the student is navigating. "
-        "This student is past standard orientation. They need a response that "
-        "addresses multiple considerations at once, compares alternatives in their "
-        "specific context, or explains why the standard approach may or may not fit. "
-        "Do not ask setup questions. Do not define terms they used correctly."
-    ),
-    "DEEP": (
-        "DEPTH INSTRUCTION: Respond at a strategic or technical level. Assume full fluency. "
-        "Skip procedural steps and basic orientation entirely. "
-        "Raise a non-obvious consideration, edge case, design tension, or failure mode "
-        "the student has not yet surfaced. Give one targeted insight that assumes "
-        "the student already understands and has applied the standard approach. "
-        "Go to where the standard approach breaks, becomes ambiguous, or requires "
-        "architectural judgment."
-    ),
-}
-
-# ---------------------------------------------------------------------------
-# Affective state instruction table
-# ---------------------------------------------------------------------------
-
-_AFFECTIVE_INSTRUCTIONS: Dict[str, str] = {
-    "LOW": (
-        "AFFECTIVE INSTRUCTION: The student appears calm and engaged. "
-        "Maintain a direct, focused tone. Prioritise intellectual challenge over reassurance."
-    ),
-    "MEDIUM": (
-        "AFFECTIVE INSTRUCTION: The student shows signs of uncertainty or mild frustration. "
-        "Acknowledge the difficulty briefly before moving forward. "
-        "Keep the next step clear and achievable. Avoid adding more questions than necessary."
-    ),
-    "HIGH": (
-        "AFFECTIVE INSTRUCTION: The student is clearly frustrated or stuck. "
-        "Do not add clarifying questions. Do not ask them to try again without guidance. "
-        "Provide enough concrete direction that they can take one clear action immediately. "
-        "A short acknowledgement of the difficulty is appropriate, but move quickly to the help."
-    ),
-}
-
-# ---------------------------------------------------------------------------
-# Multi-turn coherence instruction table
-#
-# Injected into the generation prompt so the model knows what the last
-# support level was and can avoid repeating a strategy that did not move
-# the student forward.
-# ---------------------------------------------------------------------------
-
-_COHERENCE_INSTRUCTIONS: Dict[str, str] = {
-    "same_level_first_repeat": (
-        "COHERENCE INSTRUCTION: The previous turn used the same support level as this one. "
-        "Do NOT repeat the same framing, the same hint, or the same structural breakdown. "
-        "Find a different angle, a different entry point, or a different example. "
-        "The student did not respond to the prior approach — vary the strategy."
-    ),
-    "escalated": (
-        "COHERENCE INSTRUCTION: The support level has escalated from the previous turn. "
-        "Acknowledge that the student is still working through this. "
-        "The escalation means a more concrete approach is warranted — do not hold back "
-        "to the level of the previous turn."
-    ),
-    "de_escalated": (
-        "COHERENCE INSTRUCTION: The support level has de-escalated from the previous turn. "
-        "This usually means the student made progress. Acknowledge the forward movement "
-        "explicitly before continuing. Do not re-explain what was already covered."
-    ),
-    "first_turn": (
-        "COHERENCE INSTRUCTION: This is the first turn. No prior strategy to account for."
-    ),
-}
-
-_SUPPORT_LEVEL_ORDER = [
-    "CLARIFY", "QUESTION", "HINT", "STRUCTURE", "EXPLAIN", "PARTIAL",
-    "REFLECT", "EVALUATION",
-]
-
-
-def _get_coherence_key(
-    current_support_level: str,
-    previous_support_level: Optional[str],
-) -> str:
-    if not previous_support_level:
-        return "first_turn"
-    if current_support_level == previous_support_level:
-        return "same_level_first_repeat"
-    try:
-        curr_idx = _SUPPORT_LEVEL_ORDER.index(current_support_level)
-        prev_idx = _SUPPORT_LEVEL_ORDER.index(previous_support_level)
-        return "escalated" if curr_idx > prev_idx else "de_escalated"
-    except ValueError:
-        return "first_turn"
-
-
 # Dataclasses
 @dataclass
 class CheckpointResult:
@@ -350,6 +227,10 @@ def _should_run_safety_check(decision: SupportDecision) -> bool:
         return True
     return False
 
+def _strip_plan_block(text: str) -> str:
+    """Remove <plan>...</plan> block from generation output before returning."""
+    return re.sub(r"<plan>.*?</plan>", "", text, flags=re.DOTALL).strip()
+
 
 # ---------------------------------------------------------------------------
 # Fallback values — used ONLY when parsing genuinely fails.
@@ -523,16 +404,17 @@ async def generate_full_reply(
     )
     
     prompt_parts = []
-    
-    if gate_hint:
-        prompt_parts.append(gate_hint)
 
     prompt_parts.extend([
         load_prompt(BASE_PROMPT_FILES["identity"]),
         load_prompt(_phase_prompt_file(route.get("phase"))),
-        load_prompt(decision.response_prompt_file),
         generation_context,
+        load_prompt(decision.response_prompt_file),
     ])
+    
+    if gate_hint:
+        logger.info("Gate hint provided: %s")
+        prompt_parts.append(gate_hint)
     
     if _has_file_content(user_message):
         prompt_parts.append(load_prompt(BASE_PROMPT_FILES["file_handler"]))
@@ -559,7 +441,8 @@ async def generate_full_reply(
         messages=messages,
         temperature=0.3,
     )
-    return resp.choices[0].message.content or ""
+    raw = resp.choices[0].message.content or ""
+    return _strip_plan_block(raw)
 
 
 async def check_reply(
