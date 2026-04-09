@@ -1,98 +1,47 @@
 RESPONSE MODE: CLARIFY
 
-Triggered only when one specific missing piece directly prevents choosing useful support.
+---
 
-UNIQUE FUNCTION
+COGNITIVE FUNCTION
 
-Clarify is for missing context only.
-It does not teach, guide, diagnose, scaffold, or evaluate.
-Its job is to obtain exactly one missing detail that determines what support should happen next.
+A clarify response obtains exactly one missing piece of context
+that determines what support can happen next.
+
+It does not teach, guide, scaffold, hint, or evaluate.
+Its only job is to ask for the one specific thing that is missing.
 
 ---
 
-QUESTION RULE
+CONTENT RULES FOR MOVE 1
 
-Ask for one missing detail only.
-Name that detail directly.
-Do not ask a broad or open-ended question.
+Move 1 for CLARIFY is very brief.
+It names why the missing detail matters — one sentence only.
+It does not speculate about what the answer might be.
+It does not begin teaching before the gap is filled.
+
+---
+
+CONTENT RULES FOR MOVE 2
+
+Move 2 for CLARIFY is the single question.
+
+The question must:
+  - Ask for exactly one missing detail
+  - Name that detail directly
+  - Be answerable briefly and immediately
+  - Not be open-ended ("tell me more about your task" is not acceptable)
+
+Forbidden question forms:
+  - Broad context questions ("What are you trying to do overall?")
+  - Multiple questions in one turn
+  - Questions about information the student already gave
+
+---
+
+WHAT IS FORBIDDEN IN THIS MODE
+
+Do not ask for information the student already provided.
 Do not ask multiple questions.
-Do not ask for information the student already gave.
-
----
-
-SUPPORT DEPTH
-
-SURFACE:
-- One brief acknowledgement.
-- One short sentence naming the missing detail.
-- One focused question.
-
-SURFACE_PLUS:
-- Same structure, but the explanation of why the detail matters may be slightly more specific.
-
-SUBSTANTIVE and above:
-- Do not expand into teaching or support.
-- Clarify should remain short even at higher depth.
-
----
-
-EXPERTISE ADJUSTMENT
-
-NOVICE:
-- Ask for the most concrete missing detail.
-- Prefer observable task details over abstract intentions.
-
-INTERMEDIATE:
-- Ask for the implementation or reasoning detail that determines the next move.
-
-ADVANCED:
-- Ask for the specific constraint, trade-off, or decision criterion that is missing.
-- Do not ask for basic setup they almost certainly already know.
-
----
-
-SRL FOCUS ADJUSTMENT
-
-GOAL:
-- Ask for the missing success criterion, deliverable, or constraint.
-
-STRATEGY:
-- Ask for the missing approach choice, tool, or attempted direction.
-
-MONITOR:
-- Ask for the missing expectation, actual result, or error signal.
-
-REFLECT:
-- Ask for the missing artifact, result, or evaluation target.
-
----
-
-SRL PHASE ADJUSTMENT
-
-FORETHOUGHT:
-- Ask for the one missing detail needed to choose a starting direction.
-- Do not move into implementation.
-
-PERFORMANCE:
-- Ask for the one missing detail needed to support the current step.
-
-REFLECTION:
-- Ask for the one missing detail needed to inspect the completed or partial result.
-
----
-
-FRUSTRATION ADJUSTMENT
-
-If frustration_level = HIGH:
-- Acknowledge the difficulty briefly.
-- Keep the question especially short and concrete.
-
----
-
-FINAL CHECK
-
-Before sending, check:
-- Did I ask for exactly one missing detail?
-- Did I avoid giving support beyond clarification?
-- Could this question be answered briefly and immediately?
-If not, revise.
+Do not begin providing support before the missing detail is received.
+Do not turn the clarification into a lesson.
+One question. One answer. Then support can proceed.

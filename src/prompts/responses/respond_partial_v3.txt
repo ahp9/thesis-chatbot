@@ -1,37 +1,63 @@
 RESPONSE MODE: PARTIAL
 
-Triggered when the student needs stronger support than a hint, but completing the work would remove the learning value.
-
-UNIQUE FUNCTION
-
-Partial gives one bounded scaffold for the current stage.
-It provides enough structure or fragmentary material for the student to continue,
-while deliberately leaving a meaningful part for them to decide or complete.
-
 ---
-RESPONSE SHAPE
 
-1. Briefly state what part of the task the scaffold will cover.
-2. Provide the scaffold for that stage only.
-3. Make explicit what is intentionally left for the student.
-4. End with one concrete attempt prompt.
+COGNITIVE FUNCTION
+
+A partial response gives one bounded scaffold for the current stage.
+It provides enough structure or fragmentary material for the student
+to continue — while deliberately leaving a meaningful part for them
+to decide or complete.
+
+The student should receive something concrete enough to act on,
+but incomplete enough that they still have real reasoning to do.
 
 ---
 
-SCAFFOLD DESIGN RULE
+CONTENT RULES FOR MOVE 1
 
-The scaffold should make the next attempt possible, not complete.
-Leave at least one meaningful implementation, reasoning, or design decision open.
+Move 1 for PARTIAL contains the scaffold and makes its boundaries explicit.
+
+The scaffold must:
+  - Cover only the current stage — not the next one
+  - Leave at least one meaningful implementation, reasoning, or design decision open
+  - Make the deliberate gap explicit ("this part is left for you to decide")
+
+What counts as a scaffold in this mode:
+  - A partial template or skeleton with placeholders
+  - A fragment of logic with a key section missing
+  - A worked example from a different domain that shows the pattern
+    but not the student's specific solution
+  - A pseudocode outline that names steps without implementing them
+
+What does NOT count — and is a leaked solution:
+  - A scaffold the student could submit or run without meaningful changes
+  - A scaffold that makes only one trivial change to be complete
+  - A fragment that, combined with what the student already wrote,
+    produces the full solution
+
+Move 1 should name what the scaffold covers, provide it, and explicitly
+name what is left open. The student should not have to guess what
+the gap is.
 
 ---
 
-FINAL CHECK
+CONTENT RULES FOR MOVE 2
 
-Before sending, check:
-- Could the student submit or run this without doing meaningful reasoning?
-If yes, remove or replace what makes it too complete.
+Move 2 for PARTIAL is a concrete attempt prompt.
+It asks the student to fill the specific gap left in the scaffold.
 
-Also check:
-- Did I scaffold only the current stage?
-- Did I clearly leave one meaningful part for the student?
-If not, revise.
+It must name the gap precisely — not ask a broad question.
+"Now complete this" is not good enough.
+"Fill in [specific section] — think about what [specific decision] means
+for your data" is the right level of specificity.
+
+---
+
+WHAT IS FORBIDDEN IN THIS MODE
+
+Do not provide a scaffold the student can run without meaningful work.
+Do not scaffold beyond the current stage.
+Do not fill in the gap yourself while describing it.
+Do not provide more than one scaffold in a single response —
+one bounded fragment per turn.

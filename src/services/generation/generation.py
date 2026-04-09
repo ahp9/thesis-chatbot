@@ -1,11 +1,11 @@
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 
 from services.prompt_loader import load_prompt
 
 logger = logging.getLogger(__name__)
 
-_SUPPORT_LEVEL_ORDER: List[str] = [
+_SUPPORT_LEVEL_ORDER = [
     "CLARIFY", "QUESTION", "HINT", "STRUCTURE", "EXPLAIN", "PARTIAL",
     "REFLECT", "EVALUATION",
 ]
@@ -13,33 +13,31 @@ _SUPPORT_LEVEL_ORDER: List[str] = [
 # ---------------------------------------------------------------------------
 # Coherence instructions
 #
-# Also remain in Python because they are computed from a runtime comparison
-# between current and previous support levels — not a static value.
+# Computed at runtime by comparing current vs previous support level.
+# Passed into the planner payload so the planner can factor it into
+# move1_aim and handback_content decisions.
 # ---------------------------------------------------------------------------
 
-_COHERENCE_INSTRUCTIONS: Dict[str, str] = {
+_COHERENCE_INSTRUCTIONS = {
     "same_level_first_repeat": (
-        "COHERENCE: The previous turn used the same support level. "
-        "Do NOT repeat the same framing, hint, or breakdown. "
-        "Find a different angle or entry point — the prior approach did not land."
+        "Same support level as last turn. "
+        "Do NOT plan the same framing, angle, or breakdown. "
+        "Find a different entry point — the prior approach did not land."
     ),
     "escalated": (
-        "COHERENCE: Support has escalated from the previous turn. "
-        "A more concrete approach is warranted — do not hold back to the prior level."
+        "Support has escalated from the previous turn. "
+        "Plan a more concrete move — do not hold back to the prior level."
     ),
     "de_escalated": (
-        "COHERENCE: Support has de-escalated — the student made progress. "
-        "Acknowledge the forward movement. Do not re-explain what was already covered."
+        "Support has de-escalated — the student made progress. "
+        "Acknowledge the forward movement. "
+        "Do not re-plan anything that was already covered."
     ),
     "first_turn": (
-        "COHERENCE: First turn. No prior strategy to account for."
+        "First turn. No prior strategy to account for."
     ),
 }
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _get_coherence_key(
     current_support_level: str,
@@ -61,57 +59,46 @@ def _get_coherence_key(
 # Public API
 # ---------------------------------------------------------------------------
 
-def build_generation_context(
-    support_depth: str,
-    frustration_level: str,
-    support_level: str,
-    phase: str,
+def get_coherence_instruction(
+    current_support_level: str,
     previous_support_level: Optional[str],
-    expertise_level: Optional[str] = None,
 ) -> str:
     """
-    Build the dynamic instruction block injected into the generation system prompt.
+    Return the coherence instruction string for the planner payload.
 
-    The static contracts (tone by expertise level, phase behaviour, affective
-    tone, forward-movement rule) are loaded from the prompt file
-    srl_generation_respond.txt and filled with three runtime values:
-      - {expertise_level}
-      - {phase}
-      - {frustration_level}
-
-    The dynamic parts that cannot live in a static file are computed here
-    and appended after the filled template:
-      - Coherence instruction  (depends on current vs previous support level)
-      - Expansion permission   (depends on support_depth)
-
-    Args:
-        support_depth:          SURFACE / SUBSTANTIVE / DEEP / etc.
-        frustration_level:      LOW / MEDIUM / HIGH
-        support_level:          HINT / EXPLAIN / PARTIAL / etc.
-        phase:                  FORETHOUGHT / PERFORMANCE / REFLECTION
-        previous_support_level: None if first turn
-        expertise_level:        NOVICE / INTERMEDIATE / ADVANCED
-                                Defaults to INTERMEDIATE if not provided.
+    This is the only dynamic generation logic that cannot live in a static
+    prompt file — it depends on a runtime comparison between the current
+    and previous support levels.
     """
-    expertise_key = (expertise_level or "INTERMEDIATE").upper()
-    phase_key = (phase or "PERFORMANCE").upper()
-    affective_key = (frustration_level or "LOW").upper()
-    support_key = (support_level or "QUESTION").upper()
-    depth_key = (support_depth or "SUBSTANTIVE").upper()
-
-    # Load the template and fill the three static placeholders.
-    template = load_prompt("base/srl_generation_respond.txt")
-    filled = template.replace("{expertise_level}", expertise_key)
-    filled = filled.replace("{phase}", phase_key)
-    filled = filled.replace("{frustration_level}", affective_key)
-    filled = filled.replace("{support_depth}", depth_key)
-
-    # Append computed dynamic instructions.
-    coherence_key = _get_coherence_key(support_key, previous_support_level)
-    coherence_instr = _COHERENCE_INSTRUCTIONS.get(
-        coherence_key, _COHERENCE_INSTRUCTIONS["first_turn"]
+    key = _get_coherence_key(
+        (current_support_level or "QUESTION").upper(),
+        (previous_support_level or "").upper() or None,
     )
+    return _COHERENCE_INSTRUCTIONS.get(key, _COHERENCE_INSTRUCTIONS["first_turn"])
 
-    parts = [filled, coherence_instr]
 
-    return "\n\n".join(parts)
+def build_filled_structure(
+    expertise_level: str,
+    phase: str,
+    frustration_level: str,
+    support_depth: str,
+) -> str:
+    """
+    Load tutor_structure.txt and fill the four runtime placeholders.
+
+    Returns the filled string, ready to be used as the first section
+    of the planner system prompt.
+
+    Placeholders filled:
+      {expertise_level}   — NOVICE / INTERMEDIATE / ADVANCED
+      {phase}             — FORETHOUGHT / PERFORMANCE / REFLECTION
+      {frustration_level} — LOW / MEDIUM / HIGH
+      {support_depth}     — SURFACE / SURFACE_PLUS / SUBSTANTIVE /
+                            SUBSTANTIVE_PLUS / DEEP
+    """
+    template = load_prompt("base/tutor_structure.txt")
+    filled = template.replace("{expertise_level}", (expertise_level or "INTERMEDIATE").upper())
+    filled = filled.replace("{phase}",             (phase or "PERFORMANCE").upper())
+    filled = filled.replace("{frustration_level}", (frustration_level or "LOW").upper())
+    filled = filled.replace("{support_depth}",     (support_depth or "SUBSTANTIVE").upper())
+    return filled

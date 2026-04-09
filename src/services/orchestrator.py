@@ -34,8 +34,7 @@ class Orchestrator:
     ) -> TurnResult:
 
         gate_hint: str | None = None
-        if not llm_history:
-            gate_hint = await self.gate.get_hint(user_message)
+        gate_hint = await self.gate.get_hint(user_message)
 
         route = await self.router.route(user_message, llm_history, current_phase)
 

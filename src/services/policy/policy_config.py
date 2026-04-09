@@ -23,14 +23,14 @@ CODE_ALLOWED_LEVELS = {
 }
 
 RESPONSE_PROMPT_FILES = {
-    SupportLevel.CLARIFY:    "responses/old_responses/respond_clarify_v1.txt",
+    SupportLevel.CLARIFY:    "responses/respond_clarify_v2.txt",
     SupportLevel.QUESTION:   "responses/respond_question_v3.txt",
-    SupportLevel.HINT:       "responses/old_responses/respond_hint_v1.txt",       
-    SupportLevel.STRUCTURE:  "responses/old_responses/respond_structure_v1.txt",
-    SupportLevel.EXPLAIN:    "responses/old_responses/respond_explain_v1.txt",
+    SupportLevel.HINT:       "responses/respond_hint_v2.txt",       
+    SupportLevel.STRUCTURE:  "responses/respond_structure_v2.txt",
+    SupportLevel.EXPLAIN:    "responses/respond_explain_21.txt",
     SupportLevel.PARTIAL:    "responses/respond_partial_v3.txt",
-    SupportLevel.REFLECT:    "responses/old_responses/respond_reflect_v1.txt",
-    SupportLevel.EVALUATION: "responses/old_responses/respond_evaluation_v1.txt",
+    SupportLevel.REFLECT:    "responses/respond_reflect_v2.txt",
+    SupportLevel.EVALUATION: "responses/respond_evaluation_v2.txt",
 }
 
 

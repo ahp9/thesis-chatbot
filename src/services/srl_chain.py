@@ -4,7 +4,10 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
-from services.generation.generation import build_generation_context
+from services.generation.generation import (
+    build_filled_structure,
+    get_coherence_instruction,
+)
 from services.history_adapter import (
     build_learning_trajectory,
     last_assistant_reply,
@@ -15,15 +18,20 @@ from services.prompt_loader import load_prompt
 
 logger = logging.getLogger(__name__)
 
-CONTROL_MODEL = "gpt-4.1-mini"     # diagnosis + support decision
-GENERATION_MODEL = "gpt-4.1-mini"   # reply writing
-CHECK_MODEL = "gpt-4o-mini"        # safety check
-REWRITE_MODEL = "gpt-4o-mini"      # rewrite if needed
+CONTROL_MODEL    = "gpt-4.1-mini"   # checkpoint + support decision
+PLAN_MODEL       = "gpt-4o-mini"    # reply planner  (cheap, ~200 token output)
+GENERATION_MODEL = "gpt-4.1-mini"   # reply writer
+CHECK_MODEL      = "gpt-4o-mini"    # safety check
+REWRITE_MODEL    = "gpt-4o-mini"    # rewrite if safety check fails
 
-# Support levels where a safety/leak check is actually meaningful.
+# Support levels where a safety/leak check is meaningful.
 SAFETY_CHECK_LEVELS = {"PARTIAL", "EXPLAIN", "STRUCTURE", "EVALUATION"}
 
+
+# ---------------------------------------------------------------------------
 # Dataclasses
+# ---------------------------------------------------------------------------
+
 @dataclass
 class CheckpointResult:
     request_kind: str
@@ -54,6 +62,32 @@ class SupportDecision:
 
 
 @dataclass
+class ReplyPlan:
+    """
+    Output of the planner call.
+
+    student_has      — what the student demonstrably understands from their message
+    gap              — the one tension or decision they have not yet addressed
+    move1_aim        — cognitive aim of Move 1 (not a format description)
+    move1_depth      — brief | substantive | rich
+    handback_type    — question | action | partial_frame
+    handback_content — the actual question, action, or partial frame (specific)
+    off_limits       — the specific content that would constitute a leaked answer
+    tone_note        — opening register note if frustration/phase requires one
+    parse_ok         — False if planner JSON failed to parse
+    """
+    student_has:      str
+    gap:              str
+    move1_aim:        str
+    move1_depth:      str
+    handback_type:    str
+    handback_content: str
+    off_limits:       str
+    tone_note:        str
+    parse_ok:         bool = True
+
+
+@dataclass
 class CheckResult:
     is_safe: bool
     leaks_solution: bool
@@ -62,34 +96,47 @@ class CheckResult:
     was_skipped: bool = False
 
 
-# Prompt file maps
+# ---------------------------------------------------------------------------
+# Prompt file registry
+# ---------------------------------------------------------------------------
+
 BASE_PROMPT_FILES = {
-    "identity": "base/srl_model_v4.txt",
-    "generation_style": "base/srl_respond_tone.txt",
-    "phase_forethought": "phases/forethought_core_v3.txt",
-    "phase_performance": "phases/performance_core_v2.txt",
-    "phase_reflection": "phases/reflection_core_v2.txt",
-    "check_reply": "chains/check_solution_leak_v3.txt",
-    "rewrite_reply": "chains/fallback_rewrite_v3.txt",
+    # Structure / identity
+    "tutor_structure":       "base/tutor_structure.txt",
+
+    # Phase cognitive guidance (no structural instructions)
+    "phase_forethought":     "phases/forethought_core_v3.txt",
+    "phase_performance":     "phases/performance_core_v2.txt",
+    "phase_reflection":      "phases/reflection_core_v1.txt",
+
+    # Chain prompts
+    "reply_planner":         "chains/reply_planner.txt",
+    "check_reply":           "chains/check_solution_leak_v3.txt",
+    "rewrite_reply":         "chains/fallback_rewrite_v3.txt",
     "checkpoint_and_decide": "chains/student_state_v6.txt",
-    "file_handler": "base/file.txt",
+
+    # Conditional
+    "file_handler":          "base/file.txt",
 }
 
 
+# ---------------------------------------------------------------------------
 # JSON parsing
+# ---------------------------------------------------------------------------
+
 def _extract_json(raw: str) -> Dict[str, Any]:
     """
-    Try to extract a JSON object from the model's raw response.
+    Extract a JSON object from the model's raw response.
 
-    Handles three common failure modes:
-      1. Model wraps JSON in ```json ... ``` fences
-      2. Model prepends a line of prose before the JSON
-      3. Model returns valid JSON directly
+    Handles:
+      1. Valid JSON returned directly
+      2. JSON wrapped in ```json ... ``` fences
+      3. Prose before the JSON object
 
     Returns an empty dict only if all attempts fail.
     """
     if not raw or not raw.strip():
-        logger.warning("_extract_json: model returned empty response")
+        logger.warning("_extract_json: empty response from model")
         return {}
 
     try:
@@ -112,20 +159,23 @@ def _extract_json(raw: str) -> Dict[str, Any]:
             pass
 
     logger.error(
-        "_extract_json: could not parse model response. Raw content (first 500 chars):\n%s",
+        "_extract_json: could not parse model response. First 500 chars:\n%s",
         raw[:500],
     )
     return {}
 
 
 async def _call_json(
-    client, system_prompt: str, user_prompt: str, model: str = CONTROL_MODEL
+    client,
+    system_prompt: str,
+    user_prompt: str,
+    model: str = CONTROL_MODEL,
 ) -> Tuple[str, Dict[str, Any], bool]:
     resp = await client.chat.completions.create(
         model=model,
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
+            {"role": "user",   "content": user_prompt},
         ],
         response_format={"type": "json_object"},
         temperature=0,
@@ -157,8 +207,8 @@ def _compact_history(llm_history: List[Dict[str, Any]], limit: int = 8) -> str:
     recent = llm_history[-limit:] if llm_history else []
     lines = []
     for m in recent:
-        role = (m.get('role') or 'user').upper()
-        content = (m.get('content') or '').strip()
+        role    = (m.get("role") or "user").upper()
+        content = (m.get("content") or "").strip()
         if content:
             lines.append(f"{role}: {content[:500]}")
     return "\n".join(lines) if lines else "(no prior context)"
@@ -169,13 +219,12 @@ def _build_native_history(
     limit: int = 8,
 ) -> List[Dict[str, str]]:
     """
-    Build a proper OpenAI-style alternating user/assistant message list.
-    Used for generate_full_reply so the model sees real conversation turns.
-    File block content from old turns is stripped to avoid token bloat.
+    Build an OpenAI-style alternating user/assistant message list.
+    File block content from older turns is stripped to avoid token bloat.
     """
     clean: List[Dict[str, str]] = []
     for m in llm_history[-(limit * 2):]:
-        role = m.get("role", "")
+        role    = m.get("role", "")
         if role not in ("user", "assistant"):
             continue
         content = (m.get("content") or "").strip()
@@ -189,6 +238,7 @@ def _build_native_history(
 
     clean = clean[-limit:]
 
+    # Ensure the list starts with a user turn
     while clean and clean[0]["role"] == "assistant":
         clean.pop(0)
 
@@ -200,11 +250,8 @@ def _build_checkpoint_payload(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> str:
-    """
-    Build the input payload for the checkpoint+decide stage.
-    """
     recent_control = recent_control_state(llm_history)
-    trajectory = build_learning_trajectory(llm_history, limit=3)
+    trajectory     = build_learning_trajectory(llm_history, limit=3)
 
     parts = [
         f"CURRENT_PHASE:\n{route.get('phase', 'UNKNOWN')}",
@@ -217,23 +264,38 @@ def _build_checkpoint_payload(
 
 
 def _should_run_safety_check(decision: SupportDecision) -> bool:
-    """
-    Run the check when the support level can plausibly produce a leaked
-    solution or runnable code. Skip for structurally safe levels.
-    """
     if decision.can_show_code:
         return True
     if decision.support_level in SAFETY_CHECK_LEVELS:
         return True
     return False
 
+
 def _strip_plan_block(text: str) -> str:
-    """Remove <plan>...</plan> block from generation output before returning."""
+    """Remove any <plan>...</plan> block the writer may have left in its output."""
     return re.sub(r"<plan>.*?</plan>", "", text, flags=re.DOTALL).strip()
 
 
+def _build_writer_brief(
+    route: Dict[str, Any],
+    checkpoint: CheckpointResult,
+    decision: SupportDecision,
+) -> dict:
+    return {
+        "phase":                  route.get("phase", "PERFORMANCE"),
+        "support_level":          decision.support_level,
+        "support_depth":          decision.support_depth,
+        "can_show_code":          decision.can_show_code,
+        "must_end_with_question": decision.must_end_with_question,
+        "expertise_level":        checkpoint.expertise_level,
+        "frustration_level":      checkpoint.frustration_level,
+        "srl_focus":              checkpoint.srl_focus,
+        "has_attempt":            checkpoint.has_attempt,
+    }
+
+
 # ---------------------------------------------------------------------------
-# Fallback values — used ONLY when parsing genuinely fails.
+# Fallback values — used only when LLM parsing genuinely fails
 # ---------------------------------------------------------------------------
 
 def _fallback_checkpoint() -> CheckpointResult:
@@ -267,6 +329,20 @@ def _fallback_decision() -> SupportDecision:
     )
 
 
+def _fallback_plan() -> ReplyPlan:
+    return ReplyPlan(
+        student_has="(planner parse failed — engaging with student's situation)",
+        gap="(planner parse failed — targeting the next unaddressed step)",
+        move1_aim="engage specifically with the student's message and name the relevant tension",
+        move1_depth="substantive",
+        handback_type="question",
+        handback_content="What have you tried so far, and where did it stop making sense?",
+        off_limits="do not state the final answer or complete the task",
+        tone_note="",
+        parse_ok=False,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Chain steps
 # ---------------------------------------------------------------------------
@@ -278,38 +354,39 @@ async def checkpoint_and_decide(
     user_message: str,
 ) -> Tuple[CheckpointResult, SupportDecision, dict]:
     """
-    Run the combined checkpoint + decision stage.
+    Classify the student's state and decide the support level.
+
+    This is a classification task — it operates on the student's state
+    (phase, trajectory, progress, frustration) and produces labels.
+    It does NOT reason about the specific content of the reply.
     """
     prompt_parts = [
-        load_prompt(BASE_PROMPT_FILES["identity"]),
-        load_prompt(_phase_prompt_file(route.get("phase"))),
         load_prompt(BASE_PROMPT_FILES["checkpoint_and_decide"]),
     ]
     if _has_file_content(user_message):
         prompt_parts.append(load_prompt(BASE_PROMPT_FILES["file_handler"]))
 
     system_prompt = "\n\n".join(prompt_parts)
-    payload = _build_checkpoint_payload(route, llm_history, user_message)
+    payload       = _build_checkpoint_payload(route, llm_history, user_message)
+
     raw_text, data, parse_ok = await _call_json(
         client, system_prompt, payload, model=CONTROL_MODEL
     )
 
     debug = {
-        "raw_text": raw_text,
-        "parsed_json": data,
-        "parse_ok": parse_ok,
+        "raw_text":      raw_text,
+        "parsed_json":   data,
+        "parse_ok":      parse_ok,
         "fallback_used": False,
     }
 
     if not parse_ok:
-        logger.warning(
-            "checkpoint_and_decide: JSON parse failed — using fallback values."
-        )
+        logger.warning("checkpoint_and_decide: JSON parse failed — using fallback values.")
         debug["fallback_used"] = True
         return _fallback_checkpoint(), _fallback_decision(), debug
 
     checkp_raw = data.get("checkpoint", {})
-    dec_raw = data.get("decision", {})
+    dec_raw    = data.get("decision", {})
 
     diagnosis = CheckpointResult(
         request_kind=(checkp_raw.get("request_kind") or "PRODUCT").upper(),
@@ -348,87 +425,123 @@ async def checkpoint_and_decide(
     return diagnosis, decision, debug
 
 
-def _build_writer_brief(route, checkpoint, decision) -> dict:
-    return {
-        "phase":                  route.get("phase", "PERFORMANCE"),
-        "support_level":          decision.support_level,
-        "support_depth":          decision.support_depth,
-        "can_show_code":          decision.can_show_code,
-        "must_end_with_question": decision.must_end_with_question,
-        "expertise_level":        checkpoint.expertise_level,
-        "frustration_level":      checkpoint.frustration_level,
-        "srl_focus":              checkpoint.srl_focus,
-        "has_attempt":            checkpoint.has_attempt,
-    }
-
-
-async def generate_full_reply(
+async def _plan_reply(
     client,
     route: Dict[str, Any],
     checkpoint: CheckpointResult,
     decision: SupportDecision,
     llm_history: List[Dict[str, Any]],
     user_message: str,
+) -> ReplyPlan:
+    # Build the filled structure document — this is the planner's
+    # primary authority on how the reply should be shaped.
+    filled_structure = build_filled_structure(
+        expertise_level=checkpoint.expertise_level,
+        phase=route.get("phase", "PERFORMANCE"),
+        frustration_level=checkpoint.frustration_level,
+        support_depth=decision.support_depth,
+    )
+
+    system_prompt = "\n\n".join([
+        filled_structure,
+        load_prompt(BASE_PROMPT_FILES["reply_planner"]),
+    ])
+
+    # Coherence instruction: computed from the delta between current and
+    # previous support levels. Informs the planner's move1_aim so the
+    # plan does not repeat the previous approach.
+    coherence = get_coherence_instruction(
+        current_support_level=decision.support_level,
+        previous_support_level=recent_control_state(llm_history).get("previous_support_level"),
+    )
+
+    writer_brief   = _build_writer_brief(route, checkpoint, decision)
+    previous_reply = last_assistant_reply(llm_history)
+
+    payload = (
+        f"WRITER_BRIEF:\n{json.dumps(writer_brief, indent=2)}\n\n"
+        f"COHERENCE_NOTE:\n{coherence}\n\n"
+        f"PREVIOUS_REPLY:\n{previous_reply}\n\n"
+        f"STUDENT_MESSAGE:\n{user_message}"
+    )
+
+    raw, data, parse_ok = await _call_json(
+        client, system_prompt, payload, model=PLAN_MODEL
+    )
+
+    if not parse_ok:
+        logger.warning("_plan_reply: planner JSON parse failed — using fallback plan.")
+        return _fallback_plan()
+
+    return ReplyPlan(
+        student_has=      (data.get("student_has")      or "").strip(),
+        gap=              (data.get("gap")               or "").strip(),
+        move1_aim=        (data.get("move1_aim")         or "").strip(),
+        move1_depth=      (data.get("move1_depth")       or "substantive").strip().lower(),
+        handback_type=    (data.get("handback_type")     or "question").strip().lower(),
+        handback_content= (data.get("handback_content")  or "").strip(),
+        off_limits=       (data.get("off_limits")        or "").strip(),
+        tone_note=        (data.get("tone_note")         or "").strip(),
+        parse_ok=True,
+    )
+
+
+async def _write_reply(
+    client,
+    route: Dict[str, Any],
+    checkpoint: CheckpointResult,
+    decision: SupportDecision,
+    plan: ReplyPlan,
+    llm_history: List[Dict[str, Any]],
+    user_message: str,
     gate_hint: Optional[str] = None,
 ) -> str:
     """
-    Generate the tutor reply using native multi-turn history.
+    Call 2 of the two-call generation pipeline.
 
-    The system prompt is built in layers:
-      1. SRL identity (srl_model_v4)
-      2. Phase prompt (forethought / performance / reflection)
-      3. Support-level response prompt (respond_X)
-      4. Generation context: depth + affective + coherence + expansion instructions
-         These were previously commented out. They are now active and also carry
-         expertise_level so the writer has an explicit anti-parroting contract
-         for INTERMEDIATE/ADVANCED students.
-      5. File handler (conditional on file content in message)
+    The writer receives the concrete plan from the planner and executes it.
+    It has clear, non-competing authority:
+      - Phase prompt:    cognitive priorities and forbidden moves for this phase
+      - respond_X file:  content character of Move 1 for this support mode
 
-    History is passed as real alternating user/assistant turns rather than
-    a serialised string, which reduces token use and improves coherence.
+    The writer does NOT receive tutor_structure.txt directly — the structural
+    contract was consumed by the planner and is now expressed in the plan.
+    The plan tells the writer what to do; the phase and respond files tell it
+    how to do it for this phase and mode.
     """
-    recent_control = recent_control_state(llm_history)
-    previous_support_level = recent_control.get("previous_support_level")
-
-    # Build the dynamic instruction block from generation.py.
-    # expertise_level is now passed so the writer receives an explicit tone
-    # contract: INTERMEDIATE students must not have their own words parroted
-    # back at them; ADVANCED students skip orientation entirely.
-    generation_context = build_generation_context(
-        support_depth=decision.support_depth,
-        frustration_level=checkpoint.frustration_level,
-        support_level=decision.support_level,
-        phase=route.get("phase", "PERFORMANCE"),
-        previous_support_level=previous_support_level,
-        expertise_level=checkpoint.expertise_level,
-    )
-    
-    prompt_parts = []
-
-    prompt_parts.extend([
-        load_prompt(BASE_PROMPT_FILES["identity"]),
+    prompt_parts = [
         load_prompt(_phase_prompt_file(route.get("phase"))),
-        generation_context,
         load_prompt(decision.response_prompt_file),
-    ])
-    
+    ]
+
     if gate_hint:
-        logger.info("Gate hint provided: %s")
+        logger.info("Gate hint active — prepending first-turn gate prompt.")
         prompt_parts.append(gate_hint)
-    
+
     if _has_file_content(user_message):
         prompt_parts.append(load_prompt(BASE_PROMPT_FILES["file_handler"]))
 
     system_prompt = "\n\n".join(prompt_parts)
 
-    # Slim brief — only what a writer needs
-    writer_brief = _build_writer_brief(route, checkpoint, decision)
-    previous_reply = last_assistant_reply(llm_history)
+    # Format the plan as a clear instruction block for the writer.
+    # Each field is labelled so the writer knows exactly what to do
+    # without re-reading structural documents.
+    plan_block = "\n".join([
+        "REPLY_PLAN",
+        "----------",
+        f"What the student has:  {plan.student_has}",
+        f"Gap to address:        {plan.gap}",
+        f"Move 1 aim:            {plan.move1_aim}",
+        f"Move 1 depth:          {plan.move1_depth}",
+        f"Handback type:         {plan.handback_type}",
+        f"Handback content:      {plan.handback_content}",
+        f"Off limits:            {plan.off_limits}",
+        f"Tone note:             {plan.tone_note or 'none'}",
+    ])
 
     current_turn_content = (
-        f"TUTOR_BRIEF:\n{json.dumps(writer_brief, indent=2)}\n\n"
-        f"PREVIOUS_REPLY:\n{previous_reply}\n\n"
-        f"CURRENT_USER_INPUT_WITH_FILES:\n{user_message}"
+        f"{plan_block}\n\n"
+        f"STUDENT_MESSAGE:\n{user_message}"
     )
 
     history_turns = _build_native_history(llm_history)
@@ -445,6 +558,35 @@ async def generate_full_reply(
     return _strip_plan_block(raw)
 
 
+async def generate_full_reply(
+    client,
+    route: Dict[str, Any],
+    checkpoint: CheckpointResult,
+    decision: SupportDecision,
+    llm_history: List[Dict[str, Any]],
+    user_message: str,
+    gate_hint: Optional[str] = None,
+) -> str:
+    plan = await _plan_reply(
+        client, route, checkpoint, decision, llm_history, user_message
+    )
+
+    logger.info(
+        "Reply plan — gap: %s | move1_depth: %s | handback: %s",
+        plan.gap,
+        plan.move1_depth,
+        plan.handback_type,
+    )
+
+    return await _write_reply(
+        client, route, checkpoint, decision, plan, llm_history, user_message, gate_hint
+    )
+
+
+# ---------------------------------------------------------------------------
+# Safety check and rewrite
+# ---------------------------------------------------------------------------
+
 async def check_reply(
     client,
     route: Dict[str, Any],
@@ -456,6 +598,7 @@ async def check_reply(
 ) -> CheckResult:
     """
     Run the safety/leak check only when the support level warrants it.
+    Structurally safe levels (QUESTION, HINT, CLARIFY, REFLECT) are skipped.
     """
     if not _should_run_safety_check(decision):
         logger.info(
@@ -473,13 +616,14 @@ async def check_reply(
 
     system_prompt = load_prompt(BASE_PROMPT_FILES["check_reply"])
     payload = {
-        "chk": checkpoint.__dict__,
-        "dec": decision.__dict__,
-        "draft": draft_reply,
-        "user": user_message,
+        "chk":            checkpoint.__dict__,
+        "dec":            decision.__dict__,
+        "draft":          draft_reply,
+        "user":           user_message,
         "recent_history": _compact_history(llm_history, limit=4),
-        "route": route,
+        "route":          route,
     }
+
     raw_text, data, parse_ok = await _call_json(
         client,
         system_prompt,
@@ -489,7 +633,7 @@ async def check_reply(
 
     if not parse_ok:
         logger.warning("check_reply: JSON parse failed — defaulting to safe=False")
-        logger.warning("check_reply: JSON parse failed. raw_text=%s", raw_text)
+        logger.warning("check_reply raw_text: %s", raw_text)
         return CheckResult(
             is_safe=False,
             leaks_solution=True,
@@ -517,8 +661,19 @@ async def rewrite_reply(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> str:
+    """
+    Rewrite a reply that failed the safety check.
+    Uses the identity (tutor_structure filled) + fallback_rewrite prompt.
+    """
+    filled_structure = build_filled_structure(
+        expertise_level=checkpoint.expertise_level,
+        phase=route.get("phase", "PERFORMANCE"),
+        frustration_level=checkpoint.frustration_level,
+        support_depth=decision.support_depth,
+    )
+
     system_prompt = "\n\n".join([
-        load_prompt(BASE_PROMPT_FILES["identity"]),
+        filled_structure,
         load_prompt(BASE_PROMPT_FILES["rewrite_reply"]),
     ])
 
@@ -526,21 +681,22 @@ async def rewrite_reply(
     previous_reply = last_assistant_reply(llm_history)
 
     payload = {
-        "draft": draft_reply,
-        "reason": check.reason,
-        "user": user_message,
-        "recent_history": _compact_history(llm_history, limit=4),
-        "route": route,
-        "checkpoint": checkpoint.__dict__,
-        "decision": decision.__dict__,
+        "draft":            draft_reply,
+        "reason":           check.reason,
+        "user":             user_message,
+        "recent_history":   _compact_history(llm_history, limit=4),
+        "route":            route,
+        "checkpoint":       checkpoint.__dict__,
+        "decision":         decision.__dict__,
         "previous_control": recent_control,
-        "previous_reply": previous_reply,
+        "previous_reply":   previous_reply,
     }
+
     resp = await client.chat.completions.create(
         model=REWRITE_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": json.dumps(payload)},
+            {"role": "user",   "content": json.dumps(payload)},
         ],
         temperature=0.1,
     )
@@ -548,7 +704,7 @@ async def rewrite_reply(
 
 
 # ---------------------------------------------------------------------------
-# Public entry point
+# Public entry point (used by run_srl_chain legacy path)
 # ---------------------------------------------------------------------------
 
 async def run_srl_chain(
@@ -557,7 +713,7 @@ async def run_srl_chain(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> Dict[str, Any]:
-  
+
     diagnosis, decision, _ = await checkpoint_and_decide(
         client, route, llm_history, user_message
     )
@@ -571,25 +727,19 @@ async def run_srl_chain(
     )
 
     if not check.is_safe or check.leaks_solution:
-        logger.info("Safety check failed: %s. Rewriting...", check.reason)
+        logger.info("Safety check failed: %s — rewriting.", check.reason)
         final_reply = await rewrite_reply(
-            client,
-            route,
-            diagnosis,
-            decision,
-            draft_reply,
-            check,
-            llm_history,
-            user_message,
+            client, route, diagnosis, decision,
+            draft_reply, check, llm_history, user_message,
         )
     else:
         final_reply = draft_reply
 
     return {
-        "reply": final_reply,
-        "draft_reply": draft_reply,
-        "diagnosis": diagnosis.__dict__,
-        "decision": decision.__dict__,
-        "check": check.__dict__,
+        "reply":        final_reply,
+        "draft_reply":  draft_reply,
+        "diagnosis":    diagnosis.__dict__,
+        "decision":     decision.__dict__,
+        "check":        check.__dict__,
         "was_rewritten": final_reply != draft_reply,
     }
