@@ -80,6 +80,7 @@ def get_coherence_instruction(
 def build_filled_structure(
     expertise_level: str,
     phase: str,
+    srl_focus: str,
     frustration_level: str,
     support_depth: str,
 ) -> str:
@@ -92,6 +93,7 @@ def build_filled_structure(
     Placeholders filled:
       {expertise_level}   — NOVICE / INTERMEDIATE / ADVANCED
       {phase}             — FORETHOUGHT / PERFORMANCE / REFLECTION
+      {srl_focus}         — GOAL / STRATEGY / MONITOR / REFLECT
       {frustration_level} — LOW / MEDIUM / HIGH
       {support_depth}     — SURFACE / SURFACE_PLUS / SUBSTANTIVE /
                             SUBSTANTIVE_PLUS / DEEP
@@ -99,6 +101,7 @@ def build_filled_structure(
     template = load_prompt("base/tutor_structure.txt")
     filled = template.replace("{expertise_level}", (expertise_level or "INTERMEDIATE").upper())
     filled = filled.replace("{phase}",             (phase or "PERFORMANCE").upper())
+    filled = filled.replace("{srl_focus}",         (srl_focus or "GOAL").upper())
     filled = filled.replace("{frustration_level}", (frustration_level or "LOW").upper())
     filled = filled.replace("{support_depth}",     (support_depth or "SUBSTANTIVE").upper())
     return filled

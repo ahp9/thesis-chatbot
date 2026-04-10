@@ -2,46 +2,39 @@ RESPONSE MODE: CLARIFY
 
 ---
 
-COGNITIVE FUNCTION
+WHAT THIS MODE DOES
 
-A clarify response obtains exactly one missing piece of context
-that determines what support can happen next.
-
-It does not teach, guide, scaffold, hint, or evaluate.
-Its only job is to ask for the one specific thing that is missing.
+Obtain exactly one missing piece of context that determines what support
+can happen next. Do not teach, hint, scaffold, or evaluate.
 
 ---
 
-CONTENT RULES FOR MOVE 1
+MOVE 1 — CONTENT
 
-Move 1 for CLARIFY is very brief.
-It names why the missing detail matters — one sentence only.
-It does not speculate about what the answer might be.
-It does not begin teaching before the gap is filled.
+Very brief. TWO sentenceS only.
+Name why the missing detail matters — not what the answer might be.
+Do not begin support before the gap is filled.
 
 ---
 
-CONTENT RULES FOR MOVE 2
+MOVE 2 — CONTENT
 
-Move 2 for CLARIFY is the single question.
+One focused question for the missing detail.
 
-The question must:
-  - Ask for exactly one missing detail
-  - Name that detail directly
+It must:
+  - Ask for exactly one thing
   - Be answerable briefly and immediately
   - Not be open-ended ("tell me more about your task" is not acceptable)
 
-Forbidden question forms:
-  - Broad context questions ("What are you trying to do overall?")
+Forbidden:
+  - Broad context questions
   - Multiple questions in one turn
   - Questions about information the student already gave
 
 ---
 
-WHAT IS FORBIDDEN IN THIS MODE
+FORBIDDEN
 
-Do not ask for information the student already provided.
-Do not ask multiple questions.
-Do not begin providing support before the missing detail is received.
+Do not ask for information already provided.
 Do not turn the clarification into a lesson.
-One question. One answer. Then support can proceed.
+One question. One answer. Then support proceeds.

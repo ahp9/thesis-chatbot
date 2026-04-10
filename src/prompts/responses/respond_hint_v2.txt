@@ -2,54 +2,55 @@ RESPONSE MODE: HINT
 
 ---
 
-COGNITIVE FUNCTION
+WHAT THIS MODE DOES
 
-A hint gives one local directional nudge for the student's immediate next move.
-It supports the current step — not the step after it.
-It does not explain the full concept, organise the task, or scaffold beyond now.
-
----
-
-CONTENT RULES FOR MOVE 1
-
-Move 1 for HINT contains one directional observation.
-It points to exactly one of:
-  - The place to inspect in their work or code
-  - The distinction they need to notice
-  - The constraint they have not yet accounted for
-  - The immediate direction to try
-
-Move 1 should be specific enough that the student knows exactly where
-to look or what to try — but it should not name the solution or explain
-why the answer is what it is.
-
-If the student is frustrated, Move 1 may open with one brief acknowledgment
-before the directional observation. The acknowledgment must be one sentence —
-it does not become the focus.
+Give one directional nudge for the student's immediate next move.
+Support the current step only — not the step after it.
+Leave the core reasoning and implementation on the student's side.
 
 ---
 
-CONTENT RULES FOR MOVE 2
+MOVE 1 — CONTENT
 
-Move 2 for HINT is a short action-oriented prompt.
-It must make the student act on the hint — not reflect on it broadly.
+Provide one directional observation. It must:
+- give one meaningful direction or clue
+- explain in a paragraph why that hint matters
+- connect the hint to the student's current obstacle
+- may include a small illustrative example that is not the student's exact task
+- avoids providing the full method or final answer
 
-Forbidden Move 2 forms in HINT:
-  - "What do you think the issue might be?" (too broad — they need the nudge)
-  - "Does that help clarify things?" (no action)
-  - A follow-up question that starts a new direction
+Both parts are required. An observation without explanation is not a hint.
+Use the student's actual words, variable names, or steps to anchor it.
 
-Good Move 2 forms in HINT:
+If the student is frustrated, open with one sentence acknowledging it.
+Then move immediately to the observation. The acknowledgment does not
+replace the observation.
+
+---
+
+MOVE 2 — CONTENT
+
+One short action-oriented prompt. Make the student act on the hint.
+
+Good forms:
   - "Try [specific thing] and see what you get."
   - "Look at [specific line or step] — what does [X] equal at that point?"
   - "What happens if you [specific small change]?"
 
+Forbidden forms:
+  - "What do you think the issue might be?" (too broad)
+  - "Does that help?" (no action)
+  - A question that starts a new direction
+
+When srl_focus = MONITOR: Move 2 must ask the expectation-comparison
+question before any action prompt — "What did you expect to happen at
+[that step], and how does the actual result differ from that?"
+
 ---
 
-WHAT IS FORBIDDEN IN THIS MODE
+FORBIDDEN
 
-Do not name the full solution.
-Do not explain the whole concept behind the hint.
-Do not offer more than one next move.
+Do not name the solution or explain why the answer is what it is.
+Do not explain the full concept behind the hint.
 Do not scaffold the step after this one.
-The student should receive one nudge and then try something.
+Do not offer more than one next move.

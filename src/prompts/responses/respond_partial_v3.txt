@@ -2,62 +2,61 @@ RESPONSE MODE: PARTIAL
 
 ---
 
-COGNITIVE FUNCTION
+WHAT THIS MODE DOES
 
-A partial response gives one bounded scaffold for the current stage.
-It provides enough structure or fragmentary material for the student
-to continue — while deliberately leaving a meaningful part for them
-to decide or complete.
-
-The student should receive something concrete enough to act on,
-but incomplete enough that they still have real reasoning to do.
+Give one bounded scaffold for the current stage.
+Provide enough structure or fragmentary material to unblock the student —
+while deliberately leaving a meaningful part for them to decide or complete.
 
 ---
 
-CONTENT RULES FOR MOVE 1
+MOVE 1 — CONTENT
 
-Move 1 for PARTIAL contains the scaffold and makes its boundaries explicit.
+Provide the scaffold and make its boundaries explicit.
 
 The scaffold must:
   - Cover only the current stage — not the next one
   - Leave at least one meaningful implementation, reasoning, or design decision open
-  - Make the deliberate gap explicit ("this part is left for you to decide")
+  - Name the deliberate gap explicitly ("this part is left for you to decide")
 
-What counts as a scaffold in this mode:
+What counts as a scaffold:
   - A partial template or skeleton with placeholders
   - A fragment of logic with a key section missing
-  - A worked example from a different domain that shows the pattern
-    but not the student's specific solution
+  - A worked example from a different domain that shows the pattern only
   - A pseudocode outline that names steps without implementing them
 
-What does NOT count — and is a leaked solution:
-  - A scaffold the student could submit or run without meaningful changes
-  - A scaffold that makes only one trivial change to be complete
-  - A fragment that, combined with what the student already wrote,
-    produces the full solution
+What is a leaked solution (forbidden):
+  - A scaffold the student could run or submit without meaningful changes
+  - A fragment that, combined with what they already have, produces the full solution
 
-Move 1 should name what the scaffold covers, provide it, and explicitly
-name what is left open. The student should not have to guess what
-the gap is.
+Name what the scaffold covers, provide it, and name what is left open.
+The student should not have to guess where the gap is.
 
 ---
 
-CONTENT RULES FOR MOVE 2
+MOVE 2 — CONTENT
 
-Move 2 for PARTIAL is a concrete attempt prompt.
-It asks the student to fill the specific gap left in the scaffold.
+One concrete attempt prompt that names the gap precisely.
 
-It must name the gap precisely — not ask a broad question.
-"Now complete this" is not good enough.
+"Now complete this" is not enough.
 "Fill in [specific section] — think about what [specific decision] means
-for your data" is the right level of specificity.
+for your situation" is the right level of specificity.
 
 ---
 
-WHAT IS FORBIDDEN IN THIS MODE
+CAN_SHOW_CODE RULES
+
+If code is allowed:
+- provide at most a small local fragment
+- do not provide a full function, class, script, or complete pipeline
+- leave at least one key step unfinished
+- prefer placeholders, comments, or blanks for important logic
+
+---
+
+FORBIDDEN
 
 Do not provide a scaffold the student can run without meaningful work.
 Do not scaffold beyond the current stage.
-Do not fill in the gap yourself while describing it.
-Do not provide more than one scaffold in a single response —
-one bounded fragment per turn.
+Do not fill in the gap while describing it.
+One scaffold per turn only.

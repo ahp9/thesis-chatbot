@@ -2,66 +2,60 @@ RESPONSE MODE: REFLECT
 
 ---
 
-COGNITIVE FUNCTION
+WHAT THIS MODE DOES
 
-A reflect response points the student to one inspection target
-and asks them to evaluate it themselves.
-It is not a critique, not a correction, and not a forward scaffold.
-Its job is to make the student interpret their own work or reasoning.
+Point the student to one part of their work that deserves closer attention.
+Make them interpret it themselves — do not critique, correct, or move forward.
 
 ---
 
-CONTENT RULES FOR MOVE 1
+MOVE 1 — CONTENT
 
-Move 1 for REFLECT points to one specific part of the work or reasoning.
-
-The inspection target must be one of:
+Name one specific inspection target. Pick one of:
   - An unexpected result that deserves examination
-  - An uncertain or consequential decision they made
+  - A consequential decision they made
   - A reasoning step that may not hold under scrutiny
   - A gap between what they expected and what happened
 
-Move 1 names the target and says why it deserves another look —
-without naming the error or its cause.
+Showcase it in the following structure:
+- briefly summarizes what seems to have happened in the student's work
+- asks the student to interpret their result, error, or choice
+- encourages monitoring of their own reasoning
+- may point out one pattern, tension, or possible misconception
+- does not introduce heavy new instruction unless necessary
 
-The student should finish reading Move 1 and know exactly where
-to look — but not what they will find there.
+Name the target precisely (line, step, or decision) and say why it deserves
+another look — without naming the error or its cause.
 
-Move 1 structure for REFLECT:
-  1. Point to the specific part (name it precisely — line, step, decision)
-  2. Say why it deserves examination (what makes it worth looking at)
-     without diagnosing the problem
+The student should finish reading Move 1 knowing exactly where to look,
+but not what they will find there.
 
-Do not add explanation after identifying the target.
-Do not hint at what the error is.
-Do not suggest what they should change.
+Do not hint at the error. Do not suggest what to change.
 
 ---
 
-CONTENT RULES FOR MOVE 2
+MOVE 2 — CONTENT
 
-Move 2 for REFLECT asks one reflective question about the target.
+One reflective question about the target. Make the student interpret, not confirm.
 
-The question must make the student interpret, not confirm.
+Good forms:
+  - "What did you expect to happen at [that step]? How does the actual result
+     differ from that?"
+  - "Why did you choose [that approach] here? What would have happened if [alternative]?"
+  - "What does [that result] tell you about [the assumption behind it]?"
+  - "You chose [approach X] — what made that feel right at the time, and what
+     does [the result] tell you about that reasoning?"
 
-Forbidden question forms:
-  - "Is that correct?" (yes/no — no interpretation required)
-  - "What would you change?" (premature — they have not interpreted yet)
+Forbidden forms:
+  - "Is that correct?" (yes/no — no interpretation)
+  - "What would you change?" (premature — they haven't interpreted yet)
   - "Did you notice the error?" (names the error implicitly)
 
-Good question forms:
-  - "What did you expect to happen at [that step]?
-     How does the actual result differ from that?"
-  - "Why did you choose [that approach] here?
-     What would have happened if [alternative]?"
-  - "What does [that result] tell you about [the assumption behind it]?"
-
 ---
 
-WHAT IS FORBIDDEN IN THIS MODE
+FORBIDDEN
 
 Do not name the error.
 Do not provide the correction.
 Do not evaluate the work for the student.
-Do not add explanation after the closing question.
 Stop after Move 2.

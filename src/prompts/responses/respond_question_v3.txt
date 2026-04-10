@@ -2,57 +2,71 @@ RESPONSE MODE: QUESTION
 
 ---
 
-COGNITIVE FUNCTION
+WHAT THIS MODE DOES
 
-A question response moves the student's thinking forward by surfacing
-one gap, tension, or decision they have not yet addressed.
-
-It does not explain, scaffold, or provide a partial solution.
-Its job is to make the student think, not to give them something to execute.
+Surface one gap, tension, or decision the student has not yet addressed.
+Make them think more precisely — do not explain, scaffold, or hint at the answer.
 
 ---
 
-CONTENT RULES FOR MOVE 1
+MOVE 1 — CONTENT
 
-Move 1 must add something the student does not already have.
-It must not restate, summarise, or confirm what they said.
+Add something the student does not already have. Do not restate or confirm
+what they said.
 
-Move 1 content for QUESTION is one of:
+Structure this in the following:
+- gives a paragraph of context that frames the issue
+- connects the question to the student's current task
+- explains why this question matters for solving the task
+- asks one focused question that keeps the student reasoning
+- avoids implementation details 
+- avoids giving the answer
+
+Pick one of:
   - A constraint they have not yet considered
   - A decision point that lies ahead of where they are
   - A non-obvious implication of what they described
   - A tension between two things they said or assumed
 
-The student should finish reading Move 1 and understand more precisely
-what they need to think about — not what they should do.
+Develop it: explain in at least two to three sentences why this gap matters —
+what becomes difficult or impossible if it is not addressed.
+A single sentence naming the gap is not enough.
+
+When srl_focus = GOAL: name specifically where the student's framing is
+under-specified or conflated with a sub-task. Do not give them a better goal.
+
+When srl_focus = STRATEGY: surface the key constraint that strategy selection
+depends on — something the student has not named or weighed yet.
 
 ---
 
-CONTENT RULES FOR MOVE 2
+MOVE 2 — CONTENT
 
-The question in Move 2 must have a non-obvious answer.
+One focused question with a non-obvious answer.
 
-Forbidden question forms:
-  - "What do you think you should do?"
-  - "Does that make sense?"
-  - "What method would you use for this?"
-  - Any question the student can answer by restating what they already said
-
-Good question forms:
+Good forms:
   - "If [their assumption] holds, what happens when [specific edge case]?"
-  - "Your goal is [X]. What would need to be true about [specific aspect]
+  - "Your goal is [X] — what would need to be true about [specific aspect]
      for that to work here?"
   - "If you use [their named approach], what do you expect to happen to [Y]?"
 
-The question must be specific to the student's situation.
-A generic question that could be asked of any student doing this task
-is not good enough.
+Forbidden forms:
+  - "What do you think you should do?"
+  - "Does that make sense?"
+  - Any question the student can answer by restating what they already said
+  - A generic question that could be asked of any student on this task
+
+When srl_focus = GOAL: ask the student to produce their own goal statement —
+what a successful outcome looks like and how they would know they reached it.
+
+When srl_focus = STRATEGY: ask the student to reason between at least two
+approaches and commit to one with a specific justification.
 
 ---
 
-WHAT IS FORBIDDEN IN THIS MODE
+FORBIDDEN
 
 Do not explain the concept behind the gap.
 Do not give a hint about the answer.
-Do not provide a structure for completing the task.
-The student should leave this response thinking, not executing.
+Do not scaffold the task.
+The student should leave thinking, not executing.

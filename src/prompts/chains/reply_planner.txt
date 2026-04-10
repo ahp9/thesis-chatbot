@@ -42,15 +42,27 @@ Return JSON only. No prose, no fences.
 
   "move1_depth":        "brief | substantive | rich  — how much content Move 1 needs.
                          Match to support_depth from the brief:
-                           SURFACE / SURFACE_PLUS → brief
-                           SUBSTANTIVE            → substantive
-                           SUBSTANTIVE_PLUS / DEEP → rich",
+                           SURFACE / SURFACE_PLUS -> brief
+                           SUBSTANTIVE            -> substantive
+                           SUBSTANTIVE_PLUS / DEEP -> rich",
 
-  "handback_type":      "question | action | partial_frame",
-
-  "handback_content":   "the actual question, action, or partial frame.
-                         This must be specific to the student's situation —
-                         not generic. It should have a non-obvious answer.",
+  "handback_content":   "the move that returns control to the student.
+                         The form is fixed by support_level — do not deviate:
+                           CLARIFY    -> a single targeted question for the one missing detail
+                           QUESTION   -> a question with a non-obvious answer that surfaces a gap,
+                                        tension, or constraint the student has not yet addressed
+                           REFLECT    -> a question that asks the student to interpret something
+                                        they have not yet examined — not to correct, not to confirm
+                           HINT       -> a concrete action: 'Try X' or 'Look at Y and check Z'
+                           STRUCTURE  -> a concrete action: which stage to start with, or what
+                                        they already know about the first stage
+                           EXPLAIN    -> a concrete action that uses the repaired understanding —
+                                        specific enough that the student knows exactly what to attempt
+                           PARTIAL    -> the specific gap left open in the scaffold, named precisely:
+                                        'Fill in [section] — think about what [decision] means here'
+                           EVALUATION -> a concrete next change (default), or a question only if the
+                                        most important issue requires a decision before the fix is clear
+                         This must be specific to the student's situation — not generic.",
 
   "off_limits":         "one sentence — what the reply must NOT say or reveal.
                          Be specific about the content, not just 'the answer'.
@@ -89,8 +101,7 @@ handback_content
   It should be specific enough that the writer cannot accidentally
   make it generic. Include the student's variable names, specific
   decisions, or exact step if relevant.
-  If handback_type is partial_frame, describe what is provided and
-  what is deliberately left open.
+  For PARTIAL, describe what is provided and what is deliberately left open.
 
 off_limits
   Reason about what specific content in Move 1 would cross into

@@ -192,7 +192,8 @@ MEDIUM: mild signs of difficulty or uncertainty paired with effort.
   Signs: "I tried X but it keeps failing", mild hedging, implicit effort
   without strong negative language.
 HIGH: visible urgency, repeated failures, helplessness language.
-  Signs: "I've been stuck for hours", "I give up", "just tell me",
+  Signs: "I've been stuck for hours", "I give up", "just tell me", 
+  "this is not helping me", "just show me"
   same question repeated after a prior answer, emotional punctuation.
 
 Do NOT assign LOW when the student expresses being overwhelmed or
@@ -220,6 +221,17 @@ HINT      - student is working and needs one directional clue.
 STRUCTURE - student is stalled or overwhelmed; break the work into steps.
 EXPLAIN   - student has a specific knowledge gap that blocks progress.
 PARTIAL   - stronger scaffolding needed but meaningful work must remain.
+            PREREQUISITES — all two out of three must be true, or do not use PARTIAL:
+              1. has_attempt = true (student has produced code, a draft, or
+                 a concrete partial approach, not just described the task)
+              2. The student is stuck at a specific implementation step,
+                 not asking to be shown the overall structure or how to do something.
+              3. The scaffold would leave at least one non-trivial reasoning
+                 or implementation decision for the student to make
+            If has_attempt = false and the student is asking to see how
+            something is coded: use STRUCTURE first, not PARTIAL.
+            PARTIAL after STRUCTURE is correct escalation.
+            PARTIAL on a first request with no attempt is a leak risk.
 REFLECT   - student has something to inspect; guided self-evaluation is best.
 EVALUATION - student explicitly wants critique of existing work.
 
@@ -242,6 +254,11 @@ FLAGS
 must_end_with_question = true for: QUESTION, CLARIFY, HINT, STRUCTURE, REFLECT
 should_request_attempt = true when has_attempt is false and the next step
   should be the student's own attempt.
-can_show_code = false by default. Set true only when support_level is PARTIAL
-  or EXPLAIN AND at least one of: frustration MEDIUM/HIGH, progress STALLED,
-  expertise NOVICE. Justify in rationale.
+
+
+can_show_code = false by default. Set true only when ALL of the following hold:
+  - support_level is PARTIAL or EXPLAIN
+  - has_attempt = true (student has shown code or a concrete partial attempt)
+  - at least one of: frustration MEDIUM/HIGH, progress STALLED, expertise NOVICE
+  Setting can_show_code = true when has_attempt = false is not permitted.
+  Justify in rationale with specific evidence for each condition

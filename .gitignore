@@ -18,6 +18,8 @@ transcripts/*.csv
 *.log
 transcripts/
 
+uploaded_files/
+
 # Chainlit Database
 chainlit.db
 

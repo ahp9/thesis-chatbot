@@ -438,6 +438,7 @@ async def _plan_reply(
     filled_structure = build_filled_structure(
         expertise_level=checkpoint.expertise_level,
         phase=route.get("phase", "PERFORMANCE"),
+        srl_focus=checkpoint.srl_focus,
         frustration_level=checkpoint.frustration_level,
         support_depth=decision.support_depth,
     )
@@ -567,22 +568,62 @@ async def generate_full_reply(
     user_message: str,
     gate_hint: Optional[str] = None,
 ) -> str:
-    plan = await _plan_reply(
-        client, route, checkpoint, decision, llm_history, user_message
+    """
+    Single-call generation pipeline.
+
+    The writer receives tutor_structure.txt (filled) directly, along with
+    the phase prompt and respond_X file. It self-plans before writing.
+    """
+    filled_structure = build_filled_structure(
+        expertise_level=checkpoint.expertise_level,
+        phase=route.get("phase", "PERFORMANCE"),
+        srl_focus=checkpoint.srl_focus,
+        frustration_level=checkpoint.frustration_level,
+        support_depth=decision.support_depth,
     )
 
-    logger.info(
-        "Reply plan — gap: %s | move1_depth: %s | handback: %s",
-        plan.gap,
-        plan.move1_depth,
-        plan.handback_type,
+    prompt_parts = [
+        filled_structure,
+        load_prompt(_phase_prompt_file(route.get("phase"))),
+        load_prompt(decision.response_prompt_file),
+    ]
+
+    if gate_hint:
+        logger.info("Gate hint active — prepending first-turn gate prompt.")
+        prompt_parts.append(gate_hint)
+
+    if _has_file_content(user_message):
+        prompt_parts.append(load_prompt(BASE_PROMPT_FILES["file_handler"]))
+
+    system_prompt = "\n\n".join(prompt_parts)
+
+    coherence = get_coherence_instruction(
+        current_support_level=decision.support_level,
+        previous_support_level=recent_control_state(llm_history).get("previous_support_level"),
     )
 
-    return await _write_reply(
-        client, route, checkpoint, decision, plan, llm_history, user_message, gate_hint
+    writer_brief   = _build_writer_brief(route, checkpoint, decision)
+    previous_reply = last_assistant_reply(llm_history)
+
+    current_turn_content = (
+        f"WRITER_BRIEF:\n{json.dumps(writer_brief, indent=2)}\n\n"
+        f"COHERENCE_NOTE:\n{coherence}\n\n"
+        f"PREVIOUS_REPLY:\n{previous_reply}\n\n"
+        f"STUDENT_MESSAGE:\n{user_message}"
     )
 
+    history_turns = _build_native_history(llm_history)
+    messages = [{"role": "system", "content": system_prompt}]
+    messages.extend(history_turns)
+    messages.append({"role": "user", "content": current_turn_content})
 
+    resp = await client.chat.completions.create(
+        model=GENERATION_MODEL,
+        messages=messages,
+        temperature=0.3,
+    )
+    raw = resp.choices[0].message.content or ""
+    return _strip_plan_block(raw)
 # ---------------------------------------------------------------------------
 # Safety check and rewrite
 # ---------------------------------------------------------------------------
@@ -668,6 +709,7 @@ async def rewrite_reply(
     filled_structure = build_filled_structure(
         expertise_level=checkpoint.expertise_level,
         phase=route.get("phase", "PERFORMANCE"),
+        srl_focus=checkpoint.srl_focus,
         frustration_level=checkpoint.frustration_level,
         support_depth=decision.support_depth,
     )
