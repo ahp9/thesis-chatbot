@@ -18,6 +18,7 @@ from chainlit.data.storage_clients.base import BaseStorageClient
 from lib.enums import Phase, TutorMode
 from services.llm_client import get_client
 from services.orchestrator import Orchestrator
+from services.tutor import _run_basic_tutor
 from utils.file import read_uploaded_file
 from utils.logger import save_conversation
 
@@ -56,61 +57,6 @@ LOG_FILE = "transcripts"
 UPLOAD_ROOT = Path("./uploaded_files")
 
 # ---------------------------------------------------------------------------
-# Basic mode config
-# ---------------------------------------------------------------------------
-
-BASIC_MODEL = "gpt-4.1-mini"
-_BASIC_SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "base" / "ai_base_control.txt"
-
-def _load_basic_system_prompt() -> str:
-    try:
-        return _BASIC_SYSTEM_PROMPT_PATH.read_text(encoding="utf-8").strip()
-    except Exception as exc:
-        logger.warning("Could not load basic system prompt (%s) — using inline fallback.", exc)
-        return (
-            "You are a helpful tutor assistant. Answer questions directly, "
-            "write and explain code, solve problems, and support students with "
-            "coursework or projects. Be clear, thorough, and solution-oriented."
-        )
-
-
-async def _run_basic_tutor(
-    llm_history: list[dict[str, Any]],
-    user_message: str,
-) -> str:
-    """
-    Single-call path for Basic Tutor mode.
-    No routing, no classification, no safety rewrites — just one chat completion.
-    History is rebuilt as a clean user/assistant alternation from the stored content.
-    """
-    system_prompt = _load_basic_system_prompt()
-
-    # Build a clean OpenAI-style message list from history (content only, no SRL metadata).
-    messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
-
-    for item in llm_history:
-        role = item.get("role", "")
-        if role not in ("user", "assistant"):
-            continue
-        content = (item.get("content") or "").strip()
-        if not content:
-            continue
-        # Strip file blocks from older turns to save tokens.
-        if "--- FILE:" in content:
-            content = content.split("--- FILE:")[0].strip() or "[previous file upload]"
-        messages.append({"role": role, "content": content})
-
-    messages.append({"role": "user", "content": user_message})
-
-    resp = await client.chat.completions.create(
-        model=BASIC_MODEL,
-        messages=messages,
-        temperature=0.7,
-    )
-    return resp.choices[0].message.content or ""
-
-
-# ---------------------------------------------------------------------------
 # Storage
 # ---------------------------------------------------------------------------
 
@@ -135,16 +81,25 @@ class LocalStorageClient(BaseStorageClient):
     async def upload_file(
         self,
         object_key: str,
-        data: bytes,
-        mime: str,
+        data: bytes | str,
+        mime: str = "application/octet-stream",
         overwrite: bool = True,
-    ):
+        content_disposition: str | None = None,
+    ) -> dict[str, Any]:
         path = self._path_for_key(object_key)
         if path.exists() and not overwrite:
             return {"url": path.resolve().as_uri(), "object_key": object_key}
+
+        write_data = data.encode("utf-8") if isinstance(data, str) else data
+
         async with aiofiles.open(path, "wb") as f:
-            await f.write(data)
-        return {"url": path.resolve().as_uri(), "object_key": object_key}
+            await f.write(write_data)
+
+        return {
+            "url": path.resolve().as_uri(),
+            "object_key": object_key,
+            "content_disposition": content_disposition,
+        }
 
     async def delete_file(self, object_key: str):
         path = self._path_for_key(object_key)
@@ -211,25 +166,38 @@ async def _persist_uploaded_elements_for_message(
 
     outgoing_elements = []
     for el in incoming_message.elements:
-        if isinstance(el, File) and getattr(el, "path", None):
-            try:
-                outgoing_elements.append(
-                    cl.File(
-                        name=el.name or Path(el.path).name,
-                        path=el.path,
-                        mime=el.mime or "application/octet-stream",
-                        for_id=assistant_message_id,
-                    )
+        if not isinstance(el, File):
+            continue
+
+        path_str = el.path
+        if path_str is None:
+            continue
+
+        file_name = el.name or Path(path_str).name
+        mime = el.mime or "application/octet-stream"
+
+        try:
+            outgoing_elements.append(
+                cl.File(
+                    name=file_name,
+                    path=path_str,
+                    mime=mime,
+                    for_id=assistant_message_id,
                 )
-                persisted_info.append(
-                    {
-                        "name": el.name or Path(el.path).name,
-                        "mime": el.mime or "application/octet-stream",
-                        "path": el.path,
-                    }
-                )
-            except Exception as exc:
-                logger.warning("Failed to prepare file element %s: %s", getattr(el, "name", "?"), exc)
+            )
+            persisted_info.append(
+                {
+                    "name": file_name,
+                    "mime": mime,
+                    "path": path_str,
+                }
+            )
+        except Exception as exc:
+            logger.warning(
+                "Failed to prepare file element %s: %s",
+                getattr(el, "name", "?"),
+                exc,
+            )
 
     if outgoing_elements:
         await cl.Message(content="", elements=outgoing_elements).send()
@@ -243,30 +211,34 @@ def _build_combined_user_content(message: cl.Message) -> tuple[str, list[dict[st
 
     if message.elements:
         for el in message.elements:
-            if isinstance(el, File) and getattr(el, "path", None):
-                try:
-                    content = read_uploaded_file(el)
-                    content = content[:MAX_CHARS]
-
-                    uploaded_files_meta.append(
-                        {
-                            "name": el.name or Path(el.path).name,
-                            "mime": el.mime or "application/octet-stream",
-                            "path": el.path,
-                        }
-                    )
-
-                    file_text_blocks.append(
-                        f"--- FILE: {el.name or Path(el.path).name} ({el.mime or 'application/octet-stream'}) ---\n"
-                        f"CONTENT START\n"
-                        f"{content}\n"
-                        f"CONTENT END\n"
-                        f"--- END FILE ---"
-                    )
-                except Exception as exc:
-                    file_text_blocks.append(
-                        f"[Error reading file {getattr(el, 'name', 'unknown file')}: {exc}]"
-                    )
+            if not isinstance(el, File):
+                continue
+            path_str = el.path
+            if path_str is None:
+                continue
+            file_name = el.name or Path(path_str).name
+            mime = el.mime or "application/octet-stream"
+            try:
+                content = read_uploaded_file(el)
+                content = content[:MAX_CHARS]
+                uploaded_files_meta.append(
+                    {
+                        "name": file_name,
+                        "mime": mime,
+                        "path": path_str,
+                    }
+                )
+                file_text_blocks.append(
+                    f"--- FILE: {file_name} ({mime}) ---\n"
+                    f"CONTENT START\n"
+                    f"{content}\n"
+                    f"CONTENT END\n"
+                    f"--- END FILE ---"
+                )
+            except Exception as exc:
+                file_text_blocks.append(
+                    f"[Error reading file {getattr(el, 'name', 'unknown file')}: {exc}]"
+                )
 
     combined_user_content = message.content or ""
     if file_text_blocks:
@@ -487,7 +459,10 @@ async def main(message: cl.Message):
             # Basic Tutor — single LLM call, no classification or safety chain
             # ----------------------------------------------------------------
             logger.info("BASIC SESSION: %s | USER: %s", session_id, student_id)
-            ai_text = await _run_basic_tutor(llm_history, combined_user_content)
+            ai_text = await _run_basic_tutor(
+                llm_history,
+                combined_user_content,
+            )
 
     # -------------------------------------------------------------------------
     # Stream reply
