@@ -50,6 +50,29 @@ MOCK_USERS = {
     "user_3_2@usability_test_3_2.local": "usability3_2",
     "user_4_2@usability_test_4.local": "usability4_2",
     "user_5_2@usability_test_5_2.local": "usability5_2",
+    
+    "pilot_1@experiment.local": "pilot1",
+    
+    "experiment_1@experiement.local": "experiment1",
+    "experiment_2@experiement.local": "experiment2",
+    "experiment_3@experiement.local": "experiment3",
+    "experiment_4@experiement.local": "experiment4",
+    "experiment_5@experiement.local": "experiment5",
+    "experiment_6@experiement.local": "experiment6",
+    "experiment_7@experiement.local": "experiment7",
+    "experiment_8@experiement.local": "experiment8",
+    "experiment_9@experiement.local": "experiment9",
+    "experiment_10@experiement.local": "experiment10",
+    "experiment_11@experiement.local": "experiment11",
+    "experiment_12@experiement.local": "experiment12",
+    "experiment_13@experiement.local": "experiment13",
+    "experiment_14@experiement.local": "experiment14",
+    "experiment_15@experiement.local": "experiment15",
+    "experiment_16@experiement.local": "experiment16",
+    "experiment_17@experiement.local": "experiment17",
+    "experiment_18@experiement.local": "experiment18",
+    "experiment_19@experiement.local": "experiment19",
+    "experiment_20@experiement.local": "experiment20",
 }
 
 MAX_CHARS = 80_000
