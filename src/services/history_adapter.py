@@ -4,6 +4,29 @@ from typing import Any, Iterable
 
 from lib.enums import SupportLevel
 
+import re
+
+_CONTINUITY_SIGNALS = [
+    r"\bbased on (that|this|the above|my (previous|last|prior))\b",
+    r"\bfor the same\b",
+    r"\bcontinue\b",
+    r"\busing (that|the same|my) (plot|chart|code|output|result|variable)\b",
+    r"\bfrom (before|the previous|last time)\b",
+    r"\bnow (add|include|update|change)\b",
+    r"\bkeep (the same|that)\b",
+]
+
+def classify_subtask_scope(user_message: str) -> str:
+    """
+    Returns 'CONTINUE' if the message explicitly refers to a prior turn,
+    'NEW_TASK' otherwise.
+    """
+    msg = user_message.lower()
+    for pattern in _CONTINUITY_SIGNALS:
+        if re.search(pattern, msg):
+            return "CONTINUE"
+    return "NEW_TASK"
+
 
 def iter_assistant_turns(llm_history: list[dict[str, Any]]) -> Iterable[dict[str, Any]]:
     for item in llm_history or []:

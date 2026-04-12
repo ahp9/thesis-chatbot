@@ -42,7 +42,7 @@ class CheckpointResult:
     expertise_level: str
     frustration_level: str
     srl_focus: str
-    implementation_allowed: bool
+    subtask_scope: str
     confidence: float
     rationale: List[str]
     parse_ok: bool = True
@@ -293,6 +293,7 @@ def _build_writer_brief(
         "expertise_level":        checkpoint.expertise_level,
         "frustration_level":      checkpoint.frustration_level,
         "srl_focus":              checkpoint.srl_focus,
+        "subtask_scope":           checkpoint.subtask_scope,
         "has_attempt":            checkpoint.has_attempt,
     }
     
@@ -336,7 +337,7 @@ def _fallback_checkpoint() -> CheckpointResult:
         expertise_level="NOVICE",
         frustration_level="LOW",
         srl_focus="STRATEGY",
-        implementation_allowed=False,
+        subtask_scope="NEW_TASK",
         confidence=0.0,
         rationale=["PARSE_FAILED — fallback values in use"],
         parse_ok=False,
@@ -417,7 +418,7 @@ async def checkpoint_and_decide(
             checkp_raw.get("srl_focus")
             or ("STRATEGY" if checkp_raw.get("request_kind") == "PRODUCT" else "NONE")
         ).upper(),
-        implementation_allowed=bool(checkp_raw.get("implementation_allowed", False)),
+        subtask_scope=(checkp_raw.get("subtask_scope") or "NEW_TASK").upper(),
         confidence=float(checkp_raw.get("confidence") or 0.0),
         rationale=checkp_raw.get("rationale") or [],
         parse_ok=True,
@@ -499,8 +500,20 @@ async def generate_full_reply(
     writer_brief   = _build_writer_brief(route, checkpoint, decision)
     previous_reply = last_assistant_reply(llm_history)
 
+    subtask_note = (
+        "SUBTASK_SCOPE: NEW_TASK — treat this as a fresh question. "
+        "The session context (dataset, assignment) is shared background, "
+        "but the previous question's gap, variable choices, and reasoning "
+        "do not apply here. Do not reference or continue prior local reasoning "
+        "unless the student explicitly invokes it."
+        if checkpoint.subtask_scope == "NEW_TASK"
+        else "SUBTASK_SCOPE: CONTINUE — the student is explicitly continuing "
+        "from the previous turn. Prior reasoning and context are relevant."
+    )
+
     current_turn_content = (
         f"WRITER_BRIEF:\n{json.dumps(writer_brief, indent=2)}\n\n"
+        f"SUBTASK_NOTE:\n{subtask_note}\n\n"
         f"COHERENCE_NOTE:\n{coherence}\n\n"
         f"PREVIOUS_REPLY:\n{previous_reply}\n\n"
         f"STUDENT_MESSAGE:\n{user_message}"

@@ -34,6 +34,8 @@ No markdown fences, no preamble, no post-prose.
     "expertise_level": "NOVICE" | "INTERMEDIATE" | "ADVANCED",
     "frustration_level": "LOW" | "MEDIUM" | "HIGH",
     "srl_focus": "GOAL" | "STRATEGY" | "MONITOR" | "REFLECT",
+    "subtask_scope": "CONTINUE" | "NEW_TASK"
+    "implementation_allowed": bool,
     "confidence": float,
     "rationale": ["observable evidence — each point must cite a specific word, phrase, or behaviour"]
   },
@@ -218,6 +220,50 @@ to the product or answer.
 STRATEGY: goal exists, student needs help choosing an approach or plan.
 MONITOR: student has started and needs help comparing expectation vs outcome.
 REFLECT: student has a result and needs help evaluating quality.
+
+---
+
+9. SUBTASK SCOPE
+ 
+Classify whether this message continues the previous local task or opens a new one.
+ 
+CONTINUE: the student explicitly refers back to the previous turn's work,
+  reasoning, or output using connective language.
+ 
+  Explicit signals (ONE is sufficient):
+  • "based on that / this / the above"
+  • "for the same plot / chart / model / output"<<
+  • "continue" or "continuing from"
+  • "using the same variables / approach / data I used before"
+  • "from the previous question / last time"
+  • "now add / update / change [something in the prior work]"
+  • "keep the same [X]"
+  • Direct reference to a specific result, variable name, or output
+    produced in the immediately preceding turn
+ 
+NEW_TASK: the message is self-contained and makes no explicit backward
+  reference to the prior turn's local reasoning path.
+ 
+  Key principle: sharing a dataset, assignment, or session context does
+  NOT make a question a continuation. A student can ask multiple
+  independent questions about the same dataset. Each is a new local task
+  unless they explicitly link back.
+ 
+  Treat as NEW_TASK when:
+  • the question could be understood without reading the previous turn
+  • no connective language is present
+  • the student names a different variable, method, or goal than last turn
+  • the message is a fresh assignment sub-question (even from the same sheet)
+  • this is the opening message of the session
+ 
+  Default: when in doubt, classify as NEW_TASK. Over-linking turns is
+  more harmful than treating a continuation as fresh.
+ 
+EFFECT ON PLANNING: subtask_scope is passed to the reply writer.
+  When NEW_TASK, the writer must not carry forward the previous turn's
+  gap, variable choices, or reasoning framing. Session context
+  (dataset, assignment domain) remains available as background.
+  When CONTINUE, the writer may build directly on prior reasoning.
 
 ---
 

@@ -452,20 +452,20 @@ async def main(message: cl.Message):
                 result.route.srl_signal,
             )
             logger.info(
-                "CHECKPOINT: Kind=%s | Stage=%s | Progress=%s | Attempt=%s | Gap=%s | SRL=%s",
+                "CHECKPOINT: Kind=%s | Stage=%s | Progress=%s | Attempt=%s | Gap=%s | SRL=%s | SubtaskScope=%s",
                 result.control.checkpoint.request_kind.value,
                 result.control.checkpoint.task_stage.value,
                 result.control.checkpoint.progress_state.value,
                 result.control.checkpoint.has_attempt,
                 result.control.checkpoint.context_gap.value,
                 result.control.checkpoint.srl_focus.value,
+                result.control.checkpoint.subtask_scope,
             )
             logger.info(
-                "LEARNER: Expertise=%s | Frustration=%s | SRL=%s | ImplAllowed=%s",
+                "LEARNER: Expertise=%s | Frustration=%s | SRL=%s",
                 result.control.checkpoint.expertise_level.value,
                 result.control.checkpoint.frustration_level.value,
                 result.control.checkpoint.srl_focus.value,
-                result.control.checkpoint.implementation_allowed,
             )
             logger.info(
                 "DECISION: Level=%s | Depth=%s | CanShowCode=%s",

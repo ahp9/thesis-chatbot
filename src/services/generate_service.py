@@ -25,7 +25,7 @@ class GenerateService:
             expertise_level=control.checkpoint.expertise_level.value,
             frustration_level=control.checkpoint.frustration_level.value,
             srl_focus=control.checkpoint.srl_focus.value,
-            implementation_allowed=control.checkpoint.implementation_allowed,
+            subtask_scope=control.checkpoint.subtask_scope,
             confidence=control.checkpoint.confidence,
             rationale=control.checkpoint.rationale,
             parse_ok=control.checkpoint.parse_ok,
