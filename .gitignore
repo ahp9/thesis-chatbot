@@ -17,6 +17,7 @@ transcripts/*.json
 transcripts/*.csv
 *.log
 transcripts/
+uploaded_files/
 
 uploaded_files/
 
