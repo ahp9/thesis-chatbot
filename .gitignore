@@ -17,8 +17,15 @@ transcripts/*.json
 transcripts/*.csv
 *.log
 transcripts/
+uploaded_files/
 
 # Chainlit Database
 chainlit.db
+.chainlit/
+src/.chainlit/
+chainlit_history.csv
+chainlit_history.json
+chainlit.db
+**/chainlit.db
 
 
