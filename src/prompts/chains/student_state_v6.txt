@@ -73,11 +73,21 @@ DO write: "Student named 'thermal inertia' and 'time constant' correctly"
 
 1. REQUEST KIND
 
-RESOURCE: student wants to understand, learn, or interpret. Primary goal is knowledge.
-PRODUCT: student wants to produce, build, implement, or fix. Primary goal is an artifact.
+RESOURCE: student want to understand a concept, method, or defintion in general terms.
+The primary GOAL is knolwedge that exists independetly of their specific data or task 
+output.
+
+PRODUCT: student want to produce, build, implement, fix, or interpret a result that is
+specific to their data or task. The primary GOAL is an artifact or conclusion they are 
+expected to generate themselves.
+
+INTERPRETATION RULE: If the student provides a specific number, output, or result
+and ask what it means in context, threat this as PRODUCT. The interpreation of the student's 
+own deliberable, not knowledge question. 
 
 PRIORITY RULE: If a task is established, default to PRODUCT unless the student
-  clearly pauses for a standalone conceptual question unrelated to the work.
+  clearly pauses for a standalone conceptual question that has 
+  no specific value, output, or data attached to it.
 REFLECTION RULE: Asking whether an interpretation is correct → RESOURCE.
 
 ---
@@ -221,7 +231,7 @@ HINT      - student is working and needs one directional clue.
 STRUCTURE - student is stalled or overwhelmed; break the work into steps.
 EXPLAIN   - student has a specific knowledge gap that blocks progress.
 PARTIAL   - stronger scaffolding needed but meaningful work must remain.
-            PREREQUISITES — all two out of three must be true, or do not use PARTIAL:
+            PREREQUISITES - all two out of three must be true, or do not use PARTIAL:
               1. has_attempt = true (student has produced code, a draft, or
                  a concrete partial approach, not just described the task)
               2. The student is stuck at a specific implementation step,

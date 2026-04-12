@@ -117,6 +117,7 @@ BASE_PROMPT_FILES = {
 
     # Conditional
     "file_handler":          "base/file.txt",
+    "missing_file":          "chains/missing_files.txt",
 }
 
 
@@ -231,9 +232,11 @@ def _build_native_history(
         if not content:
             continue
         if "--- FILE:" in content:
-            content = content.split("--- FILE:")[0].strip()
-            if not content:
-                content = "[previous file upload]"
+            file_names = re.findall(r"--- FILE:\s*(\S+)", content)
+            labeled_files = ", ".join(file_names) if file_names else "files"
+            text_before = content.split("--- FILE:")[0].strip()
+            placeholder = f"[previously uploaded {labeled_files}]"
+            content = (text_before + "\n" + placeholder).strip() if text_before else placeholder
         clean.append({"role": role, "content": content})
 
     clean = clean[-limit:]
@@ -292,6 +295,31 @@ def _build_writer_brief(
         "srl_focus":              checkpoint.srl_focus,
         "has_attempt":            checkpoint.has_attempt,
     }
+    
+    
+def _file_referenced_but_missing(user_message: str, llm_history: list) -> str | None:
+    """
+    Returns the filename if the user seems to be referencing a prior file
+    but its content is no longer in the current message or recent history.
+    """
+    file_keywords = ["file", "csv", "dataset", "data", "upload", "notebook", "script", "code"]
+    msg_lower = user_message.lower()
+    
+    if _has_file_content(user_message):
+        return None  # File is present right now, no problem
+    
+    if not any(kw in msg_lower for kw in file_keywords):
+        return None  # User isn't asking about a file
+    
+    # Check if a file was uploaded at any point in history
+    for item in reversed(llm_history or []):
+        content = item.get("content", "")
+        if "--- FILE:" in content:
+            import re
+            names = re.findall(r"--- FILE: (.+?) \(", content)
+            return names[0] if names else "your uploaded file"
+    
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -325,20 +353,6 @@ def _fallback_decision() -> SupportDecision:
         confidence=0.0,
         rationale=["PARSE_FAILED — fallback values in use"],
         support_depth="SUBSTANTIVE",
-        parse_ok=False,
-    )
-
-
-def _fallback_plan() -> ReplyPlan:
-    return ReplyPlan(
-        student_has="(planner parse failed — engaging with student's situation)",
-        gap="(planner parse failed — targeting the next unaddressed step)",
-        move1_aim="engage specifically with the student's message and name the relevant tension",
-        move1_depth="substantive",
-        handback_type="question",
-        handback_content="What have you tried so far, and where did it stop making sense?",
-        off_limits="do not state the final answer or complete the task",
-        tone_note="",
         parse_ok=False,
     )
 
@@ -424,141 +438,6 @@ async def checkpoint_and_decide(
 
     return diagnosis, decision, debug
 
-
-async def _plan_reply(
-    client,
-    route: Dict[str, Any],
-    checkpoint: CheckpointResult,
-    decision: SupportDecision,
-    llm_history: List[Dict[str, Any]],
-    user_message: str,
-) -> ReplyPlan:
-    # Build the filled structure document — this is the planner's
-    # primary authority on how the reply should be shaped.
-    filled_structure = build_filled_structure(
-        expertise_level=checkpoint.expertise_level,
-        phase=route.get("phase", "PERFORMANCE"),
-        srl_focus=checkpoint.srl_focus,
-        frustration_level=checkpoint.frustration_level,
-        support_depth=decision.support_depth,
-    )
-
-    system_prompt = "\n\n".join([
-        filled_structure,
-        load_prompt(BASE_PROMPT_FILES["reply_planner"]),
-    ])
-
-    # Coherence instruction: computed from the delta between current and
-    # previous support levels. Informs the planner's move1_aim so the
-    # plan does not repeat the previous approach.
-    coherence = get_coherence_instruction(
-        current_support_level=decision.support_level,
-        previous_support_level=recent_control_state(llm_history).get("previous_support_level"),
-    )
-
-    writer_brief   = _build_writer_brief(route, checkpoint, decision)
-    previous_reply = last_assistant_reply(llm_history)
-
-    payload = (
-        f"WRITER_BRIEF:\n{json.dumps(writer_brief, indent=2)}\n\n"
-        f"COHERENCE_NOTE:\n{coherence}\n\n"
-        f"PREVIOUS_REPLY:\n{previous_reply}\n\n"
-        f"STUDENT_MESSAGE:\n{user_message}"
-    )
-
-    raw, data, parse_ok = await _call_json(
-        client, system_prompt, payload, model=PLAN_MODEL
-    )
-
-    if not parse_ok:
-        logger.warning("_plan_reply: planner JSON parse failed — using fallback plan.")
-        return _fallback_plan()
-
-    return ReplyPlan(
-        student_has=      (data.get("student_has")      or "").strip(),
-        gap=              (data.get("gap")               or "").strip(),
-        move1_aim=        (data.get("move1_aim")         or "").strip(),
-        move1_depth=      (data.get("move1_depth")       or "substantive").strip().lower(),
-        handback_type=    (data.get("handback_type")     or "question").strip().lower(),
-        handback_content= (data.get("handback_content")  or "").strip(),
-        off_limits=       (data.get("off_limits")        or "").strip(),
-        tone_note=        (data.get("tone_note")         or "").strip(),
-        parse_ok=True,
-    )
-
-
-async def _write_reply(
-    client,
-    route: Dict[str, Any],
-    checkpoint: CheckpointResult,
-    decision: SupportDecision,
-    plan: ReplyPlan,
-    llm_history: List[Dict[str, Any]],
-    user_message: str,
-    gate_hint: Optional[str] = None,
-) -> str:
-    """
-    Call 2 of the two-call generation pipeline.
-
-    The writer receives the concrete plan from the planner and executes it.
-    It has clear, non-competing authority:
-      - Phase prompt:    cognitive priorities and forbidden moves for this phase
-      - respond_X file:  content character of Move 1 for this support mode
-
-    The writer does NOT receive tutor_structure.txt directly — the structural
-    contract was consumed by the planner and is now expressed in the plan.
-    The plan tells the writer what to do; the phase and respond files tell it
-    how to do it for this phase and mode.
-    """
-    prompt_parts = [
-        load_prompt(_phase_prompt_file(route.get("phase"))),
-        load_prompt(decision.response_prompt_file),
-    ]
-
-    if gate_hint:
-        logger.info("Gate hint active — prepending first-turn gate prompt.")
-        prompt_parts.append(gate_hint)
-
-    if _has_file_content(user_message):
-        prompt_parts.append(load_prompt(BASE_PROMPT_FILES["file_handler"]))
-
-    system_prompt = "\n\n".join(prompt_parts)
-
-    # Format the plan as a clear instruction block for the writer.
-    # Each field is labelled so the writer knows exactly what to do
-    # without re-reading structural documents.
-    plan_block = "\n".join([
-        "REPLY_PLAN",
-        "----------",
-        f"What the student has:  {plan.student_has}",
-        f"Gap to address:        {plan.gap}",
-        f"Move 1 aim:            {plan.move1_aim}",
-        f"Move 1 depth:          {plan.move1_depth}",
-        f"Handback type:         {plan.handback_type}",
-        f"Handback content:      {plan.handback_content}",
-        f"Off limits:            {plan.off_limits}",
-        f"Tone note:             {plan.tone_note or 'none'}",
-    ])
-
-    current_turn_content = (
-        f"{plan_block}\n\n"
-        f"STUDENT_MESSAGE:\n{user_message}"
-    )
-
-    history_turns = _build_native_history(llm_history)
-    messages = [{"role": "system", "content": system_prompt}]
-    messages.extend(history_turns)
-    messages.append({"role": "user", "content": current_turn_content})
-
-    resp = await client.chat.completions.create(
-        model=GENERATION_MODEL,
-        messages=messages,
-        temperature=0.3,
-    )
-    raw = resp.choices[0].message.content or ""
-    return _strip_plan_block(raw)
-
-
 async def generate_full_reply(
     client,
     route: Dict[str, Any],
@@ -574,6 +453,21 @@ async def generate_full_reply(
     The writer receives tutor_structure.txt (filled) directly, along with
     the phase prompt and respond_X file. It self-plans before writing.
     """
+    
+    missing_filename = _file_referenced_but_missing(user_message, llm_history)
+    if missing_filename:
+        logger.info("File missing from context: %s — triggering missing file response.", missing_filename)
+        missing_prompt = load_prompt(BASE_PROMPT_FILES["missing_file"])
+        resp = await client.chat.completions.create(
+            model=GENERATION_MODEL,
+            messages=[
+                {"role": "system", "content": missing_prompt},
+                {"role": "user", "content": user_message},
+            ],
+            temperature=0.3,
+        )
+        return resp.choices[0].message.content or ""
+    
     filled_structure = build_filled_structure(
         expertise_level=checkpoint.expertise_level,
         phase=route.get("phase", "PERFORMANCE"),

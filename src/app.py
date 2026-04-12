@@ -18,7 +18,6 @@ from chainlit.data.storage_clients.base import BaseStorageClient
 from lib.enums import Phase, TutorMode
 from services.llm_client import get_client
 from services.orchestrator import Orchestrator
-from services.tutor import build_system_prompt, run_tutor
 from utils.file import read_uploaded_file
 from utils.logger import save_conversation
 
@@ -50,22 +49,74 @@ MOCK_USERS = {
     "user_3_2@usability_test_3_2.local": "usability3_2",
     "user_4_2@usability_test_4.local": "usability4_2",
     "user_5_2@usability_test_5_2.local": "usability5_2",
-    
-    "pilot_1@experiment.local": "pilot1",
 }
 
 MAX_CHARS = 80_000
 LOG_FILE = "transcripts"
 UPLOAD_ROOT = Path("./uploaded_files")
 
+# ---------------------------------------------------------------------------
+# Basic mode config
+# ---------------------------------------------------------------------------
+
+BASIC_MODEL = "gpt-4.1-mini"
+_BASIC_SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "base" / "ai_base_control.txt"
+
+def _load_basic_system_prompt() -> str:
+    try:
+        return _BASIC_SYSTEM_PROMPT_PATH.read_text(encoding="utf-8").strip()
+    except Exception as exc:
+        logger.warning("Could not load basic system prompt (%s) — using inline fallback.", exc)
+        return (
+            "You are a helpful tutor assistant. Answer questions directly, "
+            "write and explain code, solve problems, and support students with "
+            "coursework or projects. Be clear, thorough, and solution-oriented."
+        )
+
+
+async def _run_basic_tutor(
+    llm_history: list[dict[str, Any]],
+    user_message: str,
+) -> str:
+    """
+    Single-call path for Basic Tutor mode.
+    No routing, no classification, no safety rewrites — just one chat completion.
+    History is rebuilt as a clean user/assistant alternation from the stored content.
+    """
+    system_prompt = _load_basic_system_prompt()
+
+    # Build a clean OpenAI-style message list from history (content only, no SRL metadata).
+    messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
+
+    for item in llm_history:
+        role = item.get("role", "")
+        if role not in ("user", "assistant"):
+            continue
+        content = (item.get("content") or "").strip()
+        if not content:
+            continue
+        # Strip file blocks from older turns to save tokens.
+        if "--- FILE:" in content:
+            content = content.split("--- FILE:")[0].strip() or "[previous file upload]"
+        messages.append({"role": role, "content": content})
+
+    messages.append({"role": "user", "content": user_message})
+
+    resp = await client.chat.completions.create(
+        model=BASIC_MODEL,
+        messages=messages,
+        temperature=0.7,
+    )
+    return resp.choices[0].message.content or ""
+
+
+# ---------------------------------------------------------------------------
+# Storage
+# ---------------------------------------------------------------------------
 
 class LocalStorageClient(BaseStorageClient):
     """
     Minimal local filesystem storage provider for Chainlit elements.
-
-    SQLAlchemyDataLayer uses the storage provider to persist file-backed elements.
-    It also asks for read URLs again when restoring threads, so we implement
-    upload_file, delete_file, and get_read_url.
     """
 
     def __init__(self, root: str | Path = "./uploaded_files"):
@@ -73,13 +124,12 @@ class LocalStorageClient(BaseStorageClient):
         self.root.mkdir(parents=True, exist_ok=True)
 
     def _path_for_key(self, object_key: str) -> Path:
-        # Keep nested directories if Chainlit passes them.
         safe_key = object_key.lstrip("/").replace("..", "_")
         path = self.root / safe_key
         path.parent.mkdir(parents=True, exist_ok=True)
         return path
-    
-    async def close(self):  
+
+    async def close(self):
         pass
 
     async def upload_file(
@@ -90,17 +140,11 @@ class LocalStorageClient(BaseStorageClient):
         overwrite: bool = True,
     ):
         path = self._path_for_key(object_key)
-
         if path.exists() and not overwrite:
             return {"url": path.resolve().as_uri(), "object_key": object_key}
-
         async with aiofiles.open(path, "wb") as f:
             await f.write(data)
-
-        return {
-            "url": path.resolve().as_uri(),
-            "object_key": object_key,
-        }
+        return {"url": path.resolve().as_uri(), "object_key": object_key}
 
     async def delete_file(self, object_key: str):
         path = self._path_for_key(object_key)
@@ -114,6 +158,10 @@ class LocalStorageClient(BaseStorageClient):
         return path.resolve().as_uri()
 
 
+# ---------------------------------------------------------------------------
+# Persistence helpers
+# ---------------------------------------------------------------------------
+
 def get_log_filename(user_id, session_id):
     os.makedirs(LOG_FILE, exist_ok=True)
     return os.path.join(LOG_FILE, f"user_{user_id}_session_{session_id}.json")
@@ -123,7 +171,6 @@ def load_conversation(user_id, session_id):
     filename = get_log_filename(user_id, session_id)
     if not os.path.exists(filename):
         return None
-
     try:
         with open(filename, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -150,17 +197,15 @@ def _coerce_phase(value: Any) -> Phase:
         return Phase.FORETHOUGHT
 
 
+# ---------------------------------------------------------------------------
+# File handling
+# ---------------------------------------------------------------------------
+
 async def _persist_uploaded_elements_for_message(
     incoming_message: cl.Message,
     assistant_message_id: str,
 ) -> list[dict[str, str]]:
-    """
-    Re-send uploaded files as persisted Chainlit File elements attached to the
-    assistant reply. This ensures the file elements are stored by the data layer
-    and available again when the thread is reopened.
-    """
     persisted_info: list[dict[str, str]] = []
-
     if not incoming_message.elements:
         return persisted_info
 
@@ -187,11 +232,7 @@ async def _persist_uploaded_elements_for_message(
                 logger.warning("Failed to prepare file element %s: %s", getattr(el, "name", "?"), exc)
 
     if outgoing_elements:
-        # Sending a dedicated message with attached file elements makes persistence explicit.
-        await cl.Message(
-            content="",
-            elements=outgoing_elements,
-        ).send()
+        await cl.Message(content="", elements=outgoing_elements).send()
 
     return persisted_info
 
@@ -223,7 +264,9 @@ def _build_combined_user_content(message: cl.Message) -> tuple[str, list[dict[st
                         f"--- END FILE ---"
                     )
                 except Exception as exc:
-                    file_text_blocks.append(f"[Error reading file {getattr(el, 'name', 'unknown file')}: {exc}]")
+                    file_text_blocks.append(
+                        f"[Error reading file {getattr(el, 'name', 'unknown file')}: {exc}]"
+                    )
 
     combined_user_content = message.content or ""
     if file_text_blocks:
@@ -231,6 +274,10 @@ def _build_combined_user_content(message: cl.Message) -> tuple[str, list[dict[st
 
     return combined_user_content, uploaded_files_meta
 
+
+# ---------------------------------------------------------------------------
+# Chainlit setup
+# ---------------------------------------------------------------------------
 
 @cl.password_auth_callback
 async def auth_callback(username: str, password: str) -> Optional[cl.User]:
@@ -331,7 +378,6 @@ async def on_chat_resume(thread: ThreadDict):
     for step in steps:
         role = "assistant" if step.get("type") == "assistant_message" else "user"
         content = step.get("output") or step.get("input") or ""
-
         if content and content != "{}":
             llm_history.append({"role": role, "content": content})
 
@@ -343,6 +389,10 @@ async def on_chat_resume(thread: ThreadDict):
 
     logger.info("Resumed thread from Chainlit history | thread=%s | steps=%d", session_id, len(steps))
 
+
+# ---------------------------------------------------------------------------
+# Main message handler
+# ---------------------------------------------------------------------------
 
 @cl.on_message
 async def main(message: cl.Message):
@@ -356,6 +406,8 @@ async def main(message: cl.Message):
 
     ai_text = ""
     prefix = ""
+
+    # SRL-mode metadata — only populated in SRL mode.
     route_for_history: dict[str, Any] = {
         "phase": current_phase.value,
         "strategy": "NONE",
@@ -367,8 +419,14 @@ async def main(message: cl.Message):
     safety_for_history = None
     draft_reply_for_history = ""
 
-    async with cl.Step(name="Tutor is thinking...") as step:
-        if tutor_type == TutorMode.SRL.value:
+    is_srl = tutor_type == TutorMode.SRL.value
+
+    async with cl.Step(name="Thinking...") as step:
+
+        if is_srl:
+            # ----------------------------------------------------------------
+            # SRL Tutor — full pipeline: route → classify → generate → safety
+            # ----------------------------------------------------------------
             result = await orchestrator.handle_turn(
                 user_message=combined_user_content,
                 llm_history=llm_history,
@@ -425,9 +483,15 @@ async def main(message: cl.Message):
             logger.info("=" * 40)
 
         else:
-            system_prompt = build_system_prompt(tutor_type, route_for_history)
-            ai_text = await run_tutor(client, system_prompt, llm_history)
+            # ----------------------------------------------------------------
+            # Basic Tutor — single LLM call, no classification or safety chain
+            # ----------------------------------------------------------------
+            logger.info("BASIC SESSION: %s | USER: %s", session_id, student_id)
+            ai_text = await _run_basic_tutor(llm_history, combined_user_content)
 
+    # -------------------------------------------------------------------------
+    # Stream reply
+    # -------------------------------------------------------------------------
     msg = cl.Message(content="")
     await msg.send()
 
@@ -444,6 +508,9 @@ async def main(message: cl.Message):
     # Persist uploaded files as message elements in Chainlit storage.
     persisted_files = await _persist_uploaded_elements_for_message(message, msg.id)
 
+    # -------------------------------------------------------------------------
+    # Update history
+    # -------------------------------------------------------------------------
     llm_history.append(
         {
             "role": "user",
@@ -457,13 +524,16 @@ async def main(message: cl.Message):
         "role": "assistant",
         "content": ai_text,
         "timestamp": datetime.now().isoformat(),
-        "route": route_for_history,
-        "diagnosis": checkpoint_for_history,
-        "decision": decision_for_history,
-        "check": safety_for_history,
         "draft_reply": draft_reply_for_history or ai_text,
         "persisted_files": persisted_files,
     }
+
+    # Only attach SRL metadata when it was actually computed.
+    if is_srl:
+        history_entry["route"] = route_for_history
+        history_entry["diagnosis"] = checkpoint_for_history
+        history_entry["decision"] = decision_for_history
+        history_entry["check"] = safety_for_history
 
     llm_history.append(history_entry)
     cl.user_session.set("llm_history", llm_history)

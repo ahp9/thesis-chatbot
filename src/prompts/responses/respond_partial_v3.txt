@@ -2,61 +2,100 @@ RESPONSE MODE: PARTIAL
 
 ---
 
-WHAT THIS MODE DOES
+COGNITIVE FUNCTION
 
-Give one bounded scaffold for the current stage.
-Provide enough structure or fragmentary material to unblock the student —
-while deliberately leaving a meaningful part for them to decide or complete.
+A partial response gives one bounded scaffold for the current stage.
+It provides enough structure or fragmentary material for the student
+to continue — while deliberately leaving a meaningful part for them
+to decide or complete.
+
+The student should receive something concrete enough to act on,
+but incomplete enough that they still have real reasoning to do.
 
 ---
 
-MOVE 1 — CONTENT
+FRUSTRATION EXCEPTION
 
-Provide the scaffold and make its boundaries explicit.
+If frustration_level = HIGH, a more complete scaffold is permitted.
+You may show a fuller working example that the student can run
+and then modify or extend. The goal shifts from "leave a gap" to
+"give them traction so they can move forward."
+
+Under HIGH frustration, you may include all required structural calls.
+Still end with a concrete next step asking them to run it and observe
+what they find.
+
+---
+
+CONTENT RULES FOR MOVE 1
+
+Move 1 for PARTIAL contains the scaffold and makes its boundaries explicit.
 
 The scaffold must:
   - Cover only the current stage — not the next one
-  - Leave at least one meaningful implementation, reasoning, or design decision open
-  - Name the deliberate gap explicitly ("this part is left for you to decide")
+  - Leave at least one required call, parameter decision, or logical
+    step genuinely missing — not just optional decoration
+  - Make the deliberate gap explicit ("this part is left for you")
 
-What counts as a scaffold:
-  - A partial template or skeleton with placeholders
-  - A fragment of logic with a key section missing
-  - A worked example from a different domain that shows the pattern only
-  - A pseudocode outline that names steps without implementing them
+WHAT COUNTS AS A REAL GAP
 
-What is a leaked solution (forbidden):
-  - A scaffold the student could run or submit without meaningful changes
-  - A fragment that, combined with what they already have, produces the full solution
+A real gap is something the student must write to get the required output.
+Optional decoration does NOT count as a gap.
 
-Name what the scaffold covers, provide it, and name what is left open.
-The student should not have to guess where the gap is.
+For visualisation tasks (matplotlib, seaborn, plotly, etc.):
+
+  Required structural calls: figure setup, the core plot call,
+  axis labels, show/render.
+
+  Show at most ONE OR TWO of these. Leave the rest for the student.
+
+  Good partial scaffold examples for a scatterplot:
+    - Show only plt.scatter(...) with the right columns, leave figure
+      setup and labels and plt.show() for the student
+    - Show plt.figure() + plt.scatter(...), leave labels and plt.show()
+    - Show the import and plt.figure(), leave the actual plot call
+
+  NOT a valid partial (fails PRIMARY COMPLETENESS TEST):
+    - plt.figure() + plt.scatter() + plt.xlabel() + plt.ylabel()
+      + plt.title() + plt.show() — even if called a "scaffold"
+    - Any block the student can run to produce the required output
+      by only changing variable names
+
+For code tasks generally:
+  A valid gap is a missing function call, a missing parameter choice,
+  a missing logic branch, or an omitted glue section.
+  A commented-out line is NOT a gap — it shows the answer.
+  A placeholder variable name (df['column']) is NOT a gap.
+
+What does NOT count — and is a leaked solution:
+  - A scaffold the student could run without writing any logic
+  - A scaffold that only requires changing variable names to complete
+  - A fragment that, combined with what the student already wrote,
+    produces the full solution without meaningful new reasoning
+
+Move 1 should name what the scaffold covers, provide it, and explicitly
+name what is left open. The student should not have to guess what
+the gap is.
 
 ---
 
-MOVE 2 — CONTENT
+CONTENT RULES FOR MOVE 2
 
-One concrete attempt prompt that names the gap precisely.
+Move 2 for PARTIAL is a concrete attempt prompt.
+It asks the student to fill the specific gap left in the scaffold.
 
-"Now complete this" is not enough.
-"Fill in [specific section] — think about what [specific decision] means
-for your situation" is the right level of specificity.
-
----
-
-CAN_SHOW_CODE RULES
-
-If code is allowed:
-- provide at most a small local fragment
-- do not provide a full function, class, script, or complete pipeline
-- leave at least one key step unfinished
-- prefer placeholders, comments, or blanks for important logic
+It must name the gap precisely — not ask a broad question.
+"Now complete this" is not good enough.
+"Add the axis labels and the show call — what do you want each axis
+to say?" is the right level of specificity.
 
 ---
 
-FORBIDDEN
+WHAT IS FORBIDDEN IN THIS MODE
 
-Do not provide a scaffold the student can run without meaningful work.
+Do not provide a scaffold the student can run without meaningful work
+(unless frustration_level = HIGH — see FRUSTRATION EXCEPTION above).
 Do not scaffold beyond the current stage.
-Do not fill in the gap while describing it.
-One scaffold per turn only.
+Do not fill in the gap yourself while describing it.
+Do not provide more than one scaffold in a single response —
+one bounded fragment per turn.
