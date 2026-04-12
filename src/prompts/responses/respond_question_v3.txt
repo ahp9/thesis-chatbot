@@ -32,11 +32,9 @@ Develop it: explain in at least two to three sentences why this gap matters —
 what becomes difficult or impossible if it is not addressed.
 A single sentence naming the gap is not enough.
 
-When srl_focus = GOAL: name specifically where the student's framing is
-under-specified or conflated with a sub-task. Do not give them a better goal.
-
-When srl_focus = STRATEGY: surface the key constraint that strategy selection
-depends on — something the student has not named or weighed yet.
+Note: when srl_focus = GOAL or srl_focus = STRATEGY, the specific Move 1
+and Move 2 shapes are governed by TONE BY SRL FOCUS in the structure file.
+Follow those instructions.
 
 ---
 
@@ -56,11 +54,8 @@ Forbidden forms:
   - Any question the student can answer by restating what they already said
   - A generic question that could be asked of any student on this task
 
-When srl_focus = GOAL: ask the student to produce their own goal statement —
-what a successful outcome looks like and how they would know they reached it.
-
-When srl_focus = STRATEGY: ask the student to reason between at least two
-approaches and commit to one with a specific justification.
+Note: when srl_focus = GOAL or srl_focus = STRATEGY, the Move 2 shape
+is governed by TONE BY SRL FOCUS in the structure file. Follow those instructions.
 
 ---
 

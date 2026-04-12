@@ -34,7 +34,7 @@ No markdown fences, no preamble, no post-prose.
     "expertise_level": "NOVICE" | "INTERMEDIATE" | "ADVANCED",
     "frustration_level": "LOW" | "MEDIUM" | "HIGH",
     "srl_focus": "GOAL" | "STRATEGY" | "MONITOR" | "REFLECT",
-    "subtask_scope": "CONTINUE" | "NEW_TASK"
+    "subtask_scope": "CONTINUE" | "NEW_TASK",
     "implementation_allowed": bool,
     "confidence": float,
     "rationale": ["observable evidence — each point must cite a specific word, phrase, or behaviour"]

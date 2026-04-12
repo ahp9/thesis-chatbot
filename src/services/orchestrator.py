@@ -4,7 +4,7 @@ import logging
 
 from lib.contracts import CombinedControlResult, TurnResult
 from lib.enums import Phase
-from services.gate_service import GateService
+from services.guard_service import GuardService
 from services.history_adapter import recent_control_state, recent_support_levels
 from services.classify_service import ClassifyService
 from services.generate_service import GenerateService
@@ -22,7 +22,7 @@ class Orchestrator:
         self.classify = ClassifyService(client)
         self.generator = GenerateService(client)
         self.safety = SafetyService(client)
-        self.gate = GateService(client)
+        self.guard = GuardService(client)
         self.policy = PolicyEngine()
         self.telemetry = Telemetry()
 
@@ -33,8 +33,8 @@ class Orchestrator:
         current_phase: Phase,
     ) -> TurnResult:
 
-        gate_hint: str | None = None
-        gate_hint = await self.gate.get_hint(user_message)
+        guard: str | None = None
+        guard = await self.guard.get_hint(user_message)
 
         route = await self.router.route(user_message, llm_history, current_phase)
 
@@ -78,7 +78,7 @@ class Orchestrator:
             final_control,
             llm_history,
             user_message,
-            gate_hint=gate_hint,
+            guard=guard,
         )
 
         final_reply, safety, was_rewritten = await self.safety.enforce(

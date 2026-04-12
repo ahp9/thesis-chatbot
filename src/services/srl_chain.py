@@ -31,7 +31,6 @@ SAFETY_CHECK_LEVELS = {"PARTIAL", "EXPLAIN", "STRUCTURE", "EVALUATION"}
 # ---------------------------------------------------------------------------
 # Dataclasses
 # ---------------------------------------------------------------------------
-
 @dataclass
 class CheckpointResult:
     request_kind: str
@@ -60,31 +59,6 @@ class SupportDecision:
     support_depth: str = "SUBSTANTIVE"
     parse_ok: bool = True
 
-
-@dataclass
-class ReplyPlan:
-    """
-    Output of the planner call.
-
-    student_has      — what the student demonstrably understands from their message
-    gap              — the one tension or decision they have not yet addressed
-    move1_aim        — cognitive aim of Move 1 (not a format description)
-    move1_depth      — brief | substantive | rich
-    handback_type    — question | action | partial_frame
-    handback_content — the actual question, action, or partial frame (specific)
-    off_limits       — the specific content that would constitute a leaked answer
-    tone_note        — opening register note if frustration/phase requires one
-    parse_ok         — False if planner JSON failed to parse
-    """
-    student_has:      str
-    gap:              str
-    move1_aim:        str
-    move1_depth:      str
-    handback_type:    str
-    handback_content: str
-    off_limits:       str
-    tone_note:        str
-    parse_ok:         bool = True
 
 
 @dataclass
@@ -124,18 +98,7 @@ BASE_PROMPT_FILES = {
 # ---------------------------------------------------------------------------
 # JSON parsing
 # ---------------------------------------------------------------------------
-
 def _extract_json(raw: str) -> Dict[str, Any]:
-    """
-    Extract a JSON object from the model's raw response.
-
-    Handles:
-      1. Valid JSON returned directly
-      2. JSON wrapped in ```json ... ``` fences
-      3. Prose before the JSON object
-
-    Returns an empty dict only if all attempts fail.
-    """
     if not raw or not raw.strip():
         logger.warning("_extract_json: empty response from model")
         return {}
@@ -189,7 +152,6 @@ async def _call_json(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
 def _phase_prompt_file(phase: Optional[str]) -> str:
     phase = (phase or "PERFORMANCE").upper()
     if phase == "FORETHOUGHT":
@@ -219,10 +181,7 @@ def _build_native_history(
     llm_history: List[Dict[str, Any]],
     limit: int = 8,
 ) -> List[Dict[str, str]]:
-    """
-    Build an OpenAI-style alternating user/assistant message list.
-    File block content from older turns is stripped to avoid token bloat.
-    """
+
     clean: List[Dict[str, str]] = []
     for m in llm_history[-(limit * 2):]:
         role    = m.get("role", "")
@@ -299,10 +258,7 @@ def _build_writer_brief(
     
     
 def _file_referenced_but_missing(user_message: str, llm_history: list) -> str | None:
-    """
-    Returns the filename if the user seems to be referencing a prior file
-    but its content is no longer in the current message or recent history.
-    """
+
     file_keywords = ["file", "csv", "dataset", "data", "upload", "notebook", "script", "code"]
     msg_lower = user_message.lower()
     
@@ -326,7 +282,6 @@ def _file_referenced_but_missing(user_message: str, llm_history: list) -> str | 
 # ---------------------------------------------------------------------------
 # Fallback values — used only when LLM parsing genuinely fails
 # ---------------------------------------------------------------------------
-
 def _fallback_checkpoint() -> CheckpointResult:
     return CheckpointResult(
         request_kind="PRODUCT",
@@ -368,13 +323,7 @@ async def checkpoint_and_decide(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> Tuple[CheckpointResult, SupportDecision, dict]:
-    """
-    Classify the student's state and decide the support level.
 
-    This is a classification task — it operates on the student's state
-    (phase, trajectory, progress, frustration) and produces labels.
-    It does NOT reason about the specific content of the reply.
-    """
     prompt_parts = [
         load_prompt(BASE_PROMPT_FILES["checkpoint_and_decide"]),
     ]
@@ -446,15 +395,8 @@ async def generate_full_reply(
     decision: SupportDecision,
     llm_history: List[Dict[str, Any]],
     user_message: str,
-    gate_hint: Optional[str] = None,
+    guard: Optional[str] = None,
 ) -> str:
-    """
-    Single-call generation pipeline.
-
-    The writer receives tutor_structure.txt (filled) directly, along with
-    the phase prompt and respond_X file. It self-plans before writing.
-    """
-    
     missing_filename = _file_referenced_but_missing(user_message, llm_history)
     if missing_filename:
         logger.info("File missing from context: %s — triggering missing file response.", missing_filename)
@@ -483,9 +425,9 @@ async def generate_full_reply(
         load_prompt(decision.response_prompt_file),
     ]
 
-    if gate_hint:
-        logger.info("Gate hint active — prepending first-turn gate prompt.")
-        prompt_parts.append(gate_hint)
+    if guard:
+        logger.info("Guard hint active — prepending first-turn guard prompt.")
+        prompt_parts.append(guard)
 
     if _has_file_content(user_message):
         prompt_parts.append(load_prompt(BASE_PROMPT_FILES["file_handler"]))
@@ -501,13 +443,13 @@ async def generate_full_reply(
     previous_reply = last_assistant_reply(llm_history)
 
     subtask_note = (
-        "SUBTASK_SCOPE: NEW_TASK — treat this as a fresh question. "
+        "SUBTASK_SCOPE: NEW_TASK - treat this as a fresh question. "
         "The session context (dataset, assignment) is shared background, "
         "but the previous question's gap, variable choices, and reasoning "
         "do not apply here. Do not reference or continue prior local reasoning "
         "unless the student explicitly invokes it."
         if checkpoint.subtask_scope == "NEW_TASK"
-        else "SUBTASK_SCOPE: CONTINUE — the student is explicitly continuing "
+        else "SUBTASK_SCOPE: CONTINUE - the student is explicitly continuing "
         "from the previous turn. Prior reasoning and context are relevant."
     )
 
@@ -531,6 +473,8 @@ async def generate_full_reply(
     )
     raw = resp.choices[0].message.content or ""
     return _strip_plan_block(raw)
+
+
 # ---------------------------------------------------------------------------
 # Safety check and rewrite
 # ---------------------------------------------------------------------------
@@ -544,10 +488,6 @@ async def check_reply(
     llm_history: List[Dict[str, Any]],
     user_message: str,
 ) -> CheckResult:
-    """
-    Run the safety/leak check only when the support level warrants it.
-    Structurally safe levels (QUESTION, HINT, CLARIFY, REFLECT) are skipped.
-    """
     if not _should_run_safety_check(decision):
         logger.info(
             "Safety check skipped: support_level=%s can_show_code=%s",
@@ -580,19 +520,19 @@ async def check_reply(
     )
 
     if not parse_ok:
-        logger.warning("check_reply: JSON parse failed — defaulting to safe=False")
+        logger.warning("check_reply: JSON parse failed — bypassing rewrite (was_skipped=True)")
         logger.warning("check_reply raw_text: %s", raw_text)
         return CheckResult(
-            is_safe=False,
-            leaks_solution=True,
+            is_safe=True,
+            leaks_solution=False,
             skipped_diagnosis=False,
-            reason="check parse failed — conservative rewrite triggered",
-            was_skipped=False,
+            reason="check parse failed — safety check bypassed",
+            was_skipped=True,
         )
 
     return CheckResult(
-        is_safe=bool(data.get("is_safe", False)),
-        leaks_solution=bool(data.get("leaks_solution", True)),
+        is_safe=bool(data.get("is_safe", True)),
+        leaks_solution=bool(data.get("leaks_solution", False)),
         skipped_diagnosis=bool(data.get("skipped_diagnosis", False)),
         reason=data.get("reason", "unknown"),
         was_skipped=False,

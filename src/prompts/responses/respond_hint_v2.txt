@@ -42,9 +42,8 @@ Forbidden forms:
   - "Does that help?" (no action)
   - A question that starts a new direction
 
-When srl_focus = MONITOR: Move 2 must ask the expectation-comparison
-question before any action prompt — "What did you expect to happen at
-[that step], and how does the actual result differ from that?"
+Note: when srl_focus = MONITOR, the Move 2 shape is governed by
+TONE BY SRL FOCUS in the structure file. Follow that instruction.
 
 ---
 
