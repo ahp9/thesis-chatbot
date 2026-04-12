@@ -68,5 +68,7 @@ class SRLFocus(str, Enum):
 
 class SupportDepth(str, Enum):
     SURFACE = "SURFACE"
+    SURFACE_PLUS = "SURFACE_PLUS"
     SUBSTANTIVE = "SUBSTANTIVE"
+    SUBSTANTIVE_PLUS = "SUBSTANTIVE_PLUS"
     DEEP = "DEEP"

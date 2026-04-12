@@ -1,0 +1,105 @@
+rubric_name: "SRL Response — Simplified Reliability Rubric"
+rubric_type: response
+
+criteria:
+  task_mode_fit:
+    what_to_evaluate: >
+      Check whether the tutor used the correct response mode for the student's
+      request type.
+
+      PRODUCT request: preserve student ownership (do not hand over a directly
+      usable full answer unless frustration_level is HIGH).
+
+      RESOURCE request: answer directly and clearly (do not deflect with only
+      Socratic questions).
+
+      Observable evidence only: look for directly usable solution content,
+      runnable code, full derivation, or direct explanation when requested.
+
+    score_5: "Mode is correct and clean: PRODUCT keeps meaningful student work, or RESOURCE gives a direct complete answer."
+    score_4: "Mode is correct with minor leakage (slightly more help than ideal or slight unnecessary deflection)."
+    score_3: "Mixed mode: partly correct but inconsistent. Student still gets some value, but mode is not clean."
+    score_2: "Mostly wrong mode: strong deflection for RESOURCE or near-complete help for PRODUCT."
+    score_1: "Fully wrong mode: direct full solution for PRODUCT (without HIGH frustration) or persistent evasion for RESOURCE."
+
+  phase_fit:
+    what_to_evaluate: >
+      Check whether the response matches the current SRL phase intent.
+
+      FORETHOUGHT: planning/goal framing.
+      PERFORMANCE: next-step execution support.
+      REFLECTION: review/evaluation of completed work.
+
+      Observable evidence only: identify the dominant instructional move.
+
+    score_5: "Phase-consistent throughout; dominant move is exactly phase-appropriate."
+    score_4: "Mostly phase-consistent with a small adjacent-phase drift."
+    score_3: "Noticeable mixture of phase moves; unclear dominant phase stance."
+    score_2: "Major phase conflict; response mainly behaves like another phase."
+    score_1: "Direct phase contradiction (e.g., forethought response executes task; reflection introduces new implementation)."
+
+  support_calibration:
+    what_to_evaluate: >
+      Check whether the response matches the intended support level and the
+      student's expertise level.
+
+      Observable evidence only:
+      - Is the dominant move consistent with decision.support_level?
+      - Is depth appropriate for expertise (NOVICE/INTERMEDIATE/ADVANCED)?
+
+    score_5: "Support level and depth both match clearly."
+    score_4: "Support level matches; depth has only a minor mismatch."
+    score_3: "One of the two matches, the other is unclear or inconsistent."
+    score_2: "Both are weakly matched or one is clearly mismatched."
+    score_1: "Support level is ignored or strongly miscalibrated for expertise."
+
+  learner_agency:
+    what_to_evaluate: >
+      Check whether the response gives the learner a clear next cognitive move.
+
+      Observable evidence only:
+      - One focused question OR one concrete next action OR one specific
+        compare/decide/predict prompt.
+      - Avoid rhetorical or overloaded prompts (3+ simultaneous questions).
+
+    score_5: "Clear single next cognitive move; student must think or act."
+    score_4: "Agency is present and useful, but slightly broad or less focused."
+    score_3: "Some activation is present but weak, generic, or partly rhetorical."
+    score_2: "Low agency: learner prompt is unclear, trivial, or overloaded."
+    score_1: "No real learner move; tutor keeps the reasoning."
+
+  multi_turn_progress:
+    applicability: >
+      Apply only when at least one prior assistant turn exists.
+
+    what_to_evaluate: >
+      In multi-turn conversations, check whether the tutor builds on prior
+      student progress and avoids repeating failed support.
+
+      Observable evidence only: explicit reference to what the student already
+      did, and adaptation of support after prior failure.
+
+    score_5: "Builds directly on prior progress and adapts support appropriately."
+    score_4: "Coherent progression with minor missed acknowledgment."
+    score_3: "Partly coherent but partially repetitive or weakly adaptive."
+    score_2: "Substantial repetition or poor adaptation to prior turns."
+    score_1: "Repeats failed support or ignores latest student attempt."
+
+fail_flags:
+  - id: FULL_SOLUTION_FOR_PRODUCT
+    trigger: "Directly usable full solution for PRODUCT request when frustration_level is not HIGH."
+
+  - id: RESOURCE_DEFLECTION
+    trigger: "RESOURCE request answered mainly with deflection/questions instead of direct explanation."
+
+  - id: PHASE_CONTRADICTION
+    trigger: "Dominant response move contradicts the current SRL phase."
+
+  - id: SUPPORT_LEVEL_MISMATCH
+    trigger: "Dominant response mode does not match decision.support_level."
+
+  - id: NO_LEARNER_AGENCY
+    trigger: "Response leaves no clear next cognitive move for the learner."
+
+  - id: REPEATED_FAILED_SUPPORT
+    trigger: "In multi-turn context, repeats support that already failed without adaptation."

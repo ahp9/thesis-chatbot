@@ -1,0 +1,70 @@
+rubric_name: "SRL Router — Simplified Phase Routing Reliability"
+rubric_type: router
+
+criteria:
+  signal_grounding:
+    what_to_evaluate: >
+      Check whether route signals are explicitly grounded in the student's words
+      or clear omissions in context.
+
+      Signals must be observable, specific, and routing-relevant.
+
+    score_5: "All key signals are explicit, observable, and specific to the student message."
+    score_4: "Signals are mostly grounded; one is slightly generic or weakly evidenced."
+    score_3: "Mixed grounding: some concrete signals, some vague interpretation."
+    score_2: "Several signals depend on inference or are too generic to justify routing."
+    score_1: "Signals are largely invented, contradictory, or not evidence-grounded."
+
+  phase_choice_fit:
+    what_to_evaluate: >
+      Check whether selected phase is the best fit for current student intent.
+
+      FORETHOUGHT: orientation/planning.
+      PERFORMANCE: active task progress.
+      REFLECTION: evaluation of existing work.
+
+    score_5: "Selected phase is clearly best and well-supported by message intent."
+    score_4: "Selected phase is reasonable with minor adjacent-phase competition."
+    score_3: "Phase choice is mixed or weakly separated from adjacent phase."
+    score_2: "Likely wrong phase; adjacent phase fits better."
+    score_1: "Clearly wrong phase that would lead to inappropriate tutor mode."
+
+  confidence_calibration:
+    what_to_evaluate: >
+      Check if confidence matches ambiguity in phase evidence.
+
+      High confidence is justified when one phase dominates.
+      Lower confidence is justified when adjacent phases genuinely compete.
+
+    score_5: "Confidence is well-calibrated to observed phase ambiguity."
+    score_4: "Small over/under-confidence but still broadly reasonable."
+    score_3: "Calibration is mixed; confidence does not cleanly match ambiguity."
+    score_2: "Noticeable calibration error likely to mislead downstream components."
+    score_1: "Confidence strongly contradicts evidence (e.g., very high under real ambiguity)."
+
+  boundary_handling:
+    what_to_evaluate: >
+      Check two common boundary decisions:
+      - task mentioned vs task defined
+      - artifact present: continuation intent (PERFORMANCE) vs evaluation intent (REFLECTION)
+
+      Apply artifact logic only when an artifact is present.
+
+    score_5: "Both boundaries are handled correctly and explicitly in routing logic."
+    score_4: "Boundary handling is mostly correct with minor ambiguity."
+    score_3: "One boundary is unclear or weakly handled."
+    score_2: "One boundary is clearly mishandled."
+    score_1: "Boundary handling is consistently wrong and causes phase misrouting."
+
+fail_flags:
+  - id: SIGNALS_NOT_OBSERVABLE
+    trigger: "Route signals are not directly traceable to student wording or clear context gaps."
+
+  - id: TASK_MENTION_MISREAD_AS_DEFINED
+    trigger: "Domain-level mention is routed as executable task definition without concrete objective."
+
+  - id: ARTIFACT_INTENT_MISROUTED
+    trigger: "Artifact continuation/evaluation intent is routed to the wrong phase."
+
+  - id: CONFIDENCE_OVERSTATED_UNDER_AMBIGUITY
+    trigger: "High confidence used despite clear adjacent-phase competition."

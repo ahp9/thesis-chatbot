@@ -19,8 +19,9 @@ transcripts/*.csv
 transcripts/
 uploaded_files/
 
+uploaded_files/
+
 # Chainlit Database
-chainlit.db
 .chainlit/
 src/.chainlit/
 chainlit_history.csv

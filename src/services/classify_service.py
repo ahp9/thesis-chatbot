@@ -77,7 +77,7 @@ class ClassifyService:
                 checkpoint_raw.srl_focus,
                 SRLFocus.STRATEGY,
             ),
-            implementation_allowed=bool(checkpoint_raw.implementation_allowed),
+            subtask_scope=(getattr(checkpoint_raw, "subtask_scope", None) or "NEW_TASK").upper(),
             confidence=float(checkpoint_raw.confidence or 0.0),
             rationale=list(checkpoint_raw.rationale or []),
             parse_ok=bool(getattr(checkpoint_raw, "parse_ok", True)),

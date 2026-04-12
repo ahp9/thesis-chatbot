@@ -1,0 +1,328 @@
+rubric_name: "Classification — Student State Read Correctly"
+rubric_type: chain
+
+# What this rubric grades
+# -----------------------
+# Each tutor turn is graded individually. This rubric asks whether the chain's
+# internal diagnosis fields correctly reflect the student's observable state
+# in this specific message.
+#
+# Focus: diagnosis object fields and how well they match the evidence.
+# The most important fields to get right are expertise_level and frustration,
+# because errors in these cascade into every downstream decision.
+
+
+criteria:
+
+  expertise_level_read:
+    label: "Student's skill level identified from what they demonstrated, not what topic they're on"
+    what_to_evaluate: >
+      Was the expertise_level label (NOVICE / INTERMEDIATE / ADVANCED) the
+      right one for what this student is doing in this message?
+
+      The test is operational mode — what the student does with their
+      knowledge — not vocabulary, topic difficulty, or course level.
+
+      NOVICE: The student cannot explain why their approach would or would not
+        work. They interact with the surface of the problem.
+        Clear signals (one is enough):
+          - Describes an error only by symptom ("it just doesn't work")
+          - Uses a term correctly in one sentence and incorrectly in the next
+          - Shows no mental model of the tool or method they are using
+          - Has not attempted anything and has no hypothesis about where to start
+
+      INTERMEDIATE: The student understands the task structure. They make
+        errors at the implementation level, not the conceptual level.
+        Clear signals (one is enough):
+          - States what they expected to happen and what happened instead
+          - Names the correct tool or method and uses it in context
+          - Asks "how do I do X correctly?" where X is already the right approach
+          - Can explain what their code is trying to do even if it is wrong
+
+      ADVANCED: The student is reasoning about trade-offs, limits, or design
+        decisions. They have already resolved "how do I do this" and are asking
+        whether it is the right choice, what it breaks under, or how to extend it.
+        Clear signals (one is enough):
+          - Has implemented the standard approach and questions its limits for
+            their specific case
+          - Identifies a trade-off or architectural tension unprompted
+          - Frames the question as "is X the right choice given Y?" not "how do I do X?"
+          - Points to a specific failure mode or edge case they observed or anticipated
+
+      IMPORTANT: ADVANCED is rarely classified correctly. Watch for cases where
+      the student has implemented something and is questioning whether it is
+      architecturally right or whether it will hold up — this is ADVANCED even
+      if the phrasing sounds uncertain or frustrated.
+
+    score_3: "Label is correct and the rationale names the specific student behaviour that justifies it — not just the vocabulary used."
+    score_2: "Label is correct but the rationale relies on vocabulary rather than operational mode, or the case is genuinely borderline."
+    score_1: "Label is off by one level. A clear signal for a different level was present but not caught."
+    score_0: "Label is clearly wrong. Most commonly: INTERMEDIATE assigned when the student is questioning limits of an implemented approach (should be ADVANCED), or ADVANCED assigned when the student has no mental model of what they are doing."
+
+    do_not_accept:
+      - Inferring ADVANCED from technical vocabulary alone
+      - Inferring ADVANCED from topic difficulty or course level
+      - Missing ADVANCED when the student has implemented something and is questioning whether it is architecturally right
+      - Calling a student INTERMEDIATE only because they are working on a coding task
+
+
+  frustration_level_read:
+    label: "Student's emotional state read accurately"
+    what_to_evaluate: >
+      Was the frustration or emotional_state label correct for this message?
+
+      HIGH frustration — one of these is enough:
+        - Explicit distress language ("I give up", "I've been stuck for hours",
+          "I don't even know what I'm doing", "just tell me")
+        - Multiple consecutive failed attempts described
+        - Emotional punctuation (!!!, ???, ALL CAPS)
+        - Passive helplessness ("just tell me", "I don't care anymore")
+
+      MEDIUM frustration — one of these is enough:
+        - Expressed uncertainty paired with visible effort ("I tried X but it keeps failing")
+        - Mild hedging without distress ("I think I understand but I'm not sure")
+        - Implicit stress without strong language
+
+      LOW frustration:
+        - Neutral or exploratory tone
+        - No distress signals
+        - Curious or methodical phrasing
+
+      Check both the label AND whether the rationale cites a specific signal.
+
+    score_3: "Label is correct and the rationale quotes or specifically describes the signal from the transcript."
+    score_2: "Label is one level off in a genuinely ambiguous case, or label is correct with no specific rationale."
+    score_1: "Label is wrong by one level and no clear rationale is given."
+    score_0: "Label is clearly wrong — LOW when the student used explicit distress language, or HIGH for a calm exploratory message."
+
+    do_not_accept:
+      - LOW when the student said they are stuck, giving up, or exhausted
+      - HIGH for a methodical or curious message with no distress signals
+      - A correct label with a rationale that cites no specific evidence (capped at 2)
+
+
+  progress_state_read:
+    label: "How far along the student is on the task — correctly identified"
+    what_to_evaluate: >
+      Was the progress_state label (MOVING / STALLED / DONEISH) correct?
+
+      MOVING: The student is making forward progress, however imperfect.
+        They have a next step in mind or are reporting partial success.
+
+      STALLED: The student is stuck. They describe repeated failure with no
+        change in approach, or explicitly say they cannot move forward.
+        No clear next step.
+
+      DONEISH: The student has produced something and is seeking review or
+        confirmation. The primary intent is to check or evaluate existing work.
+
+    score_3: "Label correct and rationale cites the specific attempt or absence of progress."
+    score_2: "Label correct but rationale is vague, or the case is genuinely borderline between two states."
+    score_1: "Label off by one state with thin evidence."
+    score_0: "Label clearly wrong — MOVING when the student describes repeated identical failures, or DONEISH when nothing has been produced."
+
+    do_not_accept:
+      - MOVING when the student has tried the same thing multiple times with no result
+      - DONEISH when the student has not produced any artifact
+
+
+  request_kind_read:
+    label: "Student wants to build something vs. understand something — correctly identified"
+    what_to_evaluate: >
+      Was request_kind (PRODUCT / RESOURCE) correct?
+
+      PRODUCT: The student's primary intent is to produce, write, implement,
+        or fix something. They want an artifact or working result.
+        Examples: "write a function that...", "fix my code", "help me implement X"
+
+      RESOURCE: The student's primary intent is to understand or learn.
+        They want knowledge, not an artifact.
+        Examples: "what is X?", "how does Y work?", "explain the difference between..."
+
+      When both intents exist in the same message, label the dominant one.
+      Expressing confusion while asking for help building something is still PRODUCT.
+
+    score_3: "Label correct and rationale cites the specific phrasing that indicates production vs. understanding intent."
+    score_2: "Label correct for a genuinely borderline case, or correct with no rationale."
+    score_1: "Label misses the primary intent in a moderately clear case."
+    score_0: "Label is clearly wrong — RESOURCE for 'fix my code', or PRODUCT for 'what does this function do?'"
+
+    do_not_accept:
+      - RESOURCE for a production request just because the student also expresses confusion
+      - PRODUCT for a pure explanation request just because code is present
+
+
+  context_gap_read:
+    label: "How much information is missing — correctly identified"
+    what_to_evaluate: >
+      Was the context_gap label (NONE / SMALL / CRITICAL) correct?
+
+      NONE: The message has enough task, attempt, and context to give
+        targeted support without asking for more.
+
+      SMALL: Enough context to help partially, but one detail is missing.
+        Support could begin with a reasonable assumption.
+
+      CRITICAL: The task is too vague or incomplete to give any targeted
+        support. A clarifying question is required before anything else.
+
+    score_3: "Label correct. Rationale explains what information is present or missing."
+    score_2: "Label off by one step in a genuinely ambiguous case, or label correct with no rationale."
+    score_1: "Label wrong and rationale does not reflect the actual information in the message."
+    score_0: "Label clearly wrong — NONE when no task has been described, or CRITICAL for a message with full task and attempt context."
+
+    do_not_accept:
+      - NONE when the student has not described what they are trying to do
+      - CRITICAL when the student provided both a task and an attempt
+
+
+  support_level_fits_the_situation:
+    label: "The chosen support level makes sense given expertise, progress, and frustration"
+    what_to_evaluate: >
+      Given the diagnosed expertise, progress state, and frustration level,
+      was the selected support_level a reasonable pedagogical choice?
+
+      Core rules to check:
+        - CLARIFY must be selected when context_gap = CRITICAL
+        - QUESTION is appropriate for NOVICE + STARTING combinations where
+          the student needs orientation, not content
+        - HINT is the standard move for MOVING students who just need a nudge
+        - PARTIAL or EXPLAIN become appropriate when frustration is HIGH and
+          the student is STALLED — continuing to give QUESTION or HINT at this
+          point is a clear error
+        - EXPLAIN is appropriate for RESOURCE requests
+
+      Also check: if the student has been getting the same support level
+      across multiple turns with no progress, the chain should escalate.
+      Staying at HINT when a student is STALLED and frustrated is wrong.
+
+    score_3: "Support level is appropriate given the diagnosed state. Escalation happened when needed."
+    score_2: "Support level is defensible but one level off in a borderline case."
+    score_1: "Support level is clearly wrong for the state — e.g., HINT when the student is STALLED with HIGH frustration."
+    score_0: "Support level violates core rules — e.g., giving QUESTION to a student who has been stuck for multiple turns and is explicitly asking for more help."
+
+    do_not_accept:
+      - HINT or QUESTION when frustration is HIGH and progress_state is STALLED
+      - CLARIFY skipped when context_gap is CRITICAL
+      - Same support level repeated when the student has made no progress
+
+  support_depth_read:
+    label: "Chosen support depth matches what the student's state actually requires"
+    what_to_evaluate: >
+      Was support_depth (SURFACE / SURFACE_PLUS / SUBSTANTIVE / SUBSTANTIVE_PLUS / DEEP)
+      correctly chosen given the student's expertise, progress, and current obstacle?
+
+      This evaluates whether the chain selected the right cognitive depth —
+      not just whether the support_level category was plausible.
+
+      Core rule:
+        Depth must first respect expertise floor:
+          - NOVICE → SURFACE or SURFACE_PLUS
+          - INTERMEDIATE → at least SUBSTANTIVE
+          - ADVANCED → at least SUBSTANTIVE_PLUS, often DEEP
+
+      Then check whether current task state justifies shallower or deeper support.
+
+      SURFACE:
+        Appropriate when:
+          - Student needs only one local correction
+          - Very early orientation
+          - Single missing definition or pointer
+          - Narrow novice uncertainty
+
+        Wrong when:
+          - Student already named method/tool correctly
+          - Student has an active implementation obstacle
+
+      SURFACE_PLUS:
+        Appropriate when:
+          - Student is novice but needs a short multi-step orientation
+          - New subtask begins and one grounding layer is needed
+
+        Wrong when:
+          - Student already demonstrates structural reasoning
+
+      SUBSTANTIVE:
+        Appropriate when:
+          - Student is INTERMEDIATE and has a concrete obstacle
+          - Help must engage directly with their actual decision or implementation issue
+          - A real next-step trade-off or method choice is needed
+
+        Wrong when:
+          - Response stays generic despite concrete student evidence
+          - Student is ADVANCED asking a primary design question
+
+      SUBSTANTIVE_PLUS:
+        Appropriate when:
+          - Student compares alternatives
+          - Refinement or extension is being discussed
+          - ADVANCED student asks a contained but non-trivial question
+          - Multiple interacting considerations are present
+
+        Wrong when:
+          - Only one local correction is needed
+          - Student still lacks the core task frame
+
+      DEEP:
+        Appropriate when:
+          - Student is ADVANCED and reasoning about limits, trade-offs,
+            architecture, failure modes, or design consequences
+          - Standard method is already understood
+          - The real question is whether the method holds under constraints
+
+        Wrong when:
+          - Student is still asking how to perform the standard task
+          - No system-level reasoning is present
+
+      Check:
+        - Did the chosen depth engage at the level of the student's actual reasoning?
+        - Was depth too shallow for demonstrated expertise?
+        - Was depth unnecessarily deep for a local beginner issue?
+
+    score_3: "Depth matches expertise floor and current obstacle precisely; rationale cites why this depth is necessary."
+    score_2: "Depth is defensible but slightly shallow or deep for a borderline case."
+    score_1: "Depth misses the student's demonstrated level by one band."
+    score_0: "Depth clearly violates expertise floor or ignores the actual cognitive demand."
+
+    do_not_accept:
+      - SURFACE for an INTERMEDIATE student who already identified method and failure
+      - SUBSTANTIVE for an ADVANCED student asking architectural limits
+      - DEEP for a student still missing the basic task structure
+      - Generic depth choice with no evidence from student behaviour
+
+fail_flags:
+
+  - id: ADVANCED_MISSED
+    trigger: >
+      Student has implemented the standard approach and is questioning its
+      limits, correctness, or architectural fit — but was classified as
+      INTERMEDIATE. This is the most common expertise classification error.
+
+  - id: EXPERTISE_FROM_TOPIC_NOT_BEHAVIOUR
+    trigger: >
+      Expertise label matches the course or topic difficulty rather than
+      what the student is demonstrably doing with their knowledge.
+
+  - id: FRUSTRATION_CLEARLY_WRONG
+    trigger: >
+      frustration = LOW when the student used explicit distress language,
+      or frustration = HIGH for a calm exploratory message.
+
+  - id: PROGRESS_WRONG
+    trigger: >
+      progress_state = MOVING when the student has repeated the same failed
+      attempt multiple times with no change.
+
+  - id: REQUEST_KIND_INVERTED
+    trigger: >
+      RESOURCE for a clear production or build request, or PRODUCT for a
+      clear explanation or understanding request.
+
+  - id: CLARIFY_SKIPPED_ON_CRITICAL_GAP
+    trigger: >
+      context_gap = CRITICAL but support_level is not CLARIFY.
+
+  - id: SUPPORT_NOT_ESCALATED
+    trigger: >
+      Student is STALLED with HIGH frustration but support_level remained
+      at HINT or QUESTION — no escalation to PARTIAL or EXPLAIN.

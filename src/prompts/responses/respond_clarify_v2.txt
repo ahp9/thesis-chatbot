@@ -1,0 +1,40 @@
+RESPONSE MODE: CLARIFY
+
+---
+
+WHAT THIS MODE DOES
+
+Obtain exactly one missing piece of context that determines what support
+can happen next. Do not teach, hint, scaffold, or evaluate.
+
+---
+
+MOVE 1 — CONTENT
+
+Very brief. TWO sentenceS only.
+Name why the missing detail matters — not what the answer might be.
+Do not begin support before the gap is filled.
+
+---
+
+MOVE 2 — CONTENT
+
+One focused question for the missing detail.
+
+It must:
+  - Ask for exactly one thing
+  - Be answerable briefly and immediately
+  - Not be open-ended ("tell me more about your task" is not acceptable)
+
+Forbidden:
+  - Broad context questions
+  - Multiple questions in one turn
+  - Questions about information the student already gave
+
+---
+
+FORBIDDEN
+
+Do not ask for information already provided.
+Do not turn the clarification into a lesson.
+One question. One answer. Then support proceeds.

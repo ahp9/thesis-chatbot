@@ -25,11 +25,42 @@ INPUTS
 
 Use:
 1. ROUTE
-2. DIAGNOSIS
-3. DECISION
+2. DIAGNOSIS (includes frustration_level)
+3. DECISION (includes support_level, can_show_code)
 4. DRAFT_REPLY
 5. RECENT_HISTORY
 6. CURRENT_USER_MESSAGE
+
+---
+
+PRIMARY COMPLETENESS TEST
+
+Before any other rule, apply this test to any code in the reply:
+
+  Could a student copy this code, run it with their data, and get the
+  required output — without writing any logic themselves?
+
+If YES → mark leaks_solution=true, regardless of comments, labels,
+or framing words like "scaffold", "template", or "starter".
+
+A reply does NOT pass this test just because:
+  - It uses placeholder variable names (df['column']) instead of real ones
+  - It has a comment saying "you can customise this"
+  - It is missing optional styling (colors, titles, legends)
+  - The task mentions "analysis" and the code only does "plotting"
+
+The test is about REQUIRED logic, not optional decoration.
+
+---
+
+FRUSTRATION EXCEPTION
+
+If DIAGNOSIS.frustration_level = HIGH, a more complete code response is
+permitted. Under HIGH frustration, a complete runnable example is allowed
+even if it would normally fail the completeness test.
+
+Mark leaks_solution=false when frustration_level=HIGH and the reply
+gives a full working example — this is intentional scaffolding.
 
 ---
 
@@ -37,7 +68,7 @@ RULES
 
 Mark leaks_solution=true only if the reply includes:
 
-- complete runnable code
+- complete runnable code (see PRIMARY COMPLETENESS TEST above)
 - direct final answer
 - full worked solution
 - step-by-step completion that removes student reasoning
@@ -45,73 +76,83 @@ Mark leaks_solution=true only if the reply includes:
 Allow:
 
 - conceptual explanations
-- partial templates
-- illustrative examples
+- partial code with at least one required logical step missing
+- illustrative examples from a DIFFERENT domain
 - high-level strategies
 
 Mark skipped_diagnosis=true if diagnosis was required first and missing.
 
-Mark leaks_solution=true only if the reply produces new task-completing content that replaces 
-the student's own reasoning, decision-making, or implementation.
+Mark leaks_solution=true only if the reply produces new task-completing
+content that replaces the student's own reasoning, decision-making,
+or implementation.
 
-Do NOT mark leaks_solution=true when the reply only surfaces, formats, or displays user-provided 
-material without adding task-solving interpretation.
+Do NOT mark leaks_solution=true when the reply only surfaces, formats,
+or displays user-provided material without adding task-solving interpretation.
 
 Safe examples include:
 
-* showing rows or columns from a user-uploaded CSV
-* displaying schema, headers, dimensions, or summary statistics of user-owned data
-* reformatting user-provided text, tables, or files
-* echoing user content for inspection
-* visualizing user data when the visualization itself is not the assignment answer
+- showing rows or columns from a user-uploaded CSV
+- displaying schema, headers, dimensions, or summary statistics of user-owned data
+- reformatting user-provided text, tables, or files
+- echoing user content for inspection
+- visualizing user data when the visualization itself is not the assignment answer
 
 Mark leaks_solution=true only when the reply:
 
-* derives the final answer the student is expected to compute
-* performs the key analysis the student is supposed to decide
-* interprets results in place of the student's own reasoning
-* produces a submission-ready artifact that goes beyond display
+- derives the final answer the student is expected to compute
+- performs the key analysis the student is supposed to decide
+- interprets results in place of the student's own reasoning
+- produces a submission-ready artifact that goes beyond display
 
-If the content originates from the user and is shown mainly for inspection, treat this as resource/service, not product.
+If the content originates from the user and is shown mainly for inspection,
+treat this as resource/service, not product.
 
 ---
 
 CODE-ALLOWANCE AUDIT
 
 If DECISION.can_show_code = true, code is allowed in principle.
-
 Do NOT mark leakage merely because code appears.
 
 For DECISION.support_level = PARTIAL and DECISION.can_show_code = true:
 
-- allow partial code that supports the next step
-- allow separated code fragments with explanation between them
-- allow substantial fragments if the reply remains incomplete
-- allow multiple fragments if important implementation decisions remain
+Allowed — partial code where the student must still write required logic:
+  - A single core call (e.g. plt.scatter(...)) without the surrounding
+    figure setup, labels, or show call
+  - A fragment with one or more required calls missing entirely
+    (not just commented out or labelled as optional)
+  - Separated fragments with explanation between them, where the
+    glue logic is left to the student
+  - A skeleton where key parameters or function calls are omitted,
+    not just variable names
 
-Allowed examples:
+NOT allowed under PARTIAL — apply PRIMARY COMPLETENESS TEST:
+  - A complete figure setup + core call + labels + plt.show()
+    even if framed as a "scaffold"
+  - Any block a student could run to produce the required output
+    by only changing variable names
 
-- fragment A + explanation + fragment B
-- partial function body
-- selective branch logic
-- placeholder sections
-- omitted glue logic
+When uncertain: ask "what would the student actually have to write?"
+If the answer is "nothing meaningful", mark leaks_solution=true.
 
-Do NOT mark leaks_solution=true just because:
+---
 
-- code exceeds a few lines
-- there are multiple fragments
-- the explanation is detailed
+VISUALISATION-SPECIFIC RULE
 
-Mark leaks_solution=true only if the reply:
+For plotting tasks (matplotlib, seaborn, plotly, etc.):
 
-- forms a complete runnable solution
-- gives the full core algorithm end-to-end
-- removes the main implementation decisions
-- would let the student mostly copy
+A complete leaking response includes ALL of:
+  plt.figure() / fig setup
+  the core plot call (scatter, plot, bar, etc.)
+  axis labels
+  plt.show() or equivalent
 
-When uncertain under PARTIAL + code allowed:
-prefer allowed partial code if meaningful student work still remains.
+A partial non-leaking response is MISSING at least one of the above
+that the student is expected to write. Omitting only the title or
+legend does NOT make it partial — those are optional decoration.
+
+The student must be left to write at least one required structural
+call themselves.
 
 ---
 

@@ -42,6 +42,7 @@ class RouteResult(SerializableContract):
     confidence: float
     srl_signal: str
     signals: List[str]
+    trajectory_note: str
 
 
 @dataclass
@@ -54,7 +55,7 @@ class Checkpoint(SerializableContract):
     expertise_level: ExpertiseLevel
     frustration_level: FrustrationLevel
     srl_focus: SRLFocus
-    implementation_allowed: bool
+    subtask_scope: str
     confidence: float
     rationale: List[str]
     parse_ok: bool = True

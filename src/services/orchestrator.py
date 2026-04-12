@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import logging
+
 from lib.contracts import CombinedControlResult, TurnResult
 from lib.enums import Phase
-from services.history_adapter import recent_support_levels
+from services.guard_service import GuardService
+from services.history_adapter import recent_control_state, recent_support_levels
 from services.classify_service import ClassifyService
 from services.generate_service import GenerateService
 from services.policy.policy_engine import PolicyEngine
 from services.router_service import RouterService
 from services.safety_service import SafetyService
 from services.telemetry import Telemetry
+
+logger = logging.getLogger(__name__)
 
 
 class Orchestrator:
@@ -17,6 +22,7 @@ class Orchestrator:
         self.classify = ClassifyService(client)
         self.generator = GenerateService(client)
         self.safety = SafetyService(client)
+        self.guard = GuardService(client)
         self.policy = PolicyEngine()
         self.telemetry = Telemetry()
 
@@ -26,37 +32,31 @@ class Orchestrator:
         llm_history: list[dict],
         current_phase: Phase,
     ) -> TurnResult:
+
+        guard: str | None = None
+        guard = await self.guard.get_hint(user_message)
+
         route = await self.router.route(user_message, llm_history, current_phase)
-        #self.telemetry.event("route.completed", route.to_dict())
 
         router_predicted_phase = route.phase
+
+        previous_state = recent_control_state(llm_history)
+        previous_frustration = previous_state.get("previous_frustration_level")
+
         resolved_phase = self.policy.resolve_phase(
             current_phase=current_phase,
             predicted_phase=router_predicted_phase,
             confidence=route.confidence,
+            previous_frustration=previous_frustration,
         )
-
-        # self.telemetry.event(
-        #     "policy.phase_compare",
-        #     {
-        #         "current_phase": current_phase.value,
-        #         "router_predicted_phase": router_predicted_phase.value,
-        #         "router_confidence": route.confidence,
-        #         "final_phase": resolved_phase.value,
-        #         "phase_was_overridden": router_predicted_phase != resolved_phase,
-        #     },
-        # )
 
         route.phase = resolved_phase
 
-        control, classify_debug = await self.classify.classify(
+        control, _ = await self.classify.classify(
             route.to_dict(),
             llm_history,
             user_message,
         )
-
-        # self.telemetry.event("control.completed", control.to_dict())
-        # self.telemetry.event("control.debug", classify_debug)
 
         recent_levels = recent_support_levels(llm_history)
 
@@ -66,36 +66,20 @@ class Orchestrator:
             recent_support_levels=recent_levels,
         )
 
-        # self.telemetry.event(
-        #     "policy.decision_compare",
-        #     {
-        #         "llm_decision": control.decision.to_dict(),
-        #         "policy_decision": policy_decision.to_dict(),
-        #         "recent_support_levels": [lvl.value for lvl in recent_support_levels],
-        #         "decision_was_overridden": control.decision.to_dict() != policy_decision.to_dict(),
-        #     },
-        # )
-
         final_control = CombinedControlResult(
             checkpoint=control.checkpoint,
             decision=policy_decision,
         )
 
+        # gate_hint flows into generate() where it is prepended to the
+        # system prompt. If None, generate() behaves exactly as before.
         draft_reply = await self.generator.generate(
             route,
             final_control,
             llm_history,
             user_message,
+            guard=guard,
         )
-
-        # self.telemetry.event(
-        #     "generation.completed",
-        #     {
-        #         "reply_preview": draft_reply[:300],
-        #         "phase": route.phase.value,
-        #         "support_level": final_control.decision.support_level.value,
-        #     },
-        # )
 
         final_reply, safety, was_rewritten = await self.safety.enforce(
             route,
@@ -105,7 +89,8 @@ class Orchestrator:
             user_message,
         )
 
-        # self.telemetry.event("safety.completed", safety.to_dict())
+        if getattr(route, "trajectory_note", ""):
+            logger.info("TRAJECTORY NOTE: %s", route.trajectory_note)
 
         return TurnResult(
             reply=final_reply,

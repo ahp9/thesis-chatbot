@@ -1,0 +1,346 @@
+rubric_name: "Response — Pedagogical Quality of the Tutor's Replies"
+rubric_type: response
+
+# What this rubric grades
+# -----------------------
+# This rubric is applied ONCE over the full conversation. It evaluates the
+# quality of the tutor's responses from a pedagogical perspective.
+#
+# Key questions it answers:
+#   - Did the tutor avoid giving away solutions?
+#   - Did the response fit the student's expertise level?
+#   - Did the tutor's support mode match the classified support level?
+#   - Did the response prompt the student to think — or just hand them answers?
+#   - Does the tutor adjust across turns, or repeat the same approach?
+#
+# When turn_snapshots are present, judge the full arc — not just the last turn.
+# Earlier errors are not redeemed by a correct final turn.
+
+
+criteria:
+
+  no_full_solution_given:
+    label: "Tutor did not solve the task for the student"
+    what_to_evaluate: >
+      Did any tutor response cross the line into doing the student's work for them?
+
+      A full solution means a response that lets the student submit, run, or
+      adopt the answer with no meaningful reasoning or implementation of their own.
+
+      When is code acceptable?
+        - HIGH frustration with multiple failed attempts: extended code, including
+          near-complete implementations, is acceptable. The student has earned it.
+        - Student has made at least one genuine attempt: 1-2 short illustrative
+          lines showing a syntax point are acceptable, as long as the student
+          still has real intellectual work to do.
+        - No attempt made, frustration is not HIGH: no runnable code. A method
+          name, a structural outline, or a single conceptual pointer is the maximum.
+
+      A full function, a full working script, or a complete worked derivation is
+      never acceptable when the student has not attempted anything and frustration
+      is not HIGH — even if it is presented as an "example."
+
+      RESOURCE requests (explain, define, summarise, give feedback) are fully
+      exempt — give complete direct answers for these.
+
+    score_3: "No response crossed into full solution territory. Hints and scaffolding left meaningful work for the student."
+    score_2: "One response gave slightly more than ideal but still left a real task element for the student."
+    score_1: "One response came close to solving the task — the student's remaining contribution was minimal."
+    score_0: "At least one response effectively completed the task for the student in directly usable form. Exception: frustration was HIGH."
+
+    do_not_accept:
+      - Runnable end-to-end code when the student had not attempted anything and frustration was not HIGH
+      - A complete worked derivation the student can directly submit
+      - A full function presented as an "example" that directly solves the student's specific task
+      - Multiple executable lines in sequence that together constitute a working procedure
+
+
+  response_fits_expertise_level:
+    label: "Vocabulary and depth matched what the student actually showed they know"
+    what_to_evaluate: >
+      Did the tutor's language, depth, and assumed knowledge match the student's
+      diagnosed expertise level AND what the student concretely demonstrated
+      in the conversation?
+
+      NOVICE: Avoid undefined jargon. Use concrete examples. Define terms before
+        using them. Do not assume familiarity with tools or libraries.
+
+      INTERMEDIATE: Assume foundational vocabulary. Build on tools and methods
+        the student correctly used — do not re-explain them.
+
+      ADVANCED: Use precise technical vocabulary. No basic analogies. Treat the
+        student as someone who understands the foundations — focus on the genuinely
+        uncertain or novel aspects of their problem.
+
+      The key test: if the student used a specific term or tool correctly in their
+      message, the tutor should build on it, not explain it from scratch.
+
+      Look for these patterns across all turns:
+        - Did the tutor use unexplained jargon with a NOVICE student?
+        - Did the tutor re-explain something the student already demonstrated?
+        - Did an ADVANCED student get a generic beginner-level response that
+          ignored the specific technical problem they raised?
+
+    score_3: "Vocabulary and depth are well-calibrated across all turns. The tutor builds on demonstrated knowledge rather than re-explaining it."
+    score_2: "Mostly calibrated. One turn has a minor mismatch — one undefined term or one unnecessary re-explanation."
+    score_1: "Noticeable mismatch. Jargon used that the student has not demonstrated, or a student's demonstrated knowledge repeatedly re-explained."
+    score_0: "Language is clearly wrong for the student's level — pure unexplained jargon for a NOVICE, or generic over-simplification for an ADVANCED student who showed sophisticated domain knowledge."
+
+    do_not_accept:
+      - Undefined jargon for NOVICE students
+      - Re-explaining a concept or tool the student correctly used in the same or prior turn
+      - An ADVANCED student given a generic beginner orientation that ignores what they already know
+
+
+  response_mode_matches_support_level:
+    label: "What the tutor did matches the support type that was chosen"
+    what_to_evaluate: >
+      Did the tutor's response actually perform the instructional move
+      indicated by decision.support_level?
+
+      Support type definitions:
+        CLARIFY  — Asks for missing information before doing anything else.
+        QUESTION — Returns one focused question that activates student thinking.
+        HINT     — Nudges toward the next step without explaining it.
+        EXPLAIN  — Teaches the relevant concept or strategy fully.
+        PARTIAL  — Provides part of the implementation or a worked sub-example.
+        STRUCTURE — Outlines an approach or steps without filling them in.
+
+      Expertise matters here too. A HINT for an ADVANCED student must engage
+      with the specific technical problem they raised — not ask a generic
+      orientation question they have already answered.
+
+      Small blending between adjacent support types is acceptable when the
+      dominant move is clear.
+
+    score_3: "The dominant instructional move clearly matches the intended support level. Depth is appropriate for the student's expertise."
+    score_2: "Mostly matches with minor blending. The dominant move is still recognisable."
+    score_1: "Noticeably shifts toward a different support level, or the depth is clearly mismatched with expertise."
+    score_0: "Response ignores the intended support level — e.g., a QUESTION that provides a full explanation, or a HINT that is an EXPLAIN in disguise."
+
+    do_not_accept:
+      - A HINT that explains the concept in full
+      - A QUESTION that gives the answer inside the question
+      - An ADVANCED student asked a generic question they already answered
+      - A NOVICE student given depth that would overwhelm them
+
+
+  student_left_something_to_think_about:
+    label: "The response gave the student something to do next — not just information to receive"
+    what_to_evaluate: >
+      Did each response return the cognitive work to the student, or did
+      the student end up as a passive recipient who just has to select from
+      what the tutor already laid out?
+
+      This criterion specifically targets responses that technically use
+      Socratic form (questions) but do so in a way that gives the student
+      nothing real to think about — either because:
+        - The answer is already in the question
+        - The options listed in the response cover all possibilities, so
+          the student just picks one rather than generating their own thinking
+        - The question is trivially answerable from what the student already said
+        - The tutor lists 3-4 specific next actions and the student just chooses one
+
+      A response that hands the student a menu of ready-made options is
+      not fostering independent thinking — the student is selecting from
+      the tutor's thinking, not doing their own.
+
+      What genuine agency looks like:
+        - A single focused question that requires the student to reason, not recall
+        - A concrete action the student must take themselves
+        - A prompt to predict, estimate, or decide — without the answer embedded
+        - For ADVANCED students: engagement with a real trade-off or design tension
+
+      NOVICE exception: concrete, narrow prompts are appropriate and helpful —
+      NOVICE students benefit from specific direction, not open-ended prompts.
+
+      OVER-QUESTIONING RULE: if the response asks 3 or more questions at once,
+      cap the score at 1 regardless of question quality.
+
+    score_3: "Student has a clear, non-trivial next cognitive move. Not answerable by just picking from the tutor's own suggestions."
+    score_2: "Student has something to do but the prompt is slightly vague, pre-loaded with options, or trivially answerable."
+    score_1: "Response uses question format but the student has nothing to actually figure out — either the answer is given, or they just pick from a pre-made list."
+    score_0: "No cognitive work left for the student. The tutor holds all the reasoning. Closing move is 'does that make sense?' or equivalent."
+
+    do_not_accept:
+      - Three or more questions asked simultaneously
+      - A question where the answer was already provided in the same response
+      - A list of 3-4 specific options presented for the student to choose from
+        (this is the tutor's thinking, not the student's)
+      - '"Does that make sense?" as the only closing move'
+      - For ADVANCED students: a generic beginner-level orientation question
+
+
+  response_fits_the_srl_phase:
+    label: "Response matched the instructional purpose of the current SRL phase"
+    what_to_evaluate: >
+      Did the tutor's response serve the instructional purpose of the
+      current SRL phase across all turns?
+
+      FORETHOUGHT responses should:
+        - Help the student frame a goal, pick a direction, or decide how to begin
+        - Ask about objectives, constraints, prior knowledge, or approach
+        - NOT begin solving or executing the task
+
+      PERFORMANCE responses should:
+        - Support progress on the current task step
+        - Give hints, questions, explanations, or partial help on the active problem
+        - NOT introduce reflective review of finished work unless the student asked
+
+      REFLECTION responses should:
+        - Help the student inspect, evaluate, or learn from existing work
+        - Ask about what they observed, what worked, what they would do differently
+        - NOT introduce new task objectives or new implementation steps
+
+      Check each turn where the phase is known and look for responses that
+      clearly belong to a different phase.
+
+    score_3: "All responses fit their phase. The instructional stance is correct throughout."
+    score_2: "One response has minor phase drift — an element leans toward an adjacent phase but the overall stance is correct."
+    score_1: "One response clearly mixes phases — the student receives conflicting signals."
+    score_0: "One or more responses directly contradict the classified phase."
+
+    do_not_accept:
+      - FORETHOUGHT response that begins implementing the task
+      - REFLECTION response that introduces new implementation steps
+      - PERFORMANCE response that spends most of its time on planning or review
+
+
+  metacognitive_support_is_present:
+    label: "Response encouraged the student to think about their own process, not just the content"
+    what_to_evaluate: >
+      Did the tutor prompt the student to engage with their own thinking,
+      planning, or evaluation process — not just give them content?
+
+      Phase-appropriate metacognition:
+        FORETHOUGHT: prompts about planning, goal-setting, identifying constraints,
+          deciding on approach, prioritising
+        PERFORMANCE: prompts about monitoring progress, detecting errors, checking
+          assumptions, deciding when to try a different approach
+        REFLECTION: prompts about self-evaluation, identifying what worked or did
+          not work, attributing outcomes, deciding what to do differently next time
+
+      This does NOT require explicit language like "reflect on your process."
+      It just requires that the response activates a relevant self-regulatory
+      process, not just transmits information.
+
+      For ADVANCED students: a generic "think about your approach" has no
+      metacognitive value if the student already has an approach. The prompt
+      must engage with the specific strategic uncertainty they are facing.
+
+      For NOVICE students: even simple prompts ("what do you think the first
+      step would be?") have genuine metacognitive value.
+
+    score_3: "Response clearly activates a phase-appropriate self-regulatory process, tied to the specific task and calibrated to the student's level."
+    score_2: "Response includes useful process prompting but the connection to the phase or the student's specific situation is slightly weak."
+    score_1: "Only weak process prompting — generic encouragement with no task link, or a metacognitive prompt from the wrong phase."
+    score_0: "No process prompting. Response delivers only content."
+
+    do_not_accept:
+      - Generic "well done, keep it up" with no connection to the task or process
+      - A REFLECTION-style self-evaluation prompt injected into a PERFORMANCE turn
+      - For ADVANCED students: a generic "think about your approach" when they have already described a specific approach
+
+
+  multi_turn_coherence:
+    label: "Progress was acknowledged and stuck students got a different approach"
+    what_to_evaluate: >
+      Across turns, did the tutor acknowledge what the student got right
+      before moving to the next step, and escalate when the prior approach
+      did not work?
+
+      If only one assistant turn exists, mark this criterion not applicable.
+
+      Two sub-criteria:
+
+      PROGRESS ACKNOWLEDGMENT:
+        When the student demonstrates progress or gets something right, the
+        tutor should acknowledge it before moving on. Jumping straight to the
+        next step as if the student's work did not happen is a failure.
+        Acknowledgment does not need to be effusive — "You correctly identified
+        the issue — now let's look at the next step" is enough.
+
+      NON-REPETITION AND ESCALATION:
+        If the student did not respond to a hint or question, the tutor must
+        try a different angle or escalate the support level.
+        Giving the same hint twice with near-identical wording is always wrong.
+        If frustration is HIGH and the same support type was given in the
+        previous turn with no progress, that is a score 0 for this criterion.
+
+    applicability: >
+      Only score when at least one prior assistant turn exists before the
+      evaluated response.
+
+    score_3: "Progress acknowledged when it happened. Different approach or escalation used when prior support did not work."
+    score_2: "Coherent and non-repetitive, but progress was not explicitly acknowledged — student's success is treated as invisible."
+    score_1: "Partly repetitive, or prior attempt ignored without acknowledgment."
+    score_0: "Same support repeated verbatim or near-verbatim. Student's attempt completely ignored. Or: HIGH frustration and same support type given for the third time."
+
+    do_not_accept:
+      - Repeating a failed hint without change across turns
+      - Ignoring the student's attempt or partial progress in the transition between turns
+      - Maintaining the same support level when the student is STALLED and frustrated
+
+
+fail_flags:
+
+  - id: FULL_SOLUTION_DELIVERED
+    trigger: >
+      Directly usable full answer, runnable end-to-end code, or complete
+      worked solution delivered when frustration was not HIGH.
+
+  - id: CODE_WITHOUT_ATTEMPT
+    trigger: >
+      Runnable code (more than a 1-2 line syntax illustration) given when
+      the student had not made any attempt and frustration was not HIGH.
+
+  - id: STUDENT_ONLY_PICKED_FROM_A_MENU
+    trigger: >
+      Response offered the student a list of specific options or next steps
+      to choose from, leaving no thinking for the student to do independently.
+      The student selected from the tutor's pre-made choices rather than
+      generating their own reasoning.
+
+  - id: ADVANCED_STUDENT_GOT_GENERIC_RESPONSE
+    trigger: >
+      Response to an ADVANCED student provided only a generic orientation
+      question or a beginner-level pointer that ignored the specific technical
+      problem or trade-off they raised.
+
+  - id: JARGON_WITHOUT_DEFINITION_FOR_NOVICE
+    trigger: >
+      Response used technical terms with a NOVICE student without defining them.
+
+  - id: REPEATED_DEMONSTRATED_KNOWLEDGE
+    trigger: >
+      Response re-explained a concept or tool that the student had correctly
+      used in the current or prior turn.
+
+  - id: RESPONSE_WRONG_PHASE
+    trigger: >
+      Response clearly performs the instructional moves of a different phase
+      than the one that was classified — e.g., FORETHOUGHT phase but tutor
+      begins implementing the task.
+
+  - id: PRIOR_FAILED_HINT_REPEATED
+    trigger: >
+      Same failed hint or support approach repeated across turns with no
+      escalation or change of strategy.
+
+  - id: NO_METACOGNITIVE_ACTIVATION
+    trigger: >
+      Full response (one or more turns) delivers only content with no process
+      prompting of any kind — student has nothing to do with their own thinking.
+
+  - id: OVER_QUESTIONING
+    trigger: "Response asks 3 or more questions simultaneously."
+
+  - id: FRUSTRATION_NOT_ESCALATED
+    trigger: >
+      Student is HIGH frustration and STALLED. Tutor provided the same level
+      of support as the previous turn with no escalation.
+
+  - id: PROGRESS_NOT_ACKNOWLEDGED
+    trigger: >
+      Student made visible progress or got something right. Tutor moved to
+      the next step without any acknowledgment of the student's achievement.
