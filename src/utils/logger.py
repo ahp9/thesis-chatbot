@@ -6,7 +6,7 @@ LOG_FILE = "transcripts"
 
 
 def get_log_filename(user_id, session_id):
-    return os.path.join(LOG_FILE, f"user_{user_id}_session_{session_id}.jsonl")
+    return os.path.join(LOG_FILE, f"user_{user_id}_session_{session_id}.json")
 
 
 def save_conversation(session_id, user_id, tutor_type, history):
