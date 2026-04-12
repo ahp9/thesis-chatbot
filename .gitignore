@@ -21,6 +21,11 @@ transcripts/
 uploaded_files/
 
 # Chainlit Database
+.chainlit/
+src/.chainlit/
+chainlit_history.csv
+chainlit_history.json
 chainlit.db
+**/chainlit.db
 
 
