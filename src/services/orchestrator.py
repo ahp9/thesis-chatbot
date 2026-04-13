@@ -99,5 +99,5 @@ class Orchestrator:
             control=final_control,
             safety=safety,
             was_rewritten=was_rewritten,
-            prefix="*(Self-Correction)*: " if was_rewritten else "",
+            prefix="" if was_rewritten else "",
         )

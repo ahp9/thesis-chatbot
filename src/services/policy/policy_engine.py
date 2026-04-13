@@ -21,9 +21,6 @@ from services.policy.policy_config import (
     response_prompt_file_for,
 )
 
-# Hard depth floors per expertise level.
-# ADVANCED gets SUBSTANTIVE_PLUS as the minimum — DEEP is the target for
-# primary questions but SUBSTANTIVE_PLUS is acceptable for contained sub-questions.
 _DEPTH_FLOOR: dict[ExpertiseLevel, SupportDepth] = {
     ExpertiseLevel.NOVICE:        SupportDepth.SURFACE,
     ExpertiseLevel.INTERMEDIATE:  SupportDepth.SUBSTANTIVE,
@@ -63,17 +60,20 @@ class PolicyEngine:
 
         return predicted_phase
 
+    def _partial_allowed(self, checkpoint: Checkpoint) -> bool:
+        if checkpoint.has_attempt:
+            return True
+        return (
+            checkpoint.frustration_level == FrustrationLevel.HIGH
+            and checkpoint.progress_state == ProgressState.STALLED
+        )
+
     def allowed_support_levels(self, checkpoint: Checkpoint) -> Set[SupportLevel]:
         if checkpoint.context_gap == ContextGap.CRITICAL:
-            return {
-                SupportLevel.CLARIFY
-            }
+            return {SupportLevel.CLARIFY}
 
         if checkpoint.srl_focus == SRLFocus.REFLECT:
-            return {
-                SupportLevel.REFLECT, 
-                SupportLevel.EVALUATION
-            }
+            return {SupportLevel.REFLECT, SupportLevel.EVALUATION}
 
         if checkpoint.frustration_level == FrustrationLevel.HIGH:
             return {
@@ -96,15 +96,6 @@ class PolicyEngine:
                 SupportLevel.EXPLAIN,
                 SupportLevel.PARTIAL,
             }
-        
-        if checkpoint.expertise_level == ExpertiseLevel.ADVANCED:
-            return {
-                SupportLevel.QUESTION,
-                SupportLevel.HINT,
-                SupportLevel.STRUCTURE,
-                SupportLevel.EXPLAIN,
-                SupportLevel.PARTIAL,
-            }
 
         if checkpoint.srl_focus == SRLFocus.GOAL:
             return {
@@ -114,12 +105,14 @@ class PolicyEngine:
             }
 
         if checkpoint.srl_focus == SRLFocus.STRATEGY:
-            return {
+            levels = {
                 SupportLevel.QUESTION,
                 SupportLevel.HINT,
                 SupportLevel.STRUCTURE,
-                SupportLevel.PARTIAL,
             }
+            if self._partial_allowed(checkpoint):
+                levels.add(SupportLevel.PARTIAL)
+            return levels
 
         if checkpoint.srl_focus == SRLFocus.MONITOR:
             return {
@@ -129,12 +122,15 @@ class PolicyEngine:
                 SupportLevel.STRUCTURE,
             }
 
-        return set(SupportLevel)
+        levels = set(SupportLevel)
+        if not self._partial_allowed(checkpoint):
+            levels.discard(SupportLevel.PARTIAL)
+        return levels
 
     def fallback_support_level(self, checkpoint: Checkpoint) -> SupportLevel:
         if checkpoint.context_gap == ContextGap.CRITICAL:
             return SupportLevel.CLARIFY
-        
+
         if checkpoint.srl_focus == SRLFocus.REFLECT:
             if checkpoint.progress_state == ProgressState.DONEISH:
                 return SupportLevel.EVALUATION
@@ -143,22 +139,16 @@ class PolicyEngine:
         if checkpoint.frustration_level == FrustrationLevel.HIGH:
             if checkpoint.progress_state == ProgressState.STALLED:
                 return SupportLevel.PARTIAL
-            return SupportLevel.EXPLAIN
-
-        if checkpoint.frustration_level == FrustrationLevel.MEDIUM:
-            if checkpoint.progress_state == ProgressState.STALLED:
-                return SupportLevel.EXPLAIN
             return SupportLevel.STRUCTURE
-    
-        if checkpoint.progress_state == ProgressState.STALLED and checkpoint.frustration_level == FrustrationLevel.LOW:
-            if checkpoint.srl_focus == SRLFocus.MONITOR:
-                return SupportLevel.EXPLAIN  
-            return SupportLevel.HINT
+
+        if checkpoint.srl_focus == SRLFocus.GOAL:
+            return SupportLevel.QUESTION
 
         if checkpoint.srl_focus == SRLFocus.STRATEGY:
-            if checkpoint.has_attempt:
-                return SupportLevel.HINT      
-            return SupportLevel.STRUCTURE 
+            return SupportLevel.HINT
+
+        if checkpoint.srl_focus == SRLFocus.MONITOR:
+            return SupportLevel.HINT
 
         return SupportLevel.QUESTION
 
@@ -206,6 +196,16 @@ class PolicyEngine:
         recent_support_levels: list[SupportLevel],
     ) -> Decision:
         allowed = self.allowed_support_levels(checkpoint)
+
+        # Hard block: PARTIAL requires an attempt (with the frustration exception
+        # already encoded in _partial_allowed / allowed_support_levels). If the
+        # classifier chose PARTIAL despite has_attempt=False, override it here
+        # before any other logic runs.
+        if (
+            decision.support_level == SupportLevel.PARTIAL
+            and not self._partial_allowed(checkpoint)
+        ):
+            decision = replace(decision, support_level=self.fallback_support_level(checkpoint))
 
         support_level = (
             decision.support_level

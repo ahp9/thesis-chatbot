@@ -60,7 +60,6 @@ class SupportDecision:
     parse_ok: bool = True
 
 
-
 @dataclass
 class CheckResult:
     is_safe: bool
@@ -181,26 +180,56 @@ def _build_native_history(
     llm_history: List[Dict[str, Any]],
     limit: int = 8,
 ) -> List[Dict[str, str]]:
+    """
+    Build the message list passed directly to the LLM.
+
+    File content is preserved in full as long as the message containing it
+    remains within the active window (limit * 2 raw entries). Once it scrolls
+    out of that window it is replaced with a lightweight placeholder to keep
+    token usage manageable. Only one placeholder per file upload is emitted —
+    the most recent upload always keeps its full content while it is in window.
+    """
+    # Determine the absolute index of the most recent file upload in history.
+    # That message (and any other file message still within the window) retains
+    # its full content; only uploads that have scrolled out get a placeholder.
+    last_file_idx = None
+    for i, m in enumerate(llm_history):
+        if m.get("role") == "user" and "--- FILE:" in (m.get("content") or ""):
+            last_file_idx = i
+
+    # Window start in absolute llm_history coordinates.
+    window_start = max(0, len(llm_history) - (limit * 2))
 
     clean: List[Dict[str, str]] = []
-    for m in llm_history[-(limit * 2):]:
-        role    = m.get("role", "")
+    for i, m in enumerate(llm_history[-(limit * 2):]):
+        absolute_idx = window_start + i
+
+        role = m.get("role", "")
         if role not in ("user", "assistant"):
             continue
         content = (m.get("content") or "").strip()
         if not content:
             continue
+
         if "--- FILE:" in content:
-            file_names = re.findall(r"--- FILE:\s*(\S+)", content)
-            labeled_files = ", ".join(file_names) if file_names else "files"
-            text_before = content.split("--- FILE:")[0].strip()
-            placeholder = f"[previously uploaded {labeled_files}]"
-            content = (text_before + "\n" + placeholder).strip() if text_before else placeholder
+            # Keep full content if this message is within the active window.
+            # Only replace with a placeholder if it has scrolled out — i.e.
+            # it is not the most recent file upload AND it sits before the
+            # window start (which cannot happen here since we sliced to the
+            # window already, so the only case we replace is when an older
+            # file upload exists alongside a newer one in the same window).
+            if absolute_idx != last_file_idx:
+                file_names = re.findall(r"--- FILE:\s*(\S+)", content)
+                labeled_files = ", ".join(file_names) if file_names else "files"
+                text_before = content.split("--- FILE:")[0].strip()
+                placeholder = f"[previously uploaded {labeled_files}]"
+                content = (text_before + "\n" + placeholder).strip() if text_before else placeholder
+
         clean.append({"role": role, "content": content})
 
     clean = clean[-limit:]
 
-    # Ensure the list starts with a user turn
+    # Ensure the list starts with a user turn.
     while clean and clean[0]["role"] == "assistant":
         clean.pop(0)
 
@@ -252,30 +281,45 @@ def _build_writer_brief(
         "expertise_level":        checkpoint.expertise_level,
         "frustration_level":      checkpoint.frustration_level,
         "srl_focus":              checkpoint.srl_focus,
-        "subtask_scope":           checkpoint.subtask_scope,
+        "subtask_scope":          checkpoint.subtask_scope,
         "has_attempt":            checkpoint.has_attempt,
     }
-    
-    
-def _file_referenced_but_missing(user_message: str, llm_history: list) -> str | None:
 
+
+def _file_referenced_but_missing(
+    user_message: str,
+    llm_history: list,
+    history_limit: int = 8,
+) -> str | None:
+    """
+    Returns a filename if the user appears to be referencing a file that is
+    no longer in the active context window. Returns None if:
+      - the file is present in the current message, or
+      - the file is still within the active history window and therefore
+        visible to the LLM via _build_native_history.
+
+    Only triggers the re-upload prompt when a file was uploaded at some point
+    but has since scrolled out of the window entirely.
+    """
     file_keywords = ["file", "csv", "dataset", "data", "upload", "notebook", "script", "code"]
     msg_lower = user_message.lower()
-    
+
     if _has_file_content(user_message):
-        return None  # File is present right now, no problem
-    
+        return None  # File is present right now — no problem.
+
     if not any(kw in msg_lower for kw in file_keywords):
-        return None  # User isn't asking about a file
-    
-    # Check if a file was uploaded at any point in history
+        return None  # User is not referencing a file at all.
+
+    recent = (llm_history or [])[-(history_limit * 2):]
+    for item in reversed(recent):
+        if "--- FILE:" in (item.get("content") or ""):
+            return None  # File is still within the active window.
+
     for item in reversed(llm_history or []):
-        content = item.get("content", "")
-        if "--- FILE:" in content:
-            import re
-            names = re.findall(r"--- FILE: (.+?) \(", content)
+        if "--- FILE:" in (item.get("content") or ""):
+            names = re.findall(r"--- FILE: (.+?) \(", item.get("content", ""))
             return names[0] if names else "your uploaded file"
-    
+
     return None
 
 
@@ -388,6 +432,7 @@ async def checkpoint_and_decide(
 
     return diagnosis, decision, debug
 
+
 async def generate_full_reply(
     client,
     route: Dict[str, Any],
@@ -410,7 +455,7 @@ async def generate_full_reply(
             temperature=0.3,
         )
         return resp.choices[0].message.content or ""
-    
+
     filled_structure = build_filled_structure(
         expertise_level=checkpoint.expertise_level,
         phase=route.get("phase", "PERFORMANCE"),
