@@ -65,10 +65,15 @@ class PolicyEngine:
 
     def allowed_support_levels(self, checkpoint: Checkpoint) -> Set[SupportLevel]:
         if checkpoint.context_gap == ContextGap.CRITICAL:
-            return {SupportLevel.CLARIFY}
+            return {
+                SupportLevel.CLARIFY
+            }
 
         if checkpoint.srl_focus == SRLFocus.REFLECT:
-            return {SupportLevel.REFLECT, SupportLevel.EVALUATION}
+            return {
+                SupportLevel.REFLECT, 
+                SupportLevel.EVALUATION
+            }
 
         if checkpoint.frustration_level == FrustrationLevel.HIGH:
             return {
@@ -85,6 +90,15 @@ class PolicyEngine:
         if checkpoint.expertise_level == ExpertiseLevel.NOVICE:
             return {
                 SupportLevel.CLARIFY,
+                SupportLevel.QUESTION,
+                SupportLevel.HINT,
+                SupportLevel.STRUCTURE,
+                SupportLevel.EXPLAIN,
+                SupportLevel.PARTIAL,
+            }
+        
+        if checkpoint.expertise_level == ExpertiseLevel.ADVANCED:
+            return {
                 SupportLevel.QUESTION,
                 SupportLevel.HINT,
                 SupportLevel.STRUCTURE,
@@ -120,7 +134,7 @@ class PolicyEngine:
     def fallback_support_level(self, checkpoint: Checkpoint) -> SupportLevel:
         if checkpoint.context_gap == ContextGap.CRITICAL:
             return SupportLevel.CLARIFY
-
+        
         if checkpoint.srl_focus == SRLFocus.REFLECT:
             if checkpoint.progress_state == ProgressState.DONEISH:
                 return SupportLevel.EVALUATION
@@ -129,16 +143,22 @@ class PolicyEngine:
         if checkpoint.frustration_level == FrustrationLevel.HIGH:
             if checkpoint.progress_state == ProgressState.STALLED:
                 return SupportLevel.PARTIAL
-            return SupportLevel.STRUCTURE
+            return SupportLevel.EXPLAIN
 
-        if checkpoint.srl_focus == SRLFocus.GOAL:
-            return SupportLevel.QUESTION
+        if checkpoint.frustration_level == FrustrationLevel.MEDIUM:
+            if checkpoint.progress_state == ProgressState.STALLED:
+                return SupportLevel.EXPLAIN
+            return SupportLevel.STRUCTURE
+    
+        if checkpoint.progress_state == ProgressState.STALLED and checkpoint.frustration_level == FrustrationLevel.LOW:
+            if checkpoint.srl_focus == SRLFocus.MONITOR:
+                return SupportLevel.EXPLAIN  
+            return SupportLevel.HINT
 
         if checkpoint.srl_focus == SRLFocus.STRATEGY:
-            return SupportLevel.HINT
-
-        if checkpoint.srl_focus == SRLFocus.MONITOR:
-            return SupportLevel.HINT
+            if checkpoint.has_attempt:
+                return SupportLevel.HINT      
+            return SupportLevel.STRUCTURE 
 
         return SupportLevel.QUESTION
 

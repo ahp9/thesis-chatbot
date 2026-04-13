@@ -301,11 +301,11 @@ async def chat_profile(current_user: cl.User | None) -> list[cl.ChatProfile]:
     return [
         cl.ChatProfile(
             name=TutorMode.SRL.value,
-            markdown_description="Phase-aware chained tutoring with pushback.",
+            markdown_description="Group A",
         ),
         cl.ChatProfile(
             name=TutorMode.BASIC.value,
-            markdown_description="Direct answers and code support.",
+            markdown_description="Group B",
         ),
     ]
 
