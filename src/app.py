@@ -228,6 +228,64 @@ async def _persist_uploaded_elements_for_message(
 
     return persisted_info
 
+def _merge_db_steps_with_transcript(
+    steps: list[dict],
+    saved_history: list[dict],
+) -> list[dict]:
+    """
+    Build the authoritative llm_history by using the Chainlit DB steps as the
+    source of truth for *which* turns exist, then overlaying rich SRL metadata
+    (route, diagnosis, decision, check, draft_reply, uploaded_files, …) from
+    the saved transcript wherever a matching turn is found.
+
+    Matching is done by position: the Nth user turn in the DB maps to the Nth
+    user turn in the transcript, and likewise for assistant turns.
+
+    Chainlit stores each user message as two steps (a run/input step AND a
+    user_message step with the same content), so we deduplicate consecutive
+    same-role same-content steps before matching.
+    """
+    # --- Step 1: extract (role, content) pairs from DB steps -----------------
+    raw: list[tuple[str, str]] = []
+    for step in steps:
+        role = "assistant" if step.get("type") == "assistant_message" else "user"
+        content = step.get("output") or step.get("input") or ""
+        if not content or content == "{}":
+            continue
+        raw.append((role, content))
+
+    # --- Step 2: deduplicate consecutive identical (role, content) pairs ------
+    deduped: list[tuple[str, str]] = []
+    for role, content in raw:
+        if deduped and deduped[-1] == (role, content):
+            continue
+        deduped.append((role, content))
+
+    # --- Step 3: match each deduped turn to saved metadata by position --------
+    saved_user: list[dict] = [t for t in saved_history if t.get("role") == "user"]
+    saved_asst: list[dict] = [t for t in saved_history if t.get("role") == "assistant"]
+    user_idx = 0
+    asst_idx = 0
+
+    merged: list[dict] = []
+    for role, content in deduped:
+        if role == "user":
+            saved_turn = saved_user[user_idx] if user_idx < len(saved_user) else {}
+            user_idx += 1
+        else:
+            saved_turn = saved_asst[asst_idx] if asst_idx < len(saved_asst) else {}
+            asst_idx += 1
+
+        if saved_turn:
+            entry = dict(saved_turn)
+            entry["content"] = content  # DB content is authoritative
+        else:
+            entry = {"role": role, "content": content}
+
+        merged.append(entry)
+
+    return merged
+
 
 def _build_combined_user_content(message: cl.Message) -> tuple[str, list[dict[str, str]]]:
     file_text_blocks: list[str] = []
@@ -321,11 +379,29 @@ async def start():
     cl.user_session.set("user_id", student_id)
     cl.user_session.set("tutor_type", tutor_type)
     cl.user_session.set("session_id", thread_id)
-    cl.user_session.set("llm_history", [])
     cl.user_session.set("current_phase", Phase.FORETHOUGHT.value)
 
-    logger.info("Chat started | user=%s | thread=%s | mode=%s", student_id, thread_id, tutor_type)
+    # on_chat_resume (which has the full DB thread) performs the authoritative
+    # merge and writes it back to the transcript.  on_chat_start fires for
+    # brand-new sessions and for server restarts where resume doesn't trigger;
+    # in both cases, loading the saved transcript is the best available source.
+    saved = load_conversation(student_id, thread_id)
+    if saved and isinstance(saved.get("history"), list):
+        llm_history = saved["history"]
+        cl.user_session.set("llm_history", llm_history)
 
+        for item in reversed(llm_history):
+            if item.get("role") == "assistant" and isinstance(item.get("route"), dict):
+                cl.user_session.set("current_phase", item["route"].get("phase", Phase.FORETHOUGHT.value))
+                break
+
+        logger.info(
+            "Restored existing transcript on chat start | user=%s | thread=%s | turns=%d",
+            student_id, thread_id, len(llm_history),
+        )
+    else:
+        cl.user_session.set("llm_history", [])
+        logger.info("Chat started | user=%s | thread=%s | mode=%s", student_id, thread_id, tutor_type)
 
 @cl.on_chat_resume
 async def on_chat_resume(thread: ThreadDict):
@@ -350,42 +426,38 @@ async def on_chat_resume(thread: ThreadDict):
     cl.user_session.set("tutor_type", tutor_type)
     cl.user_session.set("session_id", session_id)
 
-    saved = load_conversation(student_id, session_id)
-
-    if saved and isinstance(saved.get("history"), list):
-        llm_history = saved["history"]
-        cl.user_session.set("llm_history", llm_history)
-
-        current_phase = metadata.get("current_phase")
-        if not current_phase:
-            current_phase = Phase.FORETHOUGHT.value
-            for item in reversed(llm_history):
-                if item.get("role") == "assistant" and isinstance(item.get("route"), dict):
-                    current_phase = item["route"].get("phase", Phase.FORETHOUGHT.value)
-                    break
-
-        cl.user_session.set("current_phase", current_phase)
-        logger.info("Resumed saved transcript for %s, session %s", student_id, session_id)
-        return
-
+    # Merge DB steps (authoritative for turn count) with the saved transcript
+    # (authoritative for SRL metadata).  The merged result is written back to
+    # the transcript file so future loads are already complete.
     steps = thread.get("steps", [])
-    llm_history = []
+    saved = load_conversation(student_id, session_id)
+    saved_history = saved.get("history", []) if saved else []
 
-    for step in steps:
-        role = "assistant" if step.get("type") == "assistant_message" else "user"
-        content = step.get("output") or step.get("input") or ""
-        if content and content != "{}":
-            llm_history.append({"role": role, "content": content})
+    llm_history = _merge_db_steps_with_transcript(steps, saved_history)
+
+    # Persist the merged history immediately so on_chat_start will also see it.
+    if student_id != "working_mode" and llm_history:
+        save_conversation(
+            session_id=session_id,
+            user_id=student_id,
+            tutor_type=tutor_type,
+            history=llm_history,
+        )
 
     cl.user_session.set("llm_history", llm_history)
-    cl.user_session.set(
-        "current_phase",
-        metadata.get("current_phase", Phase.FORETHOUGHT.value),
+
+    # Recover phase: prefer metadata, then walk history for last route entry.
+    current_phase = metadata.get("current_phase") or Phase.FORETHOUGHT.value
+    for item in reversed(llm_history):
+        if item.get("role") == "assistant" and isinstance(item.get("route"), dict):
+            current_phase = item["route"].get("phase", Phase.FORETHOUGHT.value)
+            break
+
+    cl.user_session.set("current_phase", current_phase)
+    logger.info(
+        "Resumed thread | user=%s | session=%s | db_steps=%d | transcript_turns=%d | merged=%d",
+        student_id, session_id, len(steps), len(saved_history), len(llm_history),
     )
-
-    logger.info("Resumed thread from Chainlit history | thread=%s | steps=%d", session_id, len(steps))
-
-
 # ---------------------------------------------------------------------------
 # Main message handler
 # ---------------------------------------------------------------------------
