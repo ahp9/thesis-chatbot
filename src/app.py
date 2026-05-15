@@ -5,13 +5,13 @@ import os
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Mapping, Sequence
 
 import aiofiles
 import chainlit as cl
 from chainlit.data.sql_alchemy import SQLAlchemyDataLayer
 from chainlit.element import File
-from chainlit.types import ThreadDict, StepDict
+from chainlit.types import ThreadDict
 
 from chainlit.data.storage_clients.base import BaseStorageClient
 
@@ -221,7 +221,7 @@ async def _persist_uploaded_elements_for_message(
     return persisted_info
 
 def _merge_db_steps_with_transcript(
-    steps: list[StepDict],
+    steps: Sequence[Mapping[str, Any]],
     saved_history: list[dict],
 ) -> list[dict]:
     """

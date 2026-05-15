@@ -11,7 +11,6 @@ from services.generate_service import GenerateService
 from services.policy.policy_engine import PolicyEngine
 from services.router_service import RouterService
 from services.safety_service import SafetyService
-from services.telemetry import Telemetry
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +23,6 @@ class Orchestrator:
         self.safety = SafetyService(client)
         self.guard = GuardService(client)
         self.policy = PolicyEngine()
-        self.telemetry = Telemetry()
 
     async def handle_turn(
         self,
