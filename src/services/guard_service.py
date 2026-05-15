@@ -43,7 +43,7 @@ class GuardService:
         logger.info("GuardService: direct-answer request detected — loading guard hint.")
 
         try:
-            return load_prompt("chains/direct_answer_guard.txt")
+            return load_prompt("constraints/direct_answer_guard.txt")
         except Exception as exc:
             logger.warning("GuardService: could not load guard prompt (%s) — guard will not fire.", exc)
             return None

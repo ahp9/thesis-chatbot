@@ -75,22 +75,21 @@ class CheckResult:
 
 BASE_PROMPT_FILES = {
     # Structure / identity
-    "tutor_structure":       "base/tutor_structure.txt",
+    "tutor_structure":       "base/srl_tutor_structure.txt",
 
     # Phase cognitive guidance (no structural instructions)
-    "phase_forethought":     "phases/forethought_core_v3.txt",
-    "phase_performance":     "phases/performance_core_v2.txt",
-    "phase_reflection":      "phases/reflection_core_v1.txt",
+    "phase_forethought":     "phases/forethought_final.txt",
+    "phase_performance":     "phases/performance_final.txt",
+    "phase_reflection":      "phases/reflection_final.txt",
 
     # Chain prompts
-    "reply_planner":         "chains/reply_planner.txt",
-    "check_reply":           "chains/check_solution_leak_v3.txt",
-    "rewrite_reply":         "chains/fallback_rewrite_v3.txt",
-    "checkpoint_and_decide": "chains/student_state_v6.txt",
+    "check_reply":           "chains/check_solution_leak_final.txt",
+    "rewrite_reply":         "chains/fallback_rewrite_final.txt",
+    "checkpoint_and_decide": "chains/student_state_final.txt",
 
     # Conditional
-    "file_handler":          "base/file.txt",
-    "missing_file":          "chains/missing_files.txt",
+    "file_handler":          "constraints/file.txt",
+    "missing_file":          "constraints/missing_files.txt",
 }
 
 

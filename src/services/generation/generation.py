@@ -98,7 +98,7 @@ def build_filled_structure(
       {support_depth}     — SURFACE / SURFACE_PLUS / SUBSTANTIVE /
                             SUBSTANTIVE_PLUS / DEEP
     """
-    template = load_prompt("base/tutor_structure.txt")
+    template = load_prompt("base/srl_tutor_structure.txt")
     filled = template.replace("{expertise_level}", (expertise_level or "INTERMEDIATE").upper())
     filled = filled.replace("{phase}",             (phase or "PERFORMANCE").upper())
     filled = filled.replace("{srl_focus}",         (srl_focus or "GOAL").upper())

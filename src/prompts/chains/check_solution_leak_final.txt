@@ -109,7 +109,7 @@ treat this as resource/service, not product.
 
 ---
 
-CODE-ALLOWANCE AUDIT
+CODE CHECK
 
 If DECISION.can_show_code = true, code is allowed in principle.
 Do NOT mark leakage merely because code appears.
