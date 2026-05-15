@@ -66,14 +66,6 @@ MOCK_USERS = {
     "participant_10@experiment.local": "experiment10",
     "participant_11@experiment.local": "experiment11",
     "participant_12@experiment.local": "experiment12",
-    "participant_13@experiment.local": "experiment13",
-    "participant_14@experiment.local": "experiment14",
-    "participant_15@experiment.local": "experiment15",
-    "participant_16@experiment.local": "experiment16",
-    "participant_17@experiment.local": "experiment17",
-    "participant_18@experiment.local": "experiment18",
-    "participant_19@experiment.local": "experiment19",
-    "participant_20@experiment.local": "experiment20",
 }
 
 MAX_CHARS = 80_000
