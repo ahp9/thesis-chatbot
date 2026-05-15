@@ -3,9 +3,9 @@ import logging
 from typing import Any, Dict
 
 from lib.enums import Phase
-from services.history_adapter import build_learning_trajectory
+from utils.history_adapter import build_learning_trajectory
 from services.policy.policy_config import SWITCH_THRESHOLD, TRANSITIONS
-from services.prompt_loader import load_prompt
+from utils.prompt_loader import load_prompt
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -14,6 +14,7 @@ ROUTER_MODEL = "gpt-4.1-mini"
 
 
 def _coerce_phase(value: str | None) -> Phase:
+    """Parse a phase string into a Phase enum, defaulting to FORETHOUGHT on failure."""
     try:
         return Phase((value or "FORETHOUGHT").upper())
     except ValueError:
@@ -23,6 +24,7 @@ def _coerce_phase(value: str | None) -> Phase:
 def update_phase(
     current_phase: str, predicted_phase: str, confidence: float
 ) -> str:
+    """Apply confidence-gated transition rules and return the resolved phase string."""
     current = _coerce_phase(current_phase)
     predicted = _coerce_phase(predicted_phase or current.value)
     confidence = float(confidence or 0.0)
@@ -39,6 +41,7 @@ def update_phase(
 async def route_message(
     client, user_message: str, llm_history: list, current_phase: str
 ) -> Dict[str, Any]:
+    """Call the router LLM and return a dict with phase, srl_signal, confidence, and trajectory fields."""
     router_system = load_prompt("base/router_system_prompt_final.txt")
 
     recent = llm_history[-6:] if llm_history else []

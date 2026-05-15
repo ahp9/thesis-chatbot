@@ -32,13 +32,10 @@ _GUARD_CLASSIFIER_SYSTEM = (
 
 
 class GuardService:
-    """Detect direct-answer requests and return a guard hint to constrain generation."""
-
     def __init__(self, client):
         self.client = client
 
     async def get_hint(self, user_message: str) -> Optional[str]:
-        """Return the guard prompt string if the message is a direct-answer request, else None."""
         should_guard = await self._classify(user_message)
         if not should_guard:
             return None
@@ -56,7 +53,6 @@ class GuardService:
     # ------------------------------------------------------------------
 
     async def _classify(self, user_message: str) -> bool:
-        """Call the guard classifier LLM and return True if a guard should fire."""
         try:
             resp = await self.client.chat.completions.create(
                 model=GUARD_MODEL,

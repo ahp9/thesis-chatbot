@@ -1,26 +1,27 @@
 import asyncio
 import json
 import logging
-import os
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Mapping, Sequence
+from typing import Any, Optional
 
-import aiofiles
 import chainlit as cl
 from chainlit.data.sql_alchemy import SQLAlchemyDataLayer
-from chainlit.element import File
 from chainlit.types import ThreadDict
-
-from chainlit.data.storage_clients.base import BaseStorageClient
 
 from lib.enums import Phase, TutorMode
 from services.llm_client import get_client
 from services.orchestrator import Orchestrator
-from services.tutor import _run_basic_tutor
-from utils.file import read_uploaded_file
+from services.tutor import run_basic_tutor
 from utils.logger import save_conversation
+from utils.message import (
+    build_combined_user_content,
+    merge_db_steps_with_transcript,
+    persist_uploaded_elements_for_message,
+)
+from utils.session import coerce_phase, load_conversation, save_transcript_if_possible
+from utils.storage import LocalStorageClient
 
 sqlite3.register_adapter(list, lambda lst: json.dumps(lst))
 sqlite3.register_adapter(dict, lambda dct: json.dumps(dct))
@@ -50,10 +51,10 @@ MOCK_USERS = {
     "user_3_2@usability_test_3_2.local": "usability3_2",
     "user_4_2@usability_test_4.local": "usability4_2",
     "user_5_2@usability_test_5_2.local": "usability5_2",
-    
+
     "pilot_1@experiment.local": "pilot1",
     "test_1@experiment.local": "test1",
-    
+
     "participant_1@experiment.local": "experiment1",
     "participant_2@experiment.local": "experiment2",
     "participant_3@experiment.local": "experiment3",
@@ -68,265 +69,12 @@ MOCK_USERS = {
     "participant_12@experiment.local": "experiment12",
 }
 
-MAX_CHARS = 80_000
-LOG_FILE = "transcripts"
 UPLOAD_ROOT = Path("./uploaded_files")
 
-# ---------------------------------------------------------------------------
-# Storage
-# ---------------------------------------------------------------------------
-
-class LocalStorageClient(BaseStorageClient):
-    """
-    Minimal local filesystem storage provider for Chainlit elements.
-    """
-
-    def __init__(self, root: str | Path = "./uploaded_files"):
-        self.root = Path(root).resolve()
-        self.root.mkdir(parents=True, exist_ok=True)
-
-    def _path_for_key(self, object_key: str) -> Path:
-        safe_key = object_key.lstrip("/").replace("..", "_")
-        path = self.root / safe_key
-        path.parent.mkdir(parents=True, exist_ok=True)
-        return path
-
-    async def close(self):
-        pass
-
-    async def upload_file(
-        self,
-        object_key: str,
-        data: bytes | str,
-        mime: str = "application/octet-stream",
-        overwrite: bool = True,
-        content_disposition: str | None = None,
-    ) -> dict[str, Any]:
-        path = self._path_for_key(object_key)
-        if path.exists() and not overwrite:
-            return {"url": path.resolve().as_uri(), "object_key": object_key}
-
-        write_data = data.encode("utf-8") if isinstance(data, str) else data
-
-        async with aiofiles.open(path, "wb") as f:
-            await f.write(write_data)
-
-        return {
-            "url": path.resolve().as_uri(),
-            "object_key": object_key,
-            "content_disposition": content_disposition,
-        }
-
-    async def delete_file(self, object_key: str):
-        path = self._path_for_key(object_key)
-        if path.exists():
-            path.unlink()
-
-    async def get_read_url(self, object_key: str):
-        path = self._path_for_key(object_key)
-        if not path.exists():
-            raise FileNotFoundError(f"Stored file not found for object_key={object_key}")
-        return path.resolve().as_uri()
-
-
-# ---------------------------------------------------------------------------
-# Persistence helpers
-# ---------------------------------------------------------------------------
-
-def get_log_filename(user_id, session_id):
-    os.makedirs(LOG_FILE, exist_ok=True)
-    return os.path.join(LOG_FILE, f"user_{user_id}_session_{session_id}.json")
-
-
-def load_conversation(user_id, session_id):
-    filename = get_log_filename(user_id, session_id)
-    if not os.path.exists(filename):
-        return None
-    try:
-        with open(filename, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception as exc:
-        logger.error("Could not load transcript %s: %s", filename, exc)
-        return None
-
-
-def maybe_save(session_id: str, student_id: str, tutor_type: str, llm_history):
-    if student_id != "working_mode" and llm_history:
-        logger.info("Saving transcript...")
-        save_conversation(
-            session_id=session_id,
-            user_id=student_id,
-            tutor_type=tutor_type,
-            history=llm_history,
-        )
-
-
-def _coerce_phase(value: Any) -> Phase:
-    try:
-        return Phase(str(value or "FORETHOUGHT").upper())
-    except ValueError:
-        return Phase.FORETHOUGHT
-
-
-# ---------------------------------------------------------------------------
-# File handling
-# ---------------------------------------------------------------------------
-
-async def _persist_uploaded_elements_for_message(
-    incoming_message: cl.Message,
-    assistant_message_id: str,
-) -> list[dict[str, str]]:
-    persisted_info: list[dict[str, str]] = []
-    if not incoming_message.elements:
-        return persisted_info
-
-    outgoing_elements = []
-    for el in incoming_message.elements:
-        if not isinstance(el, File):
-            continue
-
-        path_str = el.path
-        if path_str is None:
-            continue
-
-        file_name = el.name or Path(path_str).name
-        mime = el.mime or "application/octet-stream"
-
-        try:
-            outgoing_elements.append(
-                cl.File(
-                    name=file_name,
-                    path=path_str,
-                    mime=mime,
-                    for_id=assistant_message_id,
-                )
-            )
-            persisted_info.append(
-                {
-                    "name": file_name,
-                    "mime": mime,
-                    "path": path_str,
-                }
-            )
-        except Exception as exc:
-            logger.warning(
-                "Failed to prepare file element %s: %s",
-                getattr(el, "name", "?"),
-                exc,
-            )
-
-    if outgoing_elements:
-        await cl.Message(content="", elements=outgoing_elements).send()
-
-    return persisted_info
-
-def _merge_db_steps_with_transcript(
-    steps: Sequence[Mapping[str, Any]],
-    saved_history: list[dict],
-) -> list[dict]:
-    """
-    Build the authoritative llm_history by using the Chainlit DB steps as the
-    source of truth for *which* turns exist, then overlaying rich SRL metadata
-    (route, diagnosis, decision, check, draft_reply, uploaded_files, …) from
-    the saved transcript wherever a matching turn is found.
-
-    Matching is done by position: the Nth user turn in the DB maps to the Nth
-    user turn in the transcript, and likewise for assistant turns.
-
-    Chainlit stores each user message as two steps (a run/input step AND a
-    user_message step with the same content), so we deduplicate consecutive
-    same-role same-content steps before matching.
-    """
-    # --- Step 1: extract (role, content) pairs from DB steps -----------------
-    raw: list[tuple[str, str]] = []
-    for step in steps:
-        role = "assistant" if step.get("type") == "assistant_message" else "user"
-        content = step.get("output") or step.get("input") or ""
-        if not content or content == "{}":
-            continue
-        raw.append((role, content))
-
-    # --- Step 2: deduplicate consecutive identical (role, content) pairs ------
-    deduped: list[tuple[str, str]] = []
-    for role, content in raw:
-        if deduped and deduped[-1] == (role, content):
-            continue
-        deduped.append((role, content))
-
-    # --- Step 3: match each deduped turn to saved metadata by position --------
-    saved_user: list[dict] = [t for t in saved_history if t.get("role") == "user"]
-    saved_asst: list[dict] = [t for t in saved_history if t.get("role") == "assistant"]
-    user_idx = 0
-    asst_idx = 0
-
-    merged: list[dict] = []
-    for role, content in deduped:
-        if role == "user":
-            saved_turn = saved_user[user_idx] if user_idx < len(saved_user) else {}
-            user_idx += 1
-        else:
-            saved_turn = saved_asst[asst_idx] if asst_idx < len(saved_asst) else {}
-            asst_idx += 1
-
-        if saved_turn:
-            entry = dict(saved_turn)
-            entry["content"] = content  # DB content is authoritative
-        else:
-            entry = {"role": role, "content": content}
-
-        merged.append(entry)
-
-    return merged
-
-
-def _build_combined_user_content(message: cl.Message) -> tuple[str, list[dict[str, str]]]:
-    file_text_blocks: list[str] = []
-    uploaded_files_meta: list[dict[str, str]] = []
-
-    if message.elements:
-        for el in message.elements:
-            if not isinstance(el, File):
-                continue
-            path_str = el.path
-            if path_str is None:
-                continue
-            file_name = el.name or Path(path_str).name
-            mime = el.mime or "application/octet-stream"
-            try:
-                content = read_uploaded_file(el)
-                content = content[:MAX_CHARS]
-                uploaded_files_meta.append(
-                    {
-                        "name": file_name,
-                        "mime": mime,
-                        "path": path_str,
-                    }
-                )
-                file_text_blocks.append(
-                    f"--- FILE: {file_name} ({mime}) ---\n"
-                    f"CONTENT START\n"
-                    f"{content}\n"
-                    f"CONTENT END\n"
-                    f"--- END FILE ---"
-                )
-            except Exception as exc:
-                file_text_blocks.append(
-                    f"[Error reading file {getattr(el, 'name', 'unknown file')}: {exc}]"
-                )
-
-    combined_user_content = message.content or ""
-    if file_text_blocks:
-        combined_user_content += "\n\n" + "\n\n".join(file_text_blocks)
-
-    return combined_user_content, uploaded_files_meta
-
-
-# ---------------------------------------------------------------------------
-# Chainlit setup
-# ---------------------------------------------------------------------------
 
 @cl.password_auth_callback
 async def auth_callback(username: str, password: str) -> Optional[cl.User]:
+    """Authenticate a user against the static MOCK_USERS credential map."""
     if username in MOCK_USERS and MOCK_USERS[username] == password:
         return cl.User(
             identifier=username,
@@ -340,6 +88,7 @@ async def auth_callback(username: str, password: str) -> Optional[cl.User]:
 
 @cl.data_layer
 def get_data_layer():
+    """Configure SQLite persistence with a local file storage provider."""
     UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
     return SQLAlchemyDataLayer(
         conninfo="sqlite+aiosqlite:///./chainlit.db",
@@ -348,7 +97,8 @@ def get_data_layer():
 
 
 @cl.set_chat_profiles
-async def chat_profile(current_user: cl.User | None) -> list[cl.ChatProfile]:
+async def chat_profile(_current_user: cl.User | None) -> list[cl.ChatProfile]:
+    """Return the two available chat profiles: SRL (Group A) and Basic (Group B)."""
     return [
         cl.ChatProfile(
             name=TutorMode.SRL.value,
@@ -363,6 +113,7 @@ async def chat_profile(current_user: cl.User | None) -> list[cl.ChatProfile]:
 
 @cl.on_chat_start
 async def start():
+    """Initialise session state and restore any existing transcript on chat start."""
     user = cl.user_session.get("user")
     student_id = user.identifier.split("@")[0]
     tutor_type = cl.user_session.get("chat_profile") or TutorMode.SRL.value
@@ -373,10 +124,7 @@ async def start():
     cl.user_session.set("session_id", thread_id)
     cl.user_session.set("current_phase", Phase.FORETHOUGHT.value)
 
-    # on_chat_resume (which has the full DB thread) performs the authoritative
-    # merge and writes it back to the transcript.  on_chat_start fires for
-    # brand-new sessions and for server restarts where resume doesn't trigger;
-    # in both cases, loading the saved transcript is the best available source.
+    # Restore history if session exists
     saved = load_conversation(student_id, thread_id)
     if saved and isinstance(saved.get("history"), list):
         llm_history = saved["history"]
@@ -395,8 +143,10 @@ async def start():
         cl.user_session.set("llm_history", [])
         logger.info("Chat started | user=%s | thread=%s | mode=%s", student_id, thread_id, tutor_type)
 
+
 @cl.on_chat_resume
 async def on_chat_resume(thread: ThreadDict):
+    """Restore session state from the DB thread and merge it with the saved transcript."""
     raw_metadata = thread.get("metadata", {})
     metadata: dict[str, Any]
 
@@ -418,16 +168,14 @@ async def on_chat_resume(thread: ThreadDict):
     cl.user_session.set("tutor_type", tutor_type)
     cl.user_session.set("session_id", session_id)
 
-    # Merge DB steps (authoritative for turn count) with the saved transcript
-    # (authoritative for SRL metadata).  The merged result is written back to
-    # the transcript file so future loads are already complete.
+    # Merge DB turns with saved SRL metadata
     steps = thread.get("steps", [])
     saved = load_conversation(student_id, session_id)
     saved_history = saved.get("history", []) if saved else []
 
-    llm_history = _merge_db_steps_with_transcript(steps, saved_history)
+    llm_history = merge_db_steps_with_transcript(steps, saved_history)
 
-    # Persist the merged history immediately so on_chat_start will also see it.
+    # Persist merged history so on_chat_start sees it on next load
     if student_id != "working_mode" and llm_history:
         save_conversation(
             session_id=session_id,
@@ -438,7 +186,7 @@ async def on_chat_resume(thread: ThreadDict):
 
     cl.user_session.set("llm_history", llm_history)
 
-    # Recover phase: prefer metadata, then walk history for last route entry.
+    # Recover last known phase
     current_phase = metadata.get("current_phase") or Phase.FORETHOUGHT.value
     for item in reversed(llm_history):
         if item.get("role") == "assistant" and isinstance(item.get("route"), dict):
@@ -450,19 +198,18 @@ async def on_chat_resume(thread: ThreadDict):
         "Resumed thread | user=%s | session=%s | db_steps=%d | transcript_turns=%d | merged=%d",
         student_id, session_id, len(steps), len(saved_history), len(llm_history),
     )
-# ---------------------------------------------------------------------------
-# Main message handler
-# ---------------------------------------------------------------------------
+
 
 @cl.on_message
 async def main(message: cl.Message):
+    """Handle an incoming student message, route it through the active tutor pipeline, and stream the reply."""
     tutor_type = str(cl.user_session.get("tutor_type") or TutorMode.SRL.value)
     session_id = cl.user_session.get("session_id")
     student_id = cl.user_session.get("user_id")
     llm_history: list[dict[str, Any]] = cl.user_session.get("llm_history") or []
-    current_phase = _coerce_phase(cl.user_session.get("current_phase"))
+    current_phase = coerce_phase(cl.user_session.get("current_phase"))
 
-    combined_user_content, uploaded_files_meta = _build_combined_user_content(message)
+    combined_user_content, uploaded_files_meta = build_combined_user_content(message)
 
     ai_text = ""
     prefix = ""
@@ -484,9 +231,7 @@ async def main(message: cl.Message):
     async with cl.Step(name="Thinking...") as step:
 
         if is_srl:
-            # ----------------------------------------------------------------
-            # SRL Tutor — full pipeline: route → classify → generate → safety
-            # ----------------------------------------------------------------
+            # SRL: full pipeline — route → classify → generate → safety
             result = await orchestrator.handle_turn(
                 user_message=combined_user_content,
                 llm_history=llm_history,
@@ -543,18 +288,14 @@ async def main(message: cl.Message):
             logger.info("=" * 40)
 
         else:
-            # ----------------------------------------------------------------
-            # Basic Tutor — single LLM call, no classification or safety chain
-            # ----------------------------------------------------------------
+            # Basic: single LLM call, no classification or safety chain
             logger.info("BASIC SESSION: %s | USER: %s", session_id, student_id)
-            ai_text = await _run_basic_tutor(
+            ai_text = await run_basic_tutor(
                 llm_history,
                 combined_user_content,
             )
 
-    # -------------------------------------------------------------------------
-    # Stream reply
-    # -------------------------------------------------------------------------
+    # Stream reply and update history
     msg = cl.Message(content="")
     await msg.send()
 
@@ -569,11 +310,9 @@ async def main(message: cl.Message):
     await step.remove()
 
     # Persist uploaded files as message elements in Chainlit storage.
-    persisted_files = await _persist_uploaded_elements_for_message(message, msg.id)
+    persisted_files = await persist_uploaded_elements_for_message(message, msg.id)
 
-    # -------------------------------------------------------------------------
     # Update history
-    # -------------------------------------------------------------------------
     llm_history.append(
         {
             "role": "user",
@@ -600,17 +339,18 @@ async def main(message: cl.Message):
 
     llm_history.append(history_entry)
     cl.user_session.set("llm_history", llm_history)
-    maybe_save(session_id, student_id, tutor_type, llm_history)
+    save_transcript_if_possible(session_id, student_id, tutor_type, llm_history)
 
 
 @cl.on_chat_end
 async def end():
+    """Save the final transcript when the chat session ends."""
     session_id = cl.user_session.get("session_id")
     student_id = cl.user_session.get("user_id")
     tutor_type = cl.user_session.get("tutor_type") or TutorMode.SRL.value
     llm_history = cl.user_session.get("llm_history")
 
-    maybe_save(
+    save_transcript_if_possible(
         session_id=session_id,
         student_id=student_id,
         tutor_type=tutor_type,

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from lib.contracts import CombinedControlResult, RouteResult
-from services.srl_chain import CheckpointResult, SupportDecision, generate_full_reply
+from services.srl.srl_chain import CheckpointResult, SupportDecision, generate_full_reply
 
 
 class GenerateService:
+    """Adapter that bridges typed contract objects to the srl_chain generation function."""
+
     def __init__(self, client):
         self.client = client
 
@@ -16,6 +18,7 @@ class GenerateService:
     user_message: str,
     guard: str | None = None,
     ) -> str:
+        """Convert contract types to srl_chain dataclasses and call generate_full_reply."""
         checkpoint = CheckpointResult(
             request_kind=control.checkpoint.request_kind.value,
             task_stage=control.checkpoint.task_stage.value,

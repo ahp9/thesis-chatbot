@@ -13,6 +13,10 @@ CSV_FULL_TEXT_LIMIT = 200_000  # bytes/chars threshold for including raw CSV tex
 
 
 def _infer_column_type(values: list[str]) -> str:
+    """Infer the data type of a CSV column from a sample of its string values.
+
+    Returns one of: ``"empty"``, ``"boolean-like"``, ``"integer"``, ``"float"``, or ``"text"``.
+    """
     non_empty = [v.strip() for v in values if str(v).strip()]
     if not non_empty:
         return "empty"
@@ -42,6 +46,7 @@ def _infer_column_type(values: list[str]) -> str:
 
 
 def _parse_csv_file(storage_path: Path) -> str:
+    """Parse a CSV file and return a structured summary with column types, a row preview, and the full content if small enough."""
     raw_text = storage_path.read_text(encoding="utf-8", errors="ignore")
 
     try:
@@ -109,6 +114,12 @@ def _parse_csv_file(storage_path: Path) -> str:
 
 
 def read_uploaded_file(file: File) -> str:
+    """Extract text content from an uploaded file based on its extension.
+
+    Supports ``.txt``, ``.md``, ``.py``, ``.js``, ``.ts``, ``.tex``, ``.json``,
+    ``.csv``, ``.ipynb``, and ``.pdf``. Returns an unsupported-type message for
+    any other extension.
+    """
     if not file.path:
         raise ValueError("Uploaded file has no path")
 

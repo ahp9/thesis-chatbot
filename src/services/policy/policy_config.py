@@ -35,6 +35,7 @@ RESPONSE_PROMPT_FILES = {
 
 
 def response_prompt_file_for(support_level: SupportLevel | str) -> str:
+    """Return the response prompt file path for the given support level."""
     try:
         level = (
             support_level

@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from lib.contracts import RouteResult
 from lib.enums import Phase
-from services.router import route_message
+from services.router.router import route_message
 
 
 class RouterService:
+    """Facade over route_message that maps raw dicts to typed RouteResult contracts."""
+
     def __init__(self, client):
         self.client = client
 
@@ -15,6 +17,7 @@ class RouterService:
         llm_history: list[dict],
         current_phase: Phase,
     ) -> RouteResult:
+        """Route the user message to an SRL phase and return a typed RouteResult."""
 
         data = await route_message(
             self.client,

@@ -13,10 +13,11 @@ from lib.enums import (
     TaskStage,
 )
 from services.policy.policy_config import response_prompt_file_for
-from services.srl_chain import checkpoint_and_decide
+from services.srl.srl_chain import checkpoint_and_decide
 
 
 def _safe_enum(enum_cls, value, default):
+    """Coerce a raw string into an enum value, returning default on failure."""
     try:
         return enum_cls(value)
     except Exception:
@@ -24,6 +25,8 @@ def _safe_enum(enum_cls, value, default):
 
 
 class ClassifyService:
+    """Convert raw SRL checkpoint/decision output into typed contract objects."""
+
     def __init__(self, client):
         self.client = client
 
@@ -33,6 +36,7 @@ class ClassifyService:
         llm_history: list[dict],
         user_message: str,
     ) -> tuple[CombinedControlResult, dict]:
+        """Run the checkpoint LLM and return a typed CombinedControlResult with debug info."""
         checkpoint_raw, decision_raw, debug = await checkpoint_and_decide(
             self.client,
             route,

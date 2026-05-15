@@ -8,7 +8,7 @@ import yaml
 
 from evaluator.judge_v1 import JUDGE_SYSTEM, build_judge_user_prompt
 from lib.enums import Phase
-from services.llm_client import get_client
+from utils.llm_client import get_client
 from services.orchestrator import Orchestrator
 
 ROOT = Path(__file__).resolve().parents[1]

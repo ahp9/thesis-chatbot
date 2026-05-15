@@ -6,10 +6,12 @@ LOG_FILE = "transcripts"
 
 
 def get_log_filename(user_id, session_id):
+    """Return the transcript file path for a given user and session."""
     return os.path.join(LOG_FILE, f"user_{user_id}_session_{session_id}.json")
 
 
 def save_conversation(session_id, user_id, tutor_type, history):
+    """Write the conversation history and session metadata to a JSON transcript file."""
 
     os.makedirs(LOG_FILE, exist_ok=True)
     filename = get_log_filename(user_id, session_id)
