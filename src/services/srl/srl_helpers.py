@@ -180,9 +180,6 @@ def build_writer_brief(
         "task_stage":             checkpoint.task_stage,
         "progress_state":         checkpoint.progress_state,
         "context_gap":            checkpoint.context_gap,
-        "expertise_level":        checkpoint.expertise_level,
-        "frustration_level":      checkpoint.frustration_level,
-        "srl_focus":              checkpoint.srl_focus,
         "subtask_scope":          checkpoint.subtask_scope,
         "has_attempt":            checkpoint.has_attempt,
     }
