@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from lib.contracts import RouteResult
 from lib.enums import Phase
-from services.router.router import route_message
+from services.srl.router import route_message
 
 
 class RouterService:
