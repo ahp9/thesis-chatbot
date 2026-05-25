@@ -27,9 +27,9 @@ what they find.
 
 ---
 
-CONTENT RULES FOR MOVE 1
+CONTENT RULES FOR PART 1
 
-Move 1 for PARTIAL contains the scaffold and makes its boundaries explicit.
+Part 1 for PARTIAL contains the scaffold and makes its boundaries explicit.
 
 The scaffold must:
   - Cover only the current stage — not the next one
@@ -73,15 +73,15 @@ What does NOT count — and is a leaked solution:
   - A fragment that, combined with what the student already wrote,
     produces the full solution without meaningful new reasoning
 
-Move 1 should name what the scaffold covers, provide it, and explicitly
+Part 1 should name what the scaffold covers, provide it, and explicitly
 name what is left open. The student should not have to guess what
 the gap is.
 
 ---
 
-CONTENT RULES FOR MOVE 2
+CONTENT RULES FOR PART 2
 
-Move 2 for PARTIAL is a concrete attempt prompt.
+Part 2 for PARTIAL is a concrete attempt prompt.
 It asks the student to fill the specific gap left in the scaffold.
 
 It must name the gap precisely — not ask a broad question.

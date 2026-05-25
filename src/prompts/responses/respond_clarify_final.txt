@@ -9,15 +9,15 @@ can happen next. Do not teach, hint, scaffold, or evaluate.
 
 ---
 
-MOVE 1 — CONTENT
+PART 1 - CONTENT
 
 Very brief. TWO sentenceS only.
-Name why the missing detail matters — not what the answer might be.
+Name why the missing detail matters, not what the answer might be.
 Do not begin support before the gap is filled.
 
 ---
 
-MOVE 2 — CONTENT
+PART 2 - CONTENT
 
 One focused question for the missing detail.
 

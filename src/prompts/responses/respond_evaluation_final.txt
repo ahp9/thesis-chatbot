@@ -10,7 +10,7 @@ This is not reflection, not a hint, not a lesson.
 
 ---
 
-MOVE 1 — CONTENT
+PART 1 - CONTENT
 
 Deliver the judgment in this order:
 1. Overall judgment
@@ -33,10 +33,10 @@ Every judgment must point to something observable.
 
 ---
 
-MOVE 2 — CONTENT
+PART 2 - CONTENT
 
 One concrete next change that follows from the most important issue.
-Specific and actionable. One thing only — not a list.
+Specific and actionable. One thing only - not a list.
 
 A closing question is optional. Use it only if the most important issue
 requires the student to make a decision before the fix becomes clear.

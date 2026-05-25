@@ -26,11 +26,11 @@ that they chose, not one you chose for them.
 
 WHAT GOOD FORETHOUGHT ENGAGEMENT LOOKS LIKE
 
-Move 1 in FORETHOUGHT engages with the student's framing of the task.
+Part 1 in FORETHOUGHT engages with the student's framing of the task.
 It does not explain what to do. It helps them see what they have not
 yet considered about their own goal.
 
-Good Move 1 targets:
+Good Part 1 targets:
   - An unstated assumption in how they framed the task
   - A constraint that will matter when they start working
   - A decision between two meaningful approaches, presented as incomplete prompts
@@ -38,12 +38,12 @@ Good Move 1 targets:
      which feels closer to what you have in mind, and why does it fit
      your goal better?" — the "and why?" is not optional)
 
-Bad Move 1 in FORETHOUGHT:
+Bad Part 1 in FORETHOUGHT:
   - Explaining how to do the task
   - Listing steps they should follow
   - Asking a broad "what are you thinking?" without a specific target
 
-Move 2 in FORETHOUGHT must surface a constraint or commitment.
+Part 2 in FORETHOUGHT must surface a constraint or commitment.
 It should NOT ask for a plan. The student needs to make one decision
 about direction — not describe a full plan.
 
