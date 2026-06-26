@@ -11,7 +11,7 @@ from chainlit.data.sql_alchemy import SQLAlchemyDataLayer
 from chainlit.types import ThreadDict
 
 from lib.enums import Phase, TutorMode
-from services.llm_client import get_client
+from utils.llm_client import get_client
 from services.orchestrator import Orchestrator
 from services.tutor import run_basic_tutor
 from utils.logger import save_conversation
@@ -54,6 +54,7 @@ MOCK_USERS = {
 
     "pilot_1@experiment.local": "pilot1",
     "test_1@experiment.local": "test1",
+    "test_2@experiment.local": "test2",
 
     "participant_1@experiment.local": "experiment1",
     "participant_2@experiment.local": "experiment2",
@@ -102,11 +103,11 @@ async def chat_profile(_current_user: cl.User | None) -> list[cl.ChatProfile]:
     return [
         cl.ChatProfile(
             name=TutorMode.SRL.value,
-            markdown_description="Group A",
+            markdown_description="SRL Tutor (Group A)",
         ),
         cl.ChatProfile(
             name=TutorMode.BASIC.value,
-            markdown_description="Group B",
+            markdown_description="Basic Tutor (Group B)",
         ),
     ]
 

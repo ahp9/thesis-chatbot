@@ -19,39 +19,6 @@ Reason in this order:
 
 ---
 
-OUTPUT
-
-Return ONLY a single JSON object.
-No markdown fences, no preamble, no post-prose.
-
-{
-  "checkpoint": {
-    "request_kind": "RESOURCE" | "PRODUCT",
-    "task_stage": "STARTING" | "WORKING" | "REVIEWING",
-    "progress_state": "MOVING" | "STALLED" | "DONEISH",
-    "has_attempt": bool,
-    "context_gap": "NONE" | "SMALL" | "CRITICAL",
-    "expertise_level": "NOVICE" | "INTERMEDIATE" | "ADVANCED",
-    "frustration_level": "LOW" | "MEDIUM" | "HIGH",
-    "srl_focus": "GOAL" | "STRATEGY" | "MONITOR" | "REFLECT",
-    "subtask_scope": "CONTINUE" | "NEW_TASK",
-    "implementation_allowed": bool,
-    "confidence": float,
-    "rationale": ["observable evidence — each point must cite a specific word, phrase, or behaviour"]
-  },
-  "decision": {
-    "support_level": "CLARIFY" | "QUESTION" | "HINT" | "STRUCTURE" | "EXPLAIN" | "PARTIAL" | "REFLECT" | "EVALUATION",
-    "support_depth": "SURFACE" | "SURFACE_PLUS" | "SUBSTANTIVE" | "SUBSTANTIVE_PLUS" | "DEEP",
-    "can_show_code": bool,
-    "must_end_with_question": bool,
-    "should_request_attempt": bool,
-    "confidence": float,
-    "rationale": ["observable evidence — each point must cite a specific word, phrase, or behaviour"]
-  }
-}
-
----
-
 INPUTS
 
 1. CURRENT_PHASE
@@ -318,3 +285,36 @@ can_show_code = false by default. Set true only when ALL of the following hold:
   - at least one of: frustration MEDIUM/HIGH, progress STALLED, expertise NOVICE
   Setting can_show_code = true when has_attempt = false is not permitted.
   Justify in rationale with specific evidence for each condition
+
+---
+
+OUTPUT
+
+Return ONLY a single JSON object.
+No markdown fences, no preamble, no post-prose.
+
+{
+  "checkpoint": {
+    "request_kind": "RESOURCE" | "PRODUCT",
+    "task_stage": "STARTING" | "WORKING" | "REVIEWING",
+    "progress_state": "MOVING" | "STALLED" | "DONEISH",
+    "has_attempt": bool,
+    "context_gap": "NONE" | "SMALL" | "CRITICAL",
+    "expertise_level": "NOVICE" | "INTERMEDIATE" | "ADVANCED",
+    "frustration_level": "LOW" | "MEDIUM" | "HIGH",
+    "srl_focus": "GOAL" | "STRATEGY" | "MONITOR" | "REFLECT",
+    "subtask_scope": "CONTINUE" | "NEW_TASK",
+    "implementation_allowed": bool,
+    "confidence": float,
+    "rationale": ["observable evidence — each point must cite a specific word, phrase, or behaviour"]
+  },
+  "decision": {
+    "support_level": "CLARIFY" | "QUESTION" | "HINT" | "STRUCTURE" | "EXPLAIN" | "PARTIAL" | "REFLECT" | "EVALUATION",
+    "support_depth": "SURFACE" | "SURFACE_PLUS" | "SUBSTANTIVE" | "SUBSTANTIVE_PLUS" | "DEEP",
+    "can_show_code": bool,
+    "must_end_with_question": bool,
+    "should_request_attempt": bool,
+    "confidence": float,
+    "rationale": ["observable evidence — each point must cite a specific word, phrase, or behaviour"]
+  }
+}

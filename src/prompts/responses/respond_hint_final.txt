@@ -47,7 +47,7 @@ TONE BY SRL FOCUS in the structure file. Follow that instruction.
 
 ---
 
-FORBIDDEN
+FORBIDDEN RULE 
 
 Do not name the solution or explain why the answer is what it is.
 Do not explain the full concept behind the hint.

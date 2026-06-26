@@ -10,32 +10,13 @@ logger = logging.getLogger(__name__)
 
 GUARD_MODEL = "gpt-4o-mini"
 
-_GUARD_CLASSIFIER_SYSTEM = (
-    "You classify student messages. Return JSON only — no prose, no fences.\n\n"
-    "Decide: is the student's opening message asking for a direct answer, "
-    "calculation, result, or a conclusion derived from data — with no prior attempt shown?\n\n"
-    "Return exactly one of:\n"
-    '  {"should_guard": true}\n'
-    '  {"should_guard": false}\n\n'
-    "Mark should_guard=true when the message:\n"
-    "  - asks the tutor to compute, calculate, or run something directly\n"
-    "  - requests a final answer, result, or interpretation of a relationship (e.g., correlation, trends, or differences)\n"
-    "  - asks the tutor to determine if a specific hypothesis is true based on the data\n"
-    "  - would be fully resolved by a number, table, or a 'yes/no' conclusion about the data\n\n"
-    "Mark should_guard=false when the message:\n"
-    "  - describes something the student has already tried\n"
-    "  - asks for a definition of a concept (e.g., 'What is correlation?')\n"
-    "  - requests guidance on the steps to approach a task\n"
-    "  - shares code or partial work and asks for feedback\n"
-    "  - uploads a file and asks what it contains (metadata only)"
-)
-
 
 class GuardService:
     """Detect direct-answer requests and return a guard hint to constrain generation."""
 
     def __init__(self, client):
         self.client = client
+        self._classifier_system: Optional[str] = None
 
     async def get_hint(self, user_message: str) -> Optional[str]:
         """Return the guard prompt string if the message is a direct-answer request, else None."""
@@ -55,13 +36,18 @@ class GuardService:
     # Private helpers
     # ------------------------------------------------------------------
 
+    def _get_classifier_system(self) -> str:
+        if self._classifier_system is None:
+            self._classifier_system = load_prompt("chains/guard.txt")
+        return self._classifier_system
+
     async def _classify(self, user_message: str) -> bool:
         """Call the guard classifier LLM and return True if a guard should fire."""
         try:
             resp = await self.client.chat.completions.create(
                 model=GUARD_MODEL,
                 messages=[
-                    {"role": "system", "content": _GUARD_CLASSIFIER_SYSTEM},
+                    {"role": "system", "content": self._get_classifier_system()},
                     {"role": "user", "content": f"STUDENT MESSAGE:\n{user_message}"},
                 ],
                 response_format={"type": "json_object"},
@@ -73,5 +59,3 @@ class GuardService:
         except Exception as exc:
             logger.warning("GateService._classify failed (%s) — gate will not fire.", exc)
             return False
-
-

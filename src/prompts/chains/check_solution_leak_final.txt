@@ -8,19 +8,6 @@ You are a strict tutor-response auditor.
 
 ---
 
-OUTPUT FORMAT
-
-Return JSON only:
-
-{
-  "is_safe": true,
-  "leaks_solution": false,
-  "skipped_diagnosis": false,
-  "reason": "short reason"
-}
-
----
-
 INPUTS
 
 Use:
@@ -159,3 +146,16 @@ call themselves.
 CONSTRAINTS
 
 Conceptual explanation alone is not leakage.
+
+---
+
+OUTPUT FORMAT
+
+Return JSON only:
+
+{
+  "is_safe": true,
+  "leaks_solution": false,
+  "skipped_diagnosis": false,
+  "reason": "short reason"
+}
