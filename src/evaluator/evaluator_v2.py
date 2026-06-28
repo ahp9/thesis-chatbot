@@ -33,7 +33,7 @@ VERSION_PERFORMANCE = "v6"
 VERSION_REFLECTION = "v2"
 
 STUDENT_MODEL = "gpt-4o-mini"
-JUDGE_MODEL = "gpt-4o-mini"
+JUDGE_MODEL = "gpt-4.1-mini"
 STUDENT_TEMP = 0.8
 JUDGE_TEMP = 0.0
 
@@ -239,6 +239,28 @@ def _recompute_overall_score(
     return round(sum(values) / len(values), 1)
 
 
+def _find_invalid_judge_scores(
+    score_per_criterion: Dict[str, Dict[str, Any]]
+) -> List[str]:
+    invalid: List[str] = []
+
+    for criterion_id, crit in score_per_criterion.items():
+        if not crit.get("applicable"):
+            continue
+
+        score = crit.get("score")
+        if score is None:
+            invalid.append(f"{criterion_id}: applicable=true but score=null")
+            continue
+
+        try:
+            float(score)
+        except (TypeError, ValueError):
+            invalid.append(f"{criterion_id}: score is not numeric ({score!r})")
+
+    return invalid
+
+
 def _normalize_judge_output(
     rubric: Dict[str, Any],
     judge_json: Dict[str, Any],
@@ -336,6 +358,7 @@ async def _call_judge(
     verbose: bool,
 ) -> Dict[str, Any]:
     last_raw = ""
+    last_invalid_scores: List[str] = []
 
     for attempt in range(JUDGE_MAX_RETRIES):
         try:
@@ -357,11 +380,34 @@ async def _call_judge(
             last_raw = content
             parsed = json.loads(content)
 
-            return _normalize_judge_output(
+            normalized = _normalize_judge_output(
                 rubric=rubric,
                 judge_json=parsed,
                 total_turns=total_turns,
             )
+            last_invalid_scores = _find_invalid_judge_scores(
+                normalized.get("score_per_criterion", {})
+            )
+
+            if last_invalid_scores:
+                if verbose:
+                    print(
+                        f"[DYN]   Judge returned invalid scores "
+                        f"(attempt {attempt + 1}/{JUDGE_MAX_RETRIES}) — "
+                        f"{'; '.join(last_invalid_scores[:3])}"
+                    )
+                if attempt + 1 < JUDGE_MAX_RETRIES:
+                    continue
+
+                normalized["fail_flags"] = list(normalized.get("fail_flags", [])) + [
+                    "JUDGE_INVALID_SCORES"
+                ]
+                normalized["error"] = "judge_invalid_scores"
+                normalized["invalid_scores"] = last_invalid_scores
+                normalized["raw"] = last_raw[:500]
+                return normalized
+
+            return normalized
 
         except json.JSONDecodeError:
             if verbose:
@@ -380,13 +426,28 @@ async def _call_judge(
             "rubric_type": rubric.get("rubric_type", ""),
             "score_per_criterion": {},
             "overall_score": None,
-            "fail_flags": ["JUDGE_JSON_PARSE_FAILED"],
-            "summary": [f"Judge failed to return valid JSON after {JUDGE_MAX_RETRIES} attempts."],
+            "fail_flags": [
+                "JUDGE_INVALID_SCORES"
+                if last_invalid_scores
+                else "JUDGE_JSON_PARSE_FAILED"
+            ],
+            "summary": [
+                (
+                    "Judge returned invalid scores after "
+                    f"{JUDGE_MAX_RETRIES} attempts."
+                )
+                if last_invalid_scores
+                else f"Judge failed to return valid JSON after {JUDGE_MAX_RETRIES} attempts."
+            ],
         },
         total_turns=total_turns,
     )
     fallback["raw"] = last_raw[:500]
-    fallback["error"] = "judge_json_parse_failed"
+    fallback["error"] = (
+        "judge_invalid_scores" if last_invalid_scores else "judge_json_parse_failed"
+    )
+    if last_invalid_scores:
+        fallback["invalid_scores"] = last_invalid_scores
     return fallback
 
 
