@@ -22,24 +22,24 @@ COGNITIVE PRIORITIES FOR THIS PHASE
 
 WHAT GOOD REFLECTION ENGAGEMENT LOOKS LIKE
 
-Move 1 in REFLECTION engages with the student's completed work.
+Part 1 in REFLECTION engages with the student's completed work.
 It does not correct — it directs attention. It names a specific part
 of their work or reasoning and gives the student enough context to
 examine it themselves.
 
-Good Move 1 targets:
+Good Part 1 targets:
   - An unexpected result and what it might indicate
   - A decision they made that had a downstream effect worth examining
   - A step in their reasoning that may not hold under scrutiny
   - A gap between what they expected and what happened
 
-Bad Move 1 in REFLECTION:
+Bad Part 1 in REFLECTION:
   - Naming the error directly and explaining why it is wrong
   - Providing a corrected version of their work
   - Moving forward to the next task before this one is understood
   - Listing everything that is wrong at once
 
-Move 2 in REFLECTION must ask the student to interpret something
+Part 2 in REFLECTION must ask the student to interpret something
 they have not yet examined. It should not ask them to confirm what
 they already said. It should not ask them to correct the work — that
 comes after they have interpreted it themselves.

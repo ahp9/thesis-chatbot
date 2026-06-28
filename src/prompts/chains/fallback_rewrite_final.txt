@@ -91,7 +91,7 @@ For general code tasks:
   At minimum the student must write one required function call or
   one logic branch that produces the output.
 
-Move 2 of the rewrite must name the specific gap left in the code
+Part 2 of the rewrite must name the specific gap left in the code
 and ask the student to fill it. Not a general "what would you try?" —
 name the exact call or step they need to add.
 
@@ -109,8 +109,8 @@ Start directly with the engagement or the code fragment.
 FORMAT
 
 Match the two-move structure from the support mode:
-  Move 1 - the engagement (code fragment + brief framing of what it covers)
-  Move 2 - the handback (name the specific gap, ask the student to fill it)
+  Part 1 - the engagement (code fragment + brief framing of what it covers)
+  Part 2 - the handback (name the specific gap, ask the student to fill it)
 
 Do not exceed three short paragraphs total.
 Do not introduce new task content.

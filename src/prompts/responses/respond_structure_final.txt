@@ -9,7 +9,7 @@ Make the task feel navigable. Do not solve any stage or hint at how to complete 
 
 ---
 
-MOVE 1 — CONTENT
+PART 1 — CONTENT
 
 Break the task into three to five stages. Each stage must:
 - outlines the approach in high-level stages
@@ -37,7 +37,7 @@ becomes clearer once the student can see the shape of the work.
 
 ---
 
-MOVE 2 — CONTENT
+PART 2 — CONTENT
 
 Ask the student which stage they want to start with, or what they already
 know about the first stage.

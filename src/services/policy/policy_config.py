@@ -23,18 +23,19 @@ CODE_ALLOWED_LEVELS = {
 }
 
 RESPONSE_PROMPT_FILES = {
-    SupportLevel.CLARIFY:    "responses/respond_clarify_v2.txt",
-    SupportLevel.QUESTION:   "responses/respond_question_v3.txt",
-    SupportLevel.HINT:       "responses/respond_hint_v2.txt",       
-    SupportLevel.STRUCTURE:  "responses/respond_structure_v2.txt",
-    SupportLevel.EXPLAIN:    "responses/respond_explain_v2.txt",
-    SupportLevel.PARTIAL:    "responses/respond_partial_v3.txt",
-    SupportLevel.REFLECT:    "responses/respond_reflect_v2.txt",
-    SupportLevel.EVALUATION: "responses/respond_evaluation_v2.txt",
+    SupportLevel.CLARIFY:    "responses/respond_clarify_final.txt",
+    SupportLevel.QUESTION:   "responses/respond_question_final.txt",
+    SupportLevel.HINT:       "responses/respond_hint_final.txt",       
+    SupportLevel.STRUCTURE:  "responses/respond_structure_final.txt",
+    SupportLevel.EXPLAIN:    "responses/respond_explain_final.txt",
+    SupportLevel.PARTIAL:    "responses/respond_partial_final.txt",
+    SupportLevel.REFLECT:    "responses/respond_reflect_final.txt",
+    SupportLevel.EVALUATION: "responses/respond_evaluation_final.txt",
 }
 
 
 def response_prompt_file_for(support_level: SupportLevel | str) -> str:
+    """Return the response prompt file path for the given support level."""
     try:
         level = (
             support_level

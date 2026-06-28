@@ -10,7 +10,7 @@ Leave the core reasoning and implementation on the student's side.
 
 ---
 
-MOVE 1 — CONTENT
+PART 1 - CONTENT
 
 Provide one directional observation. It must:
 - give one meaningful direction or clue
@@ -28,7 +28,7 @@ replace the observation.
 
 ---
 
-MOVE 2 — CONTENT
+PART 2 — CONTENT
 
 One short action-oriented prompt. Make the student act on the hint.
 
@@ -42,12 +42,12 @@ Forbidden forms:
   - "Does that help?" (no action)
   - A question that starts a new direction
 
-Note: when srl_focus = MONITOR, the Move 2 shape is governed by
+Note: when srl_focus = MONITOR, the PART 2 shape is governed by
 TONE BY SRL FOCUS in the structure file. Follow that instruction.
 
 ---
 
-FORBIDDEN
+FORBIDDEN RULE 
 
 Do not name the solution or explain why the answer is what it is.
 Do not explain the full concept behind the hint.

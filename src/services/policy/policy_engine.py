@@ -36,6 +36,8 @@ _DEPTH_ORDER = {
 }
 
 class PolicyEngine:
+    """Enforce SRL policy rules on top of the classifier's suggested support decisions."""
+
     def resolve_phase(
         self,
         current_phase,
@@ -43,6 +45,7 @@ class PolicyEngine:
         confidence,
         previous_frustration: str | None = None,
     ):
+        """Confirm or veto the router's predicted phase against allowed transitions and confidence."""
         if predicted_phase == current_phase:
             return current_phase
 
@@ -61,6 +64,7 @@ class PolicyEngine:
         return predicted_phase
 
     def _partial_allowed(self, checkpoint: Checkpoint) -> bool:
+        """Return True if the PARTIAL support level is permitted for this checkpoint."""
         if checkpoint.has_attempt:
             return True
         return (
@@ -69,6 +73,7 @@ class PolicyEngine:
         )
 
     def allowed_support_levels(self, checkpoint: Checkpoint) -> Set[SupportLevel]:
+        """Return the set of support levels permitted for the current checkpoint state."""
         if checkpoint.context_gap == ContextGap.CRITICAL:
             return {SupportLevel.CLARIFY}
 
@@ -128,6 +133,7 @@ class PolicyEngine:
         return levels
 
     def fallback_support_level(self, checkpoint: Checkpoint) -> SupportLevel:
+        """Return the safest support level when the classifier's choice is not in the allowed set."""
         if checkpoint.context_gap == ContextGap.CRITICAL:
             return SupportLevel.CLARIFY
 
@@ -158,6 +164,7 @@ class PolicyEngine:
         allowed: Set[SupportLevel],
         checkpoint: Checkpoint,
     ) -> SupportLevel:
+        """Return the next level above current in the progression order, from the allowed set."""
         progression_order = [
             SupportLevel.CLARIFY,
             SupportLevel.QUESTION,
@@ -186,6 +193,7 @@ class PolicyEngine:
         depth: SupportDepth,
         expertise_level: ExpertiseLevel,
     ) -> SupportDepth:
+        """Raise support_depth to the minimum floor for the student's expertise level."""
         floor = _DEPTH_FLOOR.get(expertise_level, SupportDepth.SUBSTANTIVE)
         return depth if _DEPTH_ORDER[depth] >= _DEPTH_ORDER[floor] else floor
 
@@ -195,6 +203,7 @@ class PolicyEngine:
         decision: Decision,
         recent_support_levels: list[SupportLevel],
     ) -> Decision:
+        """Apply all policy rules to the classifier decision and return an overridden Decision."""
         allowed = self.allowed_support_levels(checkpoint)
 
         # Hard block: PARTIAL requires an attempt (with the frustration exception

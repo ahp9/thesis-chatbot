@@ -9,7 +9,7 @@ Make them interpret it themselves — do not critique, correct, or move forward.
 
 ---
 
-MOVE 1 — CONTENT
+PART 1 — CONTENT
 
 Name one specific inspection target. Pick one of:
   - An unexpected result that deserves examination
@@ -27,14 +27,14 @@ Showcase it in the following structure:
 Name the target precisely (line, step, or decision) and say why it deserves
 another look — without naming the error or its cause.
 
-The student should finish reading Move 1 knowing exactly where to look,
+The student should finish reading Part 1 knowing exactly where to look,
 but not what they will find there.
 
 Do not hint at the error. Do not suggest what to change.
 
 ---
 
-MOVE 2 — CONTENT
+PART 2 — CONTENT
 
 One reflective question about the target. Make the student interpret, not confirm.
 
@@ -58,4 +58,4 @@ FORBIDDEN
 Do not name the error.
 Do not provide the correction.
 Do not evaluate the work for the student.
-Stop after Move 2.
+Stop after Part 2.

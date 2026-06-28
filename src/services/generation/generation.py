@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from services.prompt_loader import load_prompt
+from utils.prompt_loader import load_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ def _get_coherence_key(
     current_support_level: str,
     previous_support_level: Optional[str],
 ) -> str:
+    """Map current and previous support levels to a coherence instruction key."""
     if not previous_support_level:
         return "first_turn"
     if current_support_level == previous_support_level:
@@ -63,13 +64,7 @@ def get_coherence_instruction(
     current_support_level: str,
     previous_support_level: Optional[str],
 ) -> str:
-    """
-    Return the coherence instruction string for the planner payload.
-
-    This is the only dynamic generation logic that cannot live in a static
-    prompt file — it depends on a runtime comparison between the current
-    and previous support levels.
-    """
+    """Return an instruction string flagging whether support has stayed, escalated, or de-escalated relative to the previous turn."""
     key = _get_coherence_key(
         (current_support_level or "QUESTION").upper(),
         (previous_support_level or "").upper() or None,
@@ -84,21 +79,8 @@ def build_filled_structure(
     frustration_level: str,
     support_depth: str,
 ) -> str:
-    """
-    Load tutor_structure.txt and fill the four runtime placeholders.
-
-    Returns the filled string, ready to be used as the first section
-    of the planner system prompt.
-
-    Placeholders filled:
-      {expertise_level}   — NOVICE / INTERMEDIATE / ADVANCED
-      {phase}             — FORETHOUGHT / PERFORMANCE / REFLECTION
-      {srl_focus}         — GOAL / STRATEGY / MONITOR / REFLECT
-      {frustration_level} — LOW / MEDIUM / HIGH
-      {support_depth}     — SURFACE / SURFACE_PLUS / SUBSTANTIVE /
-                            SUBSTANTIVE_PLUS / DEEP
-    """
-    template = load_prompt("base/tutor_structure.txt")
+    """Load srl_tutor_structure.txt and substitute the five runtime placeholders for the planner system prompt."""
+    template = load_prompt("base/srl_tutor_structure.txt")
     filled = template.replace("{expertise_level}", (expertise_level or "INTERMEDIATE").upper())
     filled = filled.replace("{phase}",             (phase or "PERFORMANCE").upper())
     filled = filled.replace("{srl_focus}",         (srl_focus or "GOAL").upper())

@@ -9,7 +9,7 @@ Make them think more precisely — do not explain, scaffold, or hint at the answ
 
 ---
 
-MOVE 1 — CONTENT
+PART 1 — CONTENT
 
 Add something the student does not already have. Do not restate or confirm
 what they said.
@@ -32,13 +32,13 @@ Develop it: explain in at least two to three sentences why this gap matters —
 what becomes difficult or impossible if it is not addressed.
 A single sentence naming the gap is not enough.
 
-Note: when srl_focus = GOAL or srl_focus = STRATEGY, the specific Move 1
-and Move 2 shapes are governed by TONE BY SRL FOCUS in the structure file.
+Note: when srl_focus = GOAL or srl_focus = STRATEGY, the specific Part 1
+and Part 2 shapes are governed by TONE BY SRL FOCUS in the structure file.
 Follow those instructions.
 
 ---
 
-MOVE 2 — CONTENT
+PART 2 — CONTENT
 
 One focused question with a non-obvious answer.
 
@@ -54,7 +54,7 @@ Forbidden forms:
   - Any question the student can answer by restating what they already said
   - A generic question that could be asked of any student on this task
 
-Note: when srl_focus = GOAL or srl_focus = STRATEGY, the Move 2 shape
+Note: when srl_focus = GOAL or srl_focus = STRATEGY, the Part 2 shape
 is governed by TONE BY SRL FOCUS in the structure file. Follow those instructions.
 
 ---

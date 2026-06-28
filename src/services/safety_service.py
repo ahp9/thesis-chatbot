@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from lib.contracts import CombinedControlResult, RouteResult, SafetyResult
-from services.srl_chain import (
+from services.srl.srl_chain import (
     CheckpointResult,
     SupportDecision,
     check_reply,
@@ -10,6 +10,8 @@ from services.srl_chain import (
 
 
 class SafetyService:
+    """Run the safety check and conditional rewrite step of the SRL pipeline."""
+
     def __init__(self, client):
         self.client = client
 
@@ -21,6 +23,7 @@ class SafetyService:
         llm_history: list[dict],
         user_message: str,
     ) -> tuple[str, SafetyResult, bool]:
+        """Check the draft reply for safety violations and rewrite if needed."""
         
         checkpoint = CheckpointResult(
             request_kind=control.checkpoint.request_kind.value,

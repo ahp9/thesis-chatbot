@@ -9,7 +9,7 @@ from openai.types.chat import (
     ChatCompletionUserMessageParam,
 )
 
-from services.llm_client import get_client
+from utils.llm_client import get_client
 
 client = get_client()
 
@@ -21,11 +21,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 BASIC_MODEL = "gpt-4.1-mini"
+
 _BASIC_SYSTEM_PROMPT_PATH = (
     Path(__file__).resolve().parent.parent / "prompts" / "base" / "ai_base_control.txt"
 )
 
 def _load_basic_system_prompt() -> str:
+    """Load the basic tutor system prompt from disk, falling back to an inline default if unreadable."""
     try:
         return _BASIC_SYSTEM_PROMPT_PATH.read_text(encoding="utf-8").strip()
     except Exception as exc:
@@ -37,10 +39,11 @@ def _load_basic_system_prompt() -> str:
         )
 
 
-async def _run_basic_tutor(
+async def run_basic_tutor(
     llm_history: list[dict[str, Any]],
     user_message: str,
 ) -> str:
+    """Send the current student message to the basic tutor model and return its reply."""
     system_prompt = _load_basic_system_prompt()
 
     messages: list[ChatCompletionMessageParam] = [

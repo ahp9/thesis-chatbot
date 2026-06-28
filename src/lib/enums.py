@@ -2,8 +2,8 @@ from enum import Enum
 
 
 class TutorMode(str, Enum):
-    SRL = "Group A"
-    BASIC = "Group B"
+    SRL = "SRL Tutor (Group A)"
+    BASIC = "Basic Tutor (Group B)"
 
 
 class Phase(str, Enum):

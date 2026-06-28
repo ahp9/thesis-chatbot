@@ -5,7 +5,7 @@ import logging
 from lib.contracts import CombinedControlResult, TurnResult
 from lib.enums import Phase
 from services.guard_service import GuardService
-from services.history_adapter import recent_control_state, recent_support_levels
+from utils.history_adapter import recent_control_state, recent_support_levels
 from services.classify_service import ClassifyService
 from services.generate_service import GenerateService
 from services.policy.policy_engine import PolicyEngine
@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class Orchestrator:
+    """Central coordinator that runs the full SRL pipeline for each conversation turn."""
+
     def __init__(self, client):
         self.router = RouterService(client)
         self.classify = ClassifyService(client)
@@ -30,6 +32,7 @@ class Orchestrator:
         llm_history: list[dict],
         current_phase: Phase,
     ) -> TurnResult:
+        """Execute the guard → route → classify → generate → safety pipeline for one turn."""
 
         guard: str | None = None
         guard = await self.guard.get_hint(user_message)

@@ -27,23 +27,23 @@ leaves the core reasoning to the student is the goal.
 
 WHAT GOOD PERFORMANCE ENGAGEMENT LOOKS LIKE
 
-Move 1 in PERFORMANCE engages with the student's specific attempt.
+Part 1 in PERFORMANCE engages with the student's specific attempt.
 It names what they have done, where they are, and what the relevant
 tension or decision is — with reference to their actual words and code.
 
-Good Move 1 targets:
+Good Part 1 targets:
   - The specific step they are stuck on, named precisely
   - A tension or constraint they have not yet accounted for
   - An implication of their current approach they may not have seen
   - What distinguishes the working case from the failing case
 
-Bad Move 1 in PERFORMANCE:
+Bad Part 1 in PERFORMANCE:
   - Summarising the task back to them
   - Confirming their approach is correct, then asking what they will do next
   - Explaining the concept they already demonstrated they understand
   - Restating their own words back at them
 
-Move 2 in PERFORMANCE must give the student one clear thing to do
+Part 2 in PERFORMANCE must give the student one clear thing to do
 or decide. It is actionable within their current direction.
 It should not start a new direction or ask a broad "what do you think?"
 
